@@ -1,0 +1,32 @@
+Package: bignlp
+Type: Package
+Title: Robust and Parallel NLP for Big Data
+Version: 0.0.1
+Date: 2018-05-20
+Author: Andreas Blaette
+Maintainer: Andreas Blaette <andreas.blaette@uni-due.de>
+Description: Robust and Parallel NLP for Big Data.
+Imports:
+    data.table,
+    parallel,
+    pbapply,
+    jsonlite,
+    text2vec,
+    R6,
+    coreNLP,
+    stringi,
+    rJava,
+Suggests:
+    knitr,
+    cleanNLP
+VignetteBuilder: knitr
+LazyData: yes
+License: GPL-3
+Encoding: UTF-8
+Collate:
+    'corenlp.R'
+    'AnnotatorCoreNLP.R'
+    'json.R'
+    'pretty_print.R'
+    'purge.R'
+RoxygenNote: 6.0.1

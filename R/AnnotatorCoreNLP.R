@@ -1,0 +1,122 @@
+#' Stanford CoreNLP Annotator Class.
+#' 
+#' @field tagger Class from Stanford CoreNLP to annotate text
+#' @field xmlifier Class from Stanford CoreNLP to generate XML output
+#' @field jsonifier Class from Stanford CoreNLP to generate JSON output
+#' @field writer Class from Stanford CoreNLP to generate TXT output
+#' @field append logical, whether to append output to destfile
+#' @field method whith output format to use
+#' @field cols_to_keep columns from output to keep
+#' @field destfile filename
+#' 
+#' @export AnnotatorCoreNLP
+#' @rdname AnnotatorCoreNLP
+#' @importFrom jsonlite fromJSON
+#' @importFrom stringi stri_match
+#' @importFrom coreNLP getToken
+#' @importFrom data.table as.data.table
+#' @examples 
+#' options(java.parameters = "-Xmx4g")
+#' corenlp_dir <- "/opt/stanford-corenlp/stanford-corenlp-full-2017-06-09"
+#' prop_file <- "/opt/stanford-corenlp/StanfordCoreNLP-german.properties"
+#' 
+#' txt <- "Das ist ein Satz. Und das ist ein zweiter Satz."
+#' 
+#' CNLP <- AnnotatorCoreNLP$new(method = "json", corenlp_dir = corenlp_dir, properties_file = prop_file)
+#' CNLP$annotate(txt = txt)
+#' CNLP$annotate(txt = txt, id = 15L)
+#' 
+#' CNLP <- AnnotatorCoreNLP$new(method = "xml", corenlp_dir = corenlp_dir, properties_file = prop_file)
+#' CNLP$annotate(txt = txt)
+AnnotatorCoreNLP <- R6Class(
+  
+  classname = "CoreNLP",
+
+  public = list(
+    
+    tagger = NULL,
+    xmlifier = NULL,
+    jsonifier = NULL,
+    writer = NULL,
+    append = NULL,
+    method = NULL,
+    cols_to_keep = NULL,
+    destfile = NULL,
+
+
+    initialize = function(
+      corenlp_dir = system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"),
+      properties_file = system.file(package = "coreNLP", "extdata", "StanfordCoreNLP-german.properties"), 
+      method = c("txt", "json", "xml"),
+      cols_to_keep = c("sentence", "id", "token", "pos", "ner"),
+      destfile = NULL
+    ){
+      
+      self$cols_to_keep <- cols_to_keep
+      
+      jvm_status <- rJava::.jinit(force.init = TRUE) # does it harm when called again?
+      java_version <- rJava::.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
+      message("Status of the Java Virtual Machine: ", jvm_status)
+      message("Java version: ", java_version)
+      
+      if (as.numeric(gsub("^(\\d+\\.\\d+)\\..*?$", "\\1", java_version)) != 1.8)
+        warning("java version is not 1.8, but ", java_version, ". This may violate CoreNLP requirements.")
+
+      stanford_path <- Sys.glob(paste0(corenlp_dir,"/*.jar"))
+      rJava::.jaddClassPath(stanford_path)
+      rJava::.jaddClassPath(dirname(properties_file))
+      self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", basename(properties_file))
+
+      self$method <- method
+      if (self$method == "xml") self$xmlifier <- rJava::.jnew("edu.stanford.nlp.pipeline.XMLOutputter")
+      if (self$method == "json") self$jsonifier <- rJava::.jnew("edu.stanford.nlp.pipeline.JSONOutputter")
+      if (self$method == "txt") {
+        self$writer <- new(J("java.io.PrintWriter"), rJava::.jnew("java.io.FileOutputStream", rJava::.jnew("java.io.File", destfile), TRUE))
+      }
+
+      self$append <- if (is.null(destfile)) FALSE else TRUE
+      if (!is.null(destfile)) self$destfile <- destfile
+
+      invisible( self )
+    },
+    
+    annotation_to_xml = function(anno){
+      doc <- rJava::.jcall(self$xmlifier, "Lnu/xom/Document;", "annotationToDoc", anno, self$tagger)
+      xml <- rJava::.jcall(doc, "Ljava/lang/String;", "toXML")
+      df <- coreNLP::getToken(coreNLP:::parseAnnoXML(xml))
+      colnames(df) <- tolower(colnames(df))
+      as.data.table(df[, self$cols_to_keep])
+    },
+    
+    annotation_to_json = function(anno, id = NULL){
+      json_string <- rJava::.jcall(self$jsonifier, "Ljava/lang/String;", "print", anno)
+      json_string <- gsub("\\s+", " ", json_string)
+      if (!is.null(id)){
+        stopifnot(is.integer(id))
+        json_string <- sprintf('{"id": %d, %s', id, substr(json_string, 2, nchar(json_string)))
+      }
+      if (!is.null(self$destfile)) cat(json_string, "\n", file = self$destfile, append = self$append)
+      if (self$append == FALSE) json_string else NULL # return value
+    },
+    
+    annotation_to_txt = function(anno){
+      if (self$append == FALSE){
+        self$writer <- rJava::.jnew("java.io.PrintWriter", filename <- tempfile())
+      }
+      rJava::.jcall(self$tagger, "V", "prettyPrint", anno, self$writer)
+      if (self$append == FALSE) parse_pretty_print(filename) else NULL
+    },
+
+    annotate = function(txt, id = NULL, purge = TRUE){
+      if (purge) txt <- purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+      anno <- rJava::.jcall(self$tagger, "Ledu/stanford/nlp/pipeline/Annotation;", "process", txt)
+      switch(
+        self$method,
+        xml = self$annotation_to_xml(anno),
+        json = self$annotation_to_json(anno, id = id),
+        txt = self$annotation_to_txt(anno)
+      )
+    }
+    
+  )
+)

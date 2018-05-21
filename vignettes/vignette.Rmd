@@ -1,0 +1,24 @@
+---
+title: "bignlp"
+subtitle: "Annotate big corpora"
+author: "Andreas Blaette (andreas.blaette@uni-due.de)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{GermaParl}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+  
+https://github.com/s-u/rJava/issues/25
+
+```{r load_ctk, eval = FALSE}
+Sys.setenv("CORENLP_PATH" = "/opt/stanford-corenlp/stanford-corenlp-full-2017-06-09")
+options(java.parameters = "-Xmx4g") # needs to be set before a JVM is initialized.
+noCores <- parallel::detectCores() - 2L
+```
+
+```{r}
+library(bignlp)
+packageVersion("bignlp")
+```
