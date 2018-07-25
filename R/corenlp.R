@@ -2,19 +2,27 @@
 #' 
 #' Use CoreNLP to annotate strings.
 #' 
-#' @param x input file(s)
-#' @param destfile output file, or directory, if multiple files are processed in parallel mode
-#' @param properties_file a properties file to configure annotator
-#' @param threads integer
-#' @param corenlp_dir directory where corenlp resides
-#' @param preclean whether to preprocess string
-#' @param progress logical
-#' @param verbose logical
+#' If argument \code{threads} is 1, the tagging result is returned, if destfile is NULL.
+#' If \code{threads} is higher than 1, \code{destfile} should be a directory where tagging
+#' results will be stored as NDJSON files.
+#' 
+#' @param x A \code{data.table} (required to have the columns 'id' and 'text'),
+#'   or a character vector with input file(s). Files are assumed to be tsv files
+#'   with two columns, 'id' and 'text'.
+#' @param destfile An output file, if threads > 1, a directory where ndjson files will be stored.
+#' @param properties_file A properties file to configure annotator.
+#' @param threads An integer.
+#' @param corenlp_dir The directory where corenlp resides.
+#' @param preclean Logical, whether to preprocess string.
+#' @param method The output generated, either "json" (default), "txt", or "xml".
+#' @param progress Logical, whether to show progress bar.
+#' @param verbose Logical, whether to output messages.
 #' @importFrom pbapply pblapply
 #' @importFrom parallel mclapply
 #' @importFrom text2vec split_into
 #' @importFrom data.table data.table rbindlist fread fwrite uniqueN is.data.table
 #' @importFrom R6 R6Class
+#' @importFrom cleanNLP cnlp_download_corenlp
 #' @rdname corenlp_annotate
 #' @examples 
 #' library(data.table)
@@ -41,11 +49,15 @@
 corenlp_annotate <- function(x, destfile = NULL, properties_file, corenlp_dir, method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
   
   if (is.character(x)){
-    if (file.exists(x)){
-      if (file.info(x)$isdir == FALSE){
-        x <- data.table::fread(x, showProgress = progress)
+    if (all(file.exists(x))){
+      if (length(x) == 1L){
+        if (file.info(x)$isdir == FALSE){
+          x <- data.table::fread(x, showProgress = progress)
+        } else {
+          stop("x is a directory, no procedure to process files in directory implemented")
+        }
       } else {
-        stop("x is a directory, no procedure to process files in directory implemented")
+        x <- rbindlist(lapply(x, fread))
       }
     }
   }
@@ -55,7 +67,7 @@ corenlp_annotate <- function(x, destfile = NULL, properties_file, corenlp_dir, m
   if (threads == 1L){
     return_string <- if (is.null(destfile)) {destfile <- tempfile(); TRUE} else FALSE
     Annotator <- AnnotatorCoreNLP$new(
-      method = "json",
+      method = method,
       destfile = destfile,
       corenlp_dir = corenlp_dir,
       properties_file = properties_file
@@ -77,7 +89,7 @@ corenlp_annotate <- function(x, destfile = NULL, properties_file, corenlp_dir, m
       function(i){
         options(java.parameters = "-Xmx4g")
         Annotator <- AnnotatorCoreNLP$new(
-          method = "json", destfile = outfiles[i],
+          method = method, destfile = outfiles[i],
           corenlp_dir = corenlp_dir,
           properties_file = properties_file
         )

@@ -1,7 +1,11 @@
 #' Parse CoreNLP pretty print output.
 #' 
-#' @param x a character vector or filename
-#' @param mc number of cores.
+#' The pretty print output of Stanford CoreNLP may be an alternative to the 
+#' NDJSON output. The \code{corenlp_parse_pretty_print} is a residual, kept 
+#' in the package for future use.
+#' 
+#' @param x A character vector or filename
+#' @param mc Number of cores to use.
 #' @export corenlp_parse_pretty_print
 #' @importFrom pbapply pblapply
 #' @rdname pretty_print

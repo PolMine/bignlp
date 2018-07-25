@@ -47,13 +47,14 @@ The JSON results of applying the Stanford CoreNLP annotators can be
   written/appended to that file. Otherwise, a \code{data.frame} is returned.
 }
 \examples{
-ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters.ndjson")
+ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
 cols <- c("sentence", "index", "word", "pos", "lemma")
 json_string <- readLines(ndjson_file)
 dt <- corenlp_parse_json(json_string, cols_to_keep = cols, progress = FALSE)
 
 dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = NULL, progress = FALSE)
 dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = NULL, progress = TRUE)
+
 tsv_file <- tempfile()
 dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = tsv_file, progress = FALSE)
 y <- data.table::fread(tsv_file)
@@ -71,5 +72,5 @@ corenlp_parse_ndjson(
   cols_to_keep = cols, destfile = tsv_files,
   threads = 1L
   )
-rbindlist(lapply(tsv_files, fread))
+dt <- data.table::rbindlist(lapply(tsv_files, data.table::fread))
 }

@@ -7,10 +7,12 @@
 corenlp_parse_pretty_print(x, mc = 1)
 }
 \arguments{
-\item{x}{a character vector or filename}
+\item{x}{A character vector or filename}
 
-\item{mc}{number of cores.}
+\item{mc}{Number of cores to use.}
 }
 \description{
-Parse CoreNLP pretty print output.
+The pretty print output of Stanford CoreNLP may be an alternative to the 
+NDJSON output. The \code{corenlp_parse_pretty_print} is a residual, kept 
+in the package for future use.
 }

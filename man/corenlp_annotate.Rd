@@ -9,24 +9,33 @@ corenlp_annotate(x, destfile = NULL, properties_file, corenlp_dir,
   verbose = TRUE)
 }
 \arguments{
-\item{x}{input file(s)}
+\item{x}{A \code{data.table} (required to have the columns 'id' and 'text'),
+or a character vector with input file(s). Files are assumed to be tsv files
+with two columns, 'id' and 'text'.}
 
-\item{destfile}{output file, or directory, if multiple files are processed in parallel mode}
+\item{destfile}{An output file, if threads > 1, a directory where ndjson files will be stored.}
 
-\item{properties_file}{a properties file to configure annotator}
+\item{properties_file}{A properties file to configure annotator.}
 
-\item{corenlp_dir}{directory where corenlp resides}
+\item{corenlp_dir}{The directory where corenlp resides.}
 
-\item{threads}{integer}
+\item{method}{The output generated, either "json" (default), "txt", or "xml".}
 
-\item{progress}{logical}
+\item{threads}{An integer.}
 
-\item{preclean}{whether to preprocess string}
+\item{progress}{Logical, whether to show progress bar.}
 
-\item{verbose}{logical}
+\item{preclean}{Logical, whether to preprocess string.}
+
+\item{verbose}{Logical, whether to output messages.}
 }
 \description{
 Use CoreNLP to annotate strings.
+}
+\details{
+If argument \code{threads} is 1, the tagging result is returned, if destfile is NULL.
+If \code{threads} is higher than 1, \code{destfile} should be a directory where tagging
+results will be stored as NDJSON files.
 }
 \examples{
 library(data.table)

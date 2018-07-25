@@ -14,13 +14,14 @@
 #' @export corenlp_parse_ndjson
 #' @rdname corenlp_json
 #' @examples
-#' ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters.ndjson")
+#' ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
 #' cols <- c("sentence", "index", "word", "pos", "lemma")
 #' json_string <- readLines(ndjson_file)
 #' dt <- corenlp_parse_json(json_string, cols_to_keep = cols, progress = FALSE)
 #' 
 #' dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = NULL, progress = FALSE)
 #' dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = NULL, progress = TRUE)
+#' 
 #' tsv_file <- tempfile()
 #' dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = tsv_file, progress = FALSE)
 #' y <- data.table::fread(tsv_file)
@@ -38,7 +39,7 @@
 #'   cols_to_keep = cols, destfile = tsv_files,
 #'   threads = 1L
 #'   )
-#' rbindlist(lapply(tsv_files, fread))
+#' dt <- data.table::rbindlist(lapply(tsv_files, data.table::fread))
 corenlp_parse_ndjson = function(x, cols_to_keep = c("sentence", "index", "word", "pos", "lemma"), destfile = NULL, logfile = NULL, threads = 1L, progress = TRUE, verbose = TRUE){
   if (file.info(x[1])[["isdir"]]){
     started <- Sys.time()
@@ -85,7 +86,7 @@ corenlp_parse_ndjson = function(x, cols_to_keep = c("sentence", "index", "word",
     started <- Sys.time()
     if (!progress){
       if (is.null(destfile)){
-        i <- 1
+        i <- 1L
         y <- list()
       }
       for (filename in x){
@@ -97,7 +98,7 @@ corenlp_parse_ndjson = function(x, cols_to_keep = c("sentence", "index", "word",
           y_tmp <- corenlp_parse_json(x = line, cols_to_keep = cols_to_keep, destfile = destfile, logfile = logfile)
           if (is.null(destfile)){
             y[[i]] <- y_tmp
-            i <- i + 1
+            i <- i + 1L
           }
         }
         close(con)
@@ -184,15 +185,18 @@ corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "
     if (!is.null(destfile)){
       write.table(
         y, file = destfile,
-        sep = "\t", append = TRUE, row.names = FALSE,
+        sep = "\t",
+        append = if (file.exists(destfile)) TRUE else FALSE,
+        row.names = FALSE,
         col.names = if (file.exists(destfile)) FALSE else TRUE
       )
+      return( NULL )
     } else {
       return( y )
     }
   } else if (length(x) > 1){
     .parse <- function(line) corenlp_parse_json(line, cols_to_keep = cols_to_keep, destfile = destfile, logfile = logfile, progress = FALSE)
     dfs <- if (progress) pblapply(x, .parse) else lapply(x, .parse)
-    if (is.null(destfile)) return( do.call(rbind, dfs) ) else return(invisible( NULL ))
+    if (is.null(destfile)) return( do.call(rbind, dfs) ) else return( invisible( NULL ) )
   }
 }
