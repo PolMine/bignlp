@@ -48,6 +48,7 @@
 #'   progress = FALSE
 #'   )
 #' @export corenlp_annotate
+#' @include bignlp.R
 corenlp_annotate <- function(x, destfile = NULL, corenlp_dir = getOption("bignlp.corenlp_dir"), properties_file = getOption("bignlp.properties_file"), method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
   
   if (is.character(x)){
@@ -105,6 +106,83 @@ corenlp_annotate <- function(x, destfile = NULL, corenlp_dir = getOption("bignlp
 }
 
 
+#' @name corenlp_install
+#' @title Install Stanford CoreNLP.
+#' @description The function provides an installation mechanism to download and
+#'   install Stanford CoreNLP within the bignlp package or externally.
+#' @param lang Languages to install.
+#' @param loc Directory where to put jar files. If missing, the files will be
+#'   placed in the bignlp package.
+#' @export corenlp_install
+#' @rdname corenlp_install
+#' @importFrom utils download.file unzip zip
+corenlp_install <- function(lang = "de", loc){
+  # create necessary directories
+  if (missing(loc)) loc <- system.file(package = "bignlp", "extdata")
+  exttools_dir <- loc
+  if (!file.exists(exttools_dir)) dir.create(exttools_dir)
+  corenlp_dir <- file.path(exttools_dir, "corenlp")
+  if (!file.exists(corenlp_dir)) dir.create(corenlp_dir)
+  
+  corenlp_url <- "http://nlp.stanford.edu/software/stanford-corenlp-full-2017-06-09.zip"
+  zipfile <- file.path(corenlp_dir, basename(corenlp_url))
+  download.file(url = corenlp_url, destfile = zipfile)
+  unzip(zipfile = zipfile, exdir = corenlp_dir)
+  file.remove(zipfile)
+  
+  options(
+    bignlp.corenlp_dir = system.file(
+      package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2017-06-09"
+      )
+    )
+  
+  languages <- list(
+    de = function(){
+      message("... installing model files for: German")
+      german_jar_url <- "http://nlp.stanford.edu/software/stanford-german-corenlp-2017-06-09-models.jar"
+      german_jar <- file.path(corenlp_dir, "stanford-corenlp-full-2017-06-09", basename(german_jar_url))
+      download.file(url = german_jar_url, destfile = german_jar)
+      unzip(german_jar, files = "StanfordCoreNLP-german.properties")
+      zip(zipfile = german_jar, files = "StanfordCoreNLP-german.properties", flags = "-d")
+    },
+    en = function(){
+      message("... installing model files for: English")
+      english_jar_url <- "http://nlp.stanford.edu/software/stanford-english-corenlp-2018-02-27-models.jar"
+      english_jar <- file.path(corenlp_dir, "stanford-corenlp-full-2017-06-09", basename(english_jar_url))
+      download.file(url = english_jar_url, destfile = english_jar)
+      unzip(english_jar, files = "StanfordCoreNLP.properties")
+      zip(zipfile = english_jar, files = "StanfordCoreNLP.properties", flags = "-d")
+    }
+  )
+  for (language in lang) languages[[lang]]()
+}
 
+#' Get path to properties file.
+#' 
+#' @param lang the language
+#' @param fast fast property file?
+#' @export corenlp_get_properties_file
+corenlp_get_properties_file <- function(lang = c("en", "de"), fast = TRUE){
+  
+  if (lang == "en" && fast == TRUE)
+    return(system.file(package = "bignlp", "extdata", "properties_files", "StanfordCoreNLP-english-fast.properties"))
+  
+  if (lang == "de" && fast == TRUE)
+    return(system.file(package = "bignlp", "extdata", "properties_files", "corenlp-german-fast.properties"))
+  
+}
 
-
+#' Get directory with CoreNLP jar files.
+#' 
+#' @export corenlp_get_jar_dir
+corenlp_get_jar_dir <- function(){
+  if (nchar(Sys.getenv("CORENLP_DIR")) > 0L){
+    Sys.getenv("CORENLP_DIR")
+  } else if (file.exists(system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2017-06-09"))){
+    system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2017-06-09")
+  } else if (file.exists(system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"))){
+    system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31")
+  } else {
+    ""
+  }
+}

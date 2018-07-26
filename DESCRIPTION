@@ -1,7 +1,7 @@
 Package: bignlp
 Type: Package
 Title: Robust and Parallel NLP for Big Data
-Version: 0.0.3
+Version: 0.0.4
 Date: 2018-07-26
 Author: Andreas Blaette
 Maintainer: Andreas Blaette <andreas.blaette@uni-due.de>
@@ -26,8 +26,9 @@ LazyData: yes
 License: GPL-3
 Encoding: UTF-8
 Collate:
-    'corenlp.R'
     'AnnotatorCoreNLP.R'
+    'bignlp.R'
+    'corenlp.R'
     'json.R'
     'pretty_print.R'
     'purge.R'

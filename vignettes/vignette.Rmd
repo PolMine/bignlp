@@ -45,11 +45,7 @@ Check the presence of the CoreNLP code jar as follows, and perform the download,
 
 ```{r}
 library(bignlp)
-if (getOption("bignlp.corenlp_dir") == ""){
-  library(cleanNLP)
-  cnlp_download_corenlp(type = "en")
-  options(bignlp.corenlp_dir = system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"))
-}
+if (getOption("bignlp.corenlp_dir") == "") corenlp_install(type = "en")
 ```
 
 Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the `system.file()`-function to find out where that is.
@@ -184,8 +180,7 @@ nano StanfordCoreNLP-german.properties
 Note that the bignlp package already includes a properties file that has been edited for annotating large amounts of data quickly. You will find it as follows:
 
 ```{r}
-prop_german <- system.file(package = "bignlp", "extdata", "properties_files", "corenlp-german-fast.properties")
-options(bignlp.properties_file = prop_german)
+options(bignlp.properties_file = corenlp_get_properties_file(lang = "de", fast = TRUE))
 ```
 
 Again, note that the properties file in the German model jar needs to be removed in the manner described before to make using the handcrafted properties file possible.
