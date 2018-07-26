@@ -21,6 +21,7 @@ Suggests:
     knitr,
     cwbtools,
     magrittr
+Additional_repositories: https://polmine.github.io/drat/
 VignetteBuilder: knitr
 LazyData: yes
 License: GPL-3
