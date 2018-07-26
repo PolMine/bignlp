@@ -31,7 +31,7 @@ Before we introduce code for realistic workflows using this approach, we explain
 
 ## Installation
 
-At this stage, the bignlp package uses [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/). The CoreNLP code jar and models for specific languages can be downloaded from the project website without restrictions. It is important to have the correct version of Java installed. See the the Stanford CoreNLP project website for further details. To check which version R uses, use the follwing code:
+At this stage, the bignlp package uses [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/). The CoreNLP code jar and models for specific languages can be downloaded from the project website without restrictions. It is important to have the correct version of Java installed. See the the Stanford CoreNLP project website for further details. To check which Java version is used by R, run the follwing code:
 
 ```{r, eval = FALSE}
 library(rJava)
@@ -45,7 +45,7 @@ Check the presence of the CoreNLP code jar as follows, and perform the download,
 
 ```{r}
 library(bignlp)
-if (getOption("bignlp.corenlp_dir") == "") corenlp_install(type = "en")
+if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "en")
 ```
 
 Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the `system.file()`-function to find out where that is.
