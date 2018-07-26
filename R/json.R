@@ -11,6 +11,7 @@
 #' @param threads integer
 #' @param progress logical 
 #' @param verbose logical
+#' @return A character vector with the target files.
 #' @export corenlp_parse_ndjson
 #' @rdname corenlp_json
 #' @examples
@@ -44,7 +45,7 @@ corenlp_parse_ndjson = function(x, cols_to_keep = c("sentence", "index", "word",
   if (file.info(x[1])[["isdir"]]){
     started <- Sys.time()
     ndjson_files <- Sys.glob(sprintf("%s/*.ndjson", x))
-    if (length(ndjson_files) == 0) stop("no ndjson files in directory x")
+    if (length(ndjson_files) == 0L) stop("no ndjson files in directory x")
     message("... number of files to process: ", length(ndjson_files))
     # ensure that filenames are processed in the correct order
     if (all(grepl("\\d+", basename(ndjson_files)))){
@@ -83,7 +84,6 @@ corenlp_parse_ndjson = function(x, cols_to_keep = c("sentence", "index", "word",
     }
     return( Sys.time() - started )
   } else {
-    started <- Sys.time()
     if (!progress){
       if (is.null(destfile)){
         i <- 1L
@@ -103,7 +103,7 @@ corenlp_parse_ndjson = function(x, cols_to_keep = c("sentence", "index", "word",
         }
         close(con)
       }
-      if (!is.null(destfile)) return( Sys.time() - started ) else return( do.call(rbind, y) )
+      if (!is.null(destfile)) return( destfile ) else return( do.call(rbind, y) )
     } else {
       if (is.null(destfile)){
         destfile <- sapply(1L:length(x), function(i) NULL)
@@ -120,7 +120,7 @@ corenlp_parse_ndjson = function(x, cols_to_keep = c("sentence", "index", "word",
           df
         }
       )
-      if (is.null(unlist(destfile))) return( Sys.time() - started ) else return(do.call(rbind, y))
+      if (!all(is.null(unlist(destfile)))) return( destfile ) else return(do.call(rbind, y))
     }
   }
 }

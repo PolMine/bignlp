@@ -17,6 +17,8 @@
 #' @param method The output generated, either "json" (default), "txt", or "xml".
 #' @param progress Logical, whether to show progress bar.
 #' @param verbose Logical, whether to output messages.
+#' @return The target files will be returned, so that they can serve as input to
+#'   \code{corenlp_parse_ndjson}.
 #' @importFrom pbapply pblapply
 #' @importFrom parallel mclapply
 #' @importFrom text2vec split_into
@@ -46,7 +48,7 @@
 #'   progress = FALSE
 #'   )
 #' @export corenlp_annotate
-corenlp_annotate <- function(x, destfile = NULL, properties_file, corenlp_dir, method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
+corenlp_annotate <- function(x, destfile = NULL, corenlp_dir = getOption("bignlp.corenlp_dir"), properties_file = getOption("bignlp.properties_file"), method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
   
   if (is.character(x)){
     if (all(file.exists(x))){
@@ -74,7 +76,7 @@ corenlp_annotate <- function(x, destfile = NULL, properties_file, corenlp_dir, m
     )
     .annotate <- function(i) Annotator$annotate(x[["text"]][i], id = x[i][["id"]])
     if (progress) pblapply(1L:nrow(x), .annotate) else lapply(1L:nrow(x), .annotate)
-    if (return_string) return(readLines(destfile)) else return(Sys.time() - started)
+    if (return_string) return( readLines(destfile) ) else return( destfile )
   } else if (threads > 1L){
     java_status <- try(rJava::.jcheck(), silent = TRUE)
     if (class(java_status)[1] != "try-error")
@@ -97,8 +99,9 @@ corenlp_annotate <- function(x, destfile = NULL, properties_file, corenlp_dir, m
         return( outfiles[i] )
       }, mc.cores = threads
     )
+    return( destfile )
   }
-  NULL
+  invisible( NULL )
 }
 
 

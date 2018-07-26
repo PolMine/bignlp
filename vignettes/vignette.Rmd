@@ -14,49 +14,62 @@ editor_options:
   
 ## The rationale of the bignlp-package
 
-There are a few packages for Natural Language Processing (NLP). These packages offer interfaces to non-R standard tools such as OpenNLP, Stanford CoreNLP, or spaCy. The cleanNLP package manages to combine these tools in one framework. So why have another NLP R package?
+There are already a few packages for Natural Language Processing (NLP). These packages are not "pure R" NLP-tools. OpenNLP, coreNLP, or spaCy offer interfaces to standard NLP tools implemented in other programming languages. The cleanNLP R package manages to combine these external tools in one coherent framework. So why yet another NLP R package?
 
-Existing packages are not good at dealing with text when it becomes really large. The bignlp-package makes it possible to use a standard tool (Stanford CoreNLP) in parallel mode. And it takes a by-line approach. Input can be read in a line-by-line manner, so that huge amounts need not be kept in memory.
+The existing packages are not good at dealing with large volumes of text. The thrust of the bignlp-package is to use a standard tool (Stanford CoreNLP) in parallel mode. To be parsimonious with the memory available, it implements  line-by-line processing, so that annotated data is not be kept in memory.
+
+More technically speaking, there are three steps envisaged by in a bignlp workflow:
+
+  1. Input data (XML, for instance) needs to be dissected into a two-column `data.table` with chunks of text (column "text") and a chunk id (column "id"). The purpose of the id is to serve as a link to relate chunks with metadata that is stored in another table (and that also has an id column).
+  
+  2. The input `data.table` is processed in single- or multi-threaded mode, using Stanford CoreNLP. The output of the `corenlp_annotate()`-function is written to one or several NDJSON files (NDJSON stands for newline-delimited JSON). Each line of the NDJSON files is a valid JSON string with the annotation data, and including the id.
+  
+  3. The NDJSON files are processed a line-by-line manner, resulting in a `data.table` with the chunk ids, and the tokenized and annotated text, of course.
+
+Before we introduce code for realistic workflows using this approach, we explain the installation requirements.
 
 
 ## Installation
 
-It is not difficult to download Stanford CoreNLP. The easiest way to get it, is to use the installation mechanism included in the cleanNLP package. In the following example, we will annotate a few documents from the UN General Assembly corpus, so we need the English annotation tools.
+At this stage, the bignlp package uses [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/). The CoreNLP code jar and models for specific languages can be downloaded from the project website without restrictions. It is important to have the correct version of Java installed. See the the Stanford CoreNLP project website for further details. To check which version R uses, use the follwing code:
 
-If the java files have been downloaded, this is how to find out where they are.
-
-```{r}
-corenlp_dir <- system.file(
-  package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"
-  )
+```{r, eval = FALSE}
+library(rJava)
+.jinit()
+.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
 ```
 
-If the download has not yet been performed, do it now.
+The easiest way to download Stanford CoreNLP is to (ab)use the installation mechanism included in the cleanNLP package. In the following example, we will annotate a few documents from the UN General Assembly corpus, so we need the English annotation tools.
+
+Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary.
 
 ```{r}
-library(cleanNLP)
-if (length(corenlp_dir) == 0){
-  cleanNLP::cnlp_download_corenlp(type = "en")
-  corenlp_dir <- system.file(
-  package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"
-  )
+library(bignlp)
+if (getOption("bignlp.corenlp_dir") == ""){
+  library(cleanNLP)
+  cnlp_download_corenlp(type = "en")
+  options(bignlp.corenlp_dir = system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"))
 }
 ```
 
-We need to know the directory with the jar files of CoreNLP, and the location of a properties file. Use the `system.file()`-function to find out where that is.
+Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the `system.file()`-function to find out where that is.
 
 ```{r}
-properties_english_fast <- system.file(
-  package = "cleanNLP", "extdata", "StanfordCoreNLP-english-fast.properties"
+options(
+  bignlp.properties_file = system.file(package = "cleanNLP", "extdata", "StanfordCoreNLP-english-fast.properties")
 )
 ```
 
+Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. CoreNLP and properties files can be stored anywhere on your system, and functions of the bignlp package take the paths as input.
 
-## Getting started
 
-To be able to parallelize the annotation, rJava may not be loaded before initializing the CoreNLP annotator. This is a known [rJava issue](https://github.com/s-u/rJava/issues/25). There is an unexported function `rJava:::.check.JVM()` in the rJava package that you may use in an interactive session to check whether the JVM has been initialized already.
+## Preparations for text annotation
 
-The JVMs initialized for tagging in parallel need a lot of memory. Set it before doing anything else. 
+To be able to parallelize the annotation, *rJava may not be loaded* before initializing the CoreNLP annotator. This is a known [rJava issue](https://github.com/s-u/rJava/issues/25). It is important to consider that other packages may have instantiated a JVM already. The result may be that you cannot assign sufficient memory to the newly instantiated JVMs, the model cannot be loaded, and the process will fail.
+
+There is an unexported function `rJava:::.check.JVM()` in the rJava package that you may use in an interactive session to check whether the JVM has been initialized already.
+
+The JVMs initialized for tagging in parallel need a lot of memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else. 
 
 ```{r load_ctk, eval = FALSE}
 options(java.parameters = "-Xmx4g") # needs to be set before a JVM is initialized.
@@ -75,11 +88,10 @@ tsv_file_tagged <- file.path(outdir, "unga_tagged.tsv")
 Finally, we load bignlp.
 
 ```{r}
-library(bignlp)
 packageVersion("bignlp")
 ```
 
-The packages we will also need is the data.table package, mostly for its super-fast fread and fwrite functions.
+The packages we will also need is the `data.table` package, mostly for its impressively `fread` and `fwrite` functions.
 
 ```{r}
 library(data.table)
@@ -104,28 +116,13 @@ fwrite(x = CD$chunktable, file = tsv_file)
 Second, we call the tagger, producing NDJSON output.
 
 ```{r}
-y <- corenlp_annotate(
-  x = tsv_file,
-  destfile = ndjson_file,
-  properties_file = properties_english_fast,
-  corenlp_dir = corenlp_dir,
-  threads = 1L,
-  progress = FALSE
-)
+filenames_ndjson <- corenlp_annotate(x = tsv_file, destfile = ndjson_file)
 ```
 
 The NDJSON output is parsed into a table ... 
 
 ```{r}
-corenlp_parse_ndjson(
-  x = ndjson_file,
-  cols_to_keep = c("sentence", "index", "word", "pos", "lemma"),
-  destfile = tsv_file_tagged,
-  logfile = NULL,
-  threads = 1L,
-  progress = TRUE,
-  verbose = TRUE
-  )
+filenames_tsv_tagged <- corenlp_parse_ndjson(x = ndjson_file, destfile = tsv_file_tagged)
 ```
 
 Finally, let us have a look at the table that is on disk.
@@ -134,7 +131,21 @@ Finally, let us have a look at the table that is on disk.
 y <- data.table::fread(tsv_file_tagged)
 ```
 
-Obviously, we can fill the chunktable slot of our CorpusData object with this table.
+This is exactly what we need to fill the `tokenstream`-slot of our CorpusData object.
+
+The functions are designed to work in a pipe, so we can achieve the same result as follows:
+
+```{r}
+library(magrittr)
+library(data.table)
+
+dt <- corenlp_annotate(x = tsv_file, destfile = ndjson_file) %>% 
+  corenlp_parse_ndjson(destfile = tsv_file_tagged) %>%
+  lapply(fread) %>%
+  rbindlist()
+```
+
+
 
 ## Conclusions
 

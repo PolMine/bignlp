@@ -29,6 +29,9 @@ string string fails}
 
 \item{verbose}{logical}
 }
+\value{
+A character vector with the target files.
+}
 \description{
 Turn json or ndjson output from Stanford CoreNLP into tabular format
 

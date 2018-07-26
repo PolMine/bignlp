@@ -4,9 +4,10 @@
 \alias{corenlp_annotate}
 \title{Annotate a string.}
 \usage{
-corenlp_annotate(x, destfile = NULL, properties_file, corenlp_dir,
-  method = "json", threads = 1L, progress = TRUE, preclean = TRUE,
-  verbose = TRUE)
+corenlp_annotate(x, destfile = NULL,
+  corenlp_dir = getOption("bignlp.corenlp_dir"),
+  properties_file = getOption("bignlp.properties_file"), method = "json",
+  threads = 1L, progress = TRUE, preclean = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{x}{A \code{data.table} (required to have the columns 'id' and 'text'),
@@ -15,9 +16,9 @@ with two columns, 'id' and 'text'.}
 
 \item{destfile}{An output file, if threads > 1, a directory where ndjson files will be stored.}
 
-\item{properties_file}{A properties file to configure annotator.}
-
 \item{corenlp_dir}{The directory where corenlp resides.}
+
+\item{properties_file}{A properties file to configure annotator.}
 
 \item{method}{The output generated, either "json" (default), "txt", or "xml".}
 
@@ -28,6 +29,10 @@ with two columns, 'id' and 'text'.}
 \item{preclean}{Logical, whether to preprocess string.}
 
 \item{verbose}{Logical, whether to output messages.}
+}
+\value{
+The target files will be returned, so that they can serve as input to
+  \code{corenlp_parse_ndjson}.
 }
 \description{
 Use CoreNLP to annotate strings.
