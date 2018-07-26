@@ -150,3 +150,43 @@ dt <- corenlp_annotate(x = tsv_file, destfile = ndjson_file) %>%
 ## Conclusions
 
 Enjoy!
+
+## Appendix: Installing CoreNLP
+
+## Installing Stanford CoreNLP
+
+A good and conventional place for installing a tool such as CoreNLP is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file.
+
+```{sh eval = FALSE}
+mkdir /opt/stanford-corenlp
+cd /opt/stanford-corenlp
+wget http://nlp.stanford.edu/software/stanford-corenlp-full-2017-06-09.zip
+unzip stanford-corenlp-full-2017-06-09.zip
+rm stanford-corenlp-full-2017-06-09.zip
+```
+
+In the PolMine Project, we very often work with German data. So we illustrate getting models for a specific language for German. We go into the CoreNLP directory and download the model to this place.
+
+```{sh, eval = FALSE}
+cd stanford-corenlp-full-2017-06-09
+wget http://nlp.stanford.edu/software/stanford-german-corenlp-2017-06-09-models.jar
+```
+
+The jar file with the model include a default properties file for processing German data. So if you want to configure the parser yourself, you may encounter the problem that this properties file included in the jar will override any other properties file you may want to use. One solution is to extract the properties file from the jar, remove it from the jar and edit it by hand to serve your needs.
+
+```{sh, eval = FALSE}
+unzip stanford-german-corenlp-2017-06-09-models.jar StanfordCoreNLP-german.properties
+mv StanfordCoreNLP-german.properties ..
+zip -d stanford-german-corenlp-2017-06-09-models.jar StanfordCoreNLP-german.properties
+nano StanfordCoreNLP-german.properties 
+```
+
+Note that the bignlp package already includes a properties file that has been edited for annotating large amounts of data quickly. You will find it as follows:
+
+```{r}
+prop_german <- system.file(package = "bignlp", "extdata", "properties_files", "corenlp-german-fast.properties")
+options(bignlp.properties_file = prop_german)
+```
+
+Again, note that the properties file in the German model jar needs to be removed in the manner described before to make using the handcrafted properties file possible.
+
