@@ -16,17 +16,16 @@
 #' @rdname corenlp_json
 #' @examples
 #' ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
-#' cols <- c("sentence", "index", "word", "pos", "lemma")
 #' json_string <- readLines(ndjson_file)
 #' dt <- corenlp_parse_json(json_string, cols_to_keep = cols, progress = FALSE)
 #' 
-#' dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = NULL, progress = FALSE)
-#' dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = NULL, progress = TRUE)
+#' dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = NULL, progress = FALSE)
+#' dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = NULL, progress = TRUE)
 #' 
 #' tsv_file <- tempfile()
-#' dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = tsv_file, progress = FALSE)
+#' dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = tsv_file, progress = FALSE)
 #' y <- data.table::fread(tsv_file)
-#' dt <- corenlp_parse_ndjson(x = ndjson_file, cols_to_keep = cols, destfile = tsv_file, progress = TRUE)
+#' dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = tsv_file, progress = TRUE)
 #' y <- data.table::fread(tsv_file)
 #' 
 #' ndjson_dir <- system.file(package = "bignlp", "extdata", "ndjson")

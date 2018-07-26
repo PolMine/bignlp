@@ -27,8 +27,8 @@ LazyData: yes
 License: GPL-3
 Encoding: UTF-8
 Collate:
-    'AnnotatorCoreNLP.R'
     'bignlp.R'
+    'AnnotatorCoreNLP.R'
     'corenlp.R'
     'json.R'
     'pretty_print.R'

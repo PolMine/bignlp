@@ -1,3 +1,6 @@
+#' @include bignlp.R
+NULL
+
 #' Stanford CoreNLP Annotator Class.
 #' 
 #' @field tagger Class from Stanford CoreNLP to annotate text
@@ -25,7 +28,11 @@
 #' 
 #' txt <- "Das ist ein Satz. Und das ist ein zweiter Satz."
 #' 
-#' CNLP <- AnnotatorCoreNLP$new(method = "json", corenlp_dir = corenlp_dir, properties_file = prop_file)
+#' CNLP <- AnnotatorCoreNLP$new(
+#'   method = "json",
+#'   corenlp_dir = corenlp_dir,
+#'   properties_file = prop_file
+#'   )
 #' CNLP$annotate(txt = txt)
 #' CNLP$annotate(txt = txt, id = 15L)
 #' 
