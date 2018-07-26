@@ -18,7 +18,8 @@ the bignlp package itself, its presence in the cleanNLP package is checked.
 If it has not been found, the option bignlp.corenlp_dir is empty ("").
 }
 \examples{
-if (getOption("bignlp.corenlp_dir") == "") corenlp_install(type = "en")
+Sys.setenv("_JAVA_OPTIONS" = "")
+if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "de")
 }
 \author{
 Andreas Blaette

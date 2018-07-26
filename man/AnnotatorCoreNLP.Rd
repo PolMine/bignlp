@@ -32,9 +32,12 @@ Stanford CoreNLP Annotator Class.
 }}
 
 \examples{
+Sys.setenv("_JAVA_OPTIONS" = "")
 options(java.parameters = "-Xmx4g")
-corenlp_dir <- "/opt/stanford-corenlp/stanford-corenlp-full-2017-06-09"
-prop_file <- "/opt/stanford-corenlp/StanfordCoreNLP-german.properties"
+if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "de")
+
+corenlp_dir <- corenlp_get_jar_dir()
+prop_file <- corenlp_get_properties_file(lang = "de")
 
 txt <- "Das ist ein Satz. Und das ist ein zweiter Satz."
 

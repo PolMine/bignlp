@@ -15,5 +15,6 @@
 #' @rdname bignlp
 #' @author Andreas Blaette
 #' @examples
-#' if (getOption("bignlp.corenlp_dir") == "") corenlp_install(type = "en")
+#' Sys.setenv("_JAVA_OPTIONS" = "")
+#' if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "de")
 NULL
