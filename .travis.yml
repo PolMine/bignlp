@@ -3,7 +3,7 @@ cache: packages
 
 before_install:
   - Rscript -e 'install.packages(pkgs = c("cleanNLP", "covr", "RCurl"))'
-  - Rscript -e 'cleanNLP::cnlp_download_corenlp(type = "en")'
+  - Rscript -e 'library(cleanNLP); cnlp_download_corenlp(type = "en")'
 
 warnings_are_errors: false
 
