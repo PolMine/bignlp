@@ -30,7 +30,7 @@ options(java.parameters = "-Xmx4g")
 txt <- "Karadžiš!"
 corenlp_dir <- system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31")
 corenlp_dir <- "/opt/stanford-corenlp/stanford-corenlp-full-2017-06-09"
-properties_german_fast <- system.file(package = "bignlp", "extdata", "properties_files", "corenlp-german-fast.properties")
+properties_german_fast <- corenlp_get_properties_file(lang = "de")
 y <- corenlp_annotate(
   x = data.table(id = 1L:length(txt), text = txt),
   properties_file = properties_german_fast, corenlp_dir = corenlp_dir,

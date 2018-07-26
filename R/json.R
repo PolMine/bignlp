@@ -17,7 +17,7 @@
 #' @examples
 #' ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
 #' json_string <- readLines(ndjson_file)
-#' dt <- corenlp_parse_json(json_string, cols_to_keep = cols, progress = FALSE)
+#' dt <- corenlp_parse_json(json_string, progress = FALSE)
 #' 
 #' dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = NULL, progress = FALSE)
 #' dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = NULL, progress = TRUE)
@@ -30,13 +30,13 @@
 #' 
 #' ndjson_dir <- system.file(package = "bignlp", "extdata", "ndjson")
 #' tsv_file <- tempfile()
-#' corenlp_parse_ndjson(x = ndjson_dir, cols_to_keep = cols, destfile = tsv_file, threads = 1L)
+#' corenlp_parse_ndjson(x = ndjson_dir, destfile = tsv_file, threads = 1L)
 #' y <- data.table::fread(tsv_file)
 #' tsv_dir <- tempdir()
 #' tsv_files <- sprintf("%s/reuters_annotated_%d.tsv", tsv_dir, 1L:4L)
 #' corenlp_parse_ndjson(
 #'   x = list.files(ndjson_dir, full.names = TRUE),
-#'   cols_to_keep = cols, destfile = tsv_files,
+#'   destfile = tsv_files,
 #'   threads = 1L
 #'   )
 #' dt <- data.table::rbindlist(lapply(tsv_files, data.table::fread))
