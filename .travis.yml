@@ -4,6 +4,7 @@ cache: packages
 
 before_install:
   - Rscript -e 'install.packages("rmarkdown")'
+  - Rscript -e 'install.packages("cwbtools", repos = "https://polmine.github.io/drat/")'
 
 r_packages:
   - covr
