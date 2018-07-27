@@ -1,0 +1,19 @@
+[![License](https://img.shields.io/aur/license/yaourt.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
+[![Travis-CI Build Status](https://api.travis-ci.org/PolMine/bignlp.svg?branch=master)](https://travis-ci.org/PolMine/bignlp)
+[![codecov](https://codecov.io/gh/PolMine/bignlp/branch/master/graph/badge.svg)](https://codecov.io/gh/PolMine/bignlp/branch/master)
+
+## The 'bignlp'-package: Objectives
+
+There are already a few packages for Natural Language Processing (NLP). These packages are not "pure R" NLP-tools. OpenNLP, coreNLP, or spaCy offer interfaces to standard NLP tools implemented in other programming languages. The cleanNLP R package manages to combine these external tools in one coherent framework. So why yet another NLP R package?
+
+The existing packages are not good at dealing with large volumes of text. The thrust of the bignlp-package is to use a standard tool (Stanford CoreNLP) in parallel mode. To be parsimonious with the memory available, it implements  line-by-line processing, so that annotated data is not be kept in memory.
+
+## Workflow
+
+There are three steps envisaged by in a bignlp workflow:
+
+  1. Input data (XML, for instance) needs to be dissected into a two-column `data.table` with chunks of text (column "text") and a chunk id (column "id"). The purpose of the id is to serve as a link to relate chunks with metadata that is stored in another table (and that also has an id column).
+  
+  2. The input `data.table` is processed in single- or multi-threaded mode, using Stanford CoreNLP. The output of the `corenlp_annotate()`-function is written to one or several NDJSON files (NDJSON stands for newline-delimited JSON). Each line of the NDJSON files is a valid JSON string with the annotation data, and including the id.
+  
+  3. The NDJSON files are processed a line-by-line manner, resulting in a `data.table` with the chunk ids, and the tokenized and annotated text, of course.

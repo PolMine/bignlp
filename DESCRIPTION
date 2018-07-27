@@ -1,11 +1,10 @@
 Package: bignlp
 Type: Package
-Title: Robust and Parallel NLP for Big Data
+Title: NLP for Big Corpora
 Version: 0.0.4
 Date: 2018-07-26
-Author: Andreas Blaette
-Maintainer: Andreas Blaette <andreas.blaette@uni-due.de>
-Description: Robust and Parallel NLP for Big Data.
+Authors@R: person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de")
+Description: Parallel line-by-line NLP processing for big corpora using Stanford CoreNLP.
 Imports:
     data.table,
     parallel,
@@ -22,6 +21,7 @@ Suggests:
     cwbtools,
     magrittr
 Additional_repositories: https://polmine.github.io/drat/
+BugReports: https://github.com/PolMine/bignlp/issues
 VignetteBuilder: knitr
 LazyData: yes
 License: GPL-3
