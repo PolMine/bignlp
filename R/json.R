@@ -1,4 +1,4 @@
-#' Parse json or ndjson output.
+#' Parse NDJSON output.
 #' 
 #' Turn json or ndjson output from Stanford CoreNLP into tabular format
 #' 
@@ -17,7 +17,7 @@
 #' @examples
 #' ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
 #' json_string <- readLines(ndjson_file)
-#' dt <- corenlp_parse_json(json_string, progress = FALSE)
+#' dt <- corenlp_parse_json(json_string, cols = c("word", "pos", "lemma"), progress = FALSE)
 #' 
 #' dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = NULL, progress = FALSE)
 #' dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = NULL, progress = TRUE)

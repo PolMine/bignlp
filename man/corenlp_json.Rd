@@ -3,7 +3,7 @@
 \name{corenlp_parse_ndjson}
 \alias{corenlp_parse_ndjson}
 \alias{corenlp_parse_json}
-\title{Parse json or ndjson output.}
+\title{Parse NDJSON output.}
 \usage{
 corenlp_parse_ndjson(x, cols_to_keep = c("sentence", "index", "word", "pos",
   "lemma"), destfile = NULL, logfile = NULL, threads = 1L,
@@ -52,7 +52,7 @@ The JSON results of applying the Stanford CoreNLP annotators can be
 \examples{
 ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
 json_string <- readLines(ndjson_file)
-dt <- corenlp_parse_json(json_string, progress = FALSE)
+dt <- corenlp_parse_json(json_string, cols = c("word", "pos", "lemma"), progress = FALSE)
 
 dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = NULL, progress = FALSE)
 dt <- corenlp_parse_ndjson(x = ndjson_file, destfile = NULL, progress = TRUE)

@@ -1,8 +1,14 @@
 language: r
 cache: packages
 
+
 before_install:
-  - Rscript -e 'install.packages(pkgs = "covr")'
+  - Rscript -e 'install.packages("rmarkdown")'
+
+r_packages:
+  - covr
+  - rmarkdown
+  - testthat
 
 warnings_are_errors: false
 

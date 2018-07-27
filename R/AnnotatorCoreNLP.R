@@ -23,20 +23,20 @@ NULL
 #' options(java.parameters = "-Xmx4g")
 #' if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "de")
 #' 
-#' corenlp_dir <- corenlp_get_jar_dir()
-#' prop_file <- corenlp_get_properties_file(lang = "de")
-#' 
 #' txt <- "Das ist ein Satz. Und das ist ein zweiter Satz."
 #' 
 #' CNLP <- AnnotatorCoreNLP$new(
 #'   method = "json",
-#'   corenlp_dir = corenlp_dir,
-#'   properties_file = prop_file
+#'   corenlp_dir = getOption("bignlp.corenlp_dir"),
+#'   properties_file = corenlp_get_properties_file(lang = "de")
 #'   )
 #' CNLP$annotate(txt = txt)
 #' CNLP$annotate(txt = txt, id = 15L)
 #' 
-#' CNLP <- AnnotatorCoreNLP$new(method = "xml", corenlp_dir = corenlp_dir, properties_file = prop_file)
+#' CNLP <- AnnotatorCoreNLP$new(
+#'   method = "xml",
+#'   properties_file = corenlp_get_properties_file(lang = "de")
+#' )
 #' CNLP$annotate(txt = txt)
 AnnotatorCoreNLP <- R6Class(
   
@@ -55,8 +55,8 @@ AnnotatorCoreNLP <- R6Class(
 
 
     initialize = function(
-      corenlp_dir = system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"),
-      properties_file = system.file(package = "coreNLP", "extdata", "StanfordCoreNLP-german.properties"), 
+      corenlp_dir = getOption("bignlp.corenlp_dir"),
+      properties_file, 
       method = c("txt", "json", "xml"),
       cols_to_keep = c("sentence", "id", "token", "pos", "ner"),
       destfile = NULL
