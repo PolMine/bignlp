@@ -13,6 +13,7 @@
 #' @name bignlp
 #' @docType package
 #' @rdname bignlp
+#' @import methods
 #' @author Andreas Blaette
 #' @examples
 #' Sys.setenv("_JAVA_OPTIONS" = "")

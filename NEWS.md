@@ -1,3 +1,10 @@
+# bignlp 0.0.5
+
+* progess report for multicore operation using jobstatus package
+* byline processing for corenlp_annotate,character-method
+* `chunk_table_get_nrow`-function
+* `chunk_table_split`-function
+
 # bignlp 0.0.4
 
 * Function corenlp_install added to prepre Travis CI checks

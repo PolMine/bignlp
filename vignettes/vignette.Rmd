@@ -112,13 +112,13 @@ fwrite(x = CD$chunktable, file = tsv_file)
 Second, we call the tagger, producing NDJSON output.
 
 ```{r}
-filenames_ndjson <- corenlp_annotate(x = tsv_file, destfile = ndjson_file)
+filenames_ndjson <- corenlp_annotate(input =tsv_file, output = ndjson_file)
 ```
 
 The NDJSON output is parsed into a table ... 
 
 ```{r}
-filenames_tsv_tagged <- corenlp_parse_ndjson(x = ndjson_file, destfile = tsv_file_tagged)
+filenames_tsv_tagged <- corenlp_parse_ndjson(input =ndjson_file, output = tsv_file_tagged)
 ```
 
 Finally, let us have a look at the table that is on disk.
@@ -135,8 +135,8 @@ The functions are designed to work in a pipe, so we can achieve the same result 
 library(magrittr)
 library(data.table)
 
-dt <- corenlp_annotate(x = tsv_file, destfile = ndjson_file) %>% 
-  corenlp_parse_ndjson(destfile = tsv_file_tagged) %>%
+dt <- corenlp_annotate(input =tsv_file, output = ndjson_file) %>% 
+  corenlp_parse_ndjson(output = tsv_file_tagged) %>%
   lapply(fread) %>%
   rbindlist()
 ```
