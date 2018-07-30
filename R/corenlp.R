@@ -170,15 +170,23 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
 #'   number of threads.
 #' @examples
 #' # Illustration of byline-mode, with and without progress bar.
+#' # Single-threaded
 #' 
 #' chunk_table <- system.file(package = "bignlp", "extdata", "tsv", "unga.tsv")
 #' options("bignlp.properties_file" = corenlp_get_properties_file(lang = "en", fast = "TRUE"))
 #' tmp_outfile <- corenlp_annotate(input = chunk_table, byline = TRUE, progress = FALSE)
 #' tmp_ndjsonoutfile <- corenlp_annotate(input = chunk_table, byline = TRUE, progress = TRUE)
 #' 
+#' # Multi-threading
+#' \dontrun{
 #' unga_subsets <- chunk_table_split(chunk_table, output = NULL, n = 2L, verbose = TRUE)
-#' unga_ndjson_files <- corenlp_annotate(input = unga_subsets, threads = 2L, byline = TRUE, progress = FALSE)
-#' unga_ndjson_files <- corenlp_annotate(input = unga_subsets, threads = 2L, byline = TRUE, progress = TRUE)
+#' unga_ndjson_files <- corenlp_annotate(
+#'   input = unga_subsets, threads = 2L, byline = TRUE, progress = FALSE
+#' )
+#' unga_ndjson_files <- corenlp_annotate(
+#'   input = unga_subsets, threads = 2L, byline = TRUE, progress = TRUE
+#' )
+#' }
 #' @importFrom progress progress_bar
 #' @rdname corenlp_annotate
 setMethod("corenlp_annotate", "character", function(input, output = NULL, corenlp_dir = getOption("bignlp.corenlp_dir"), properties_file = getOption("bignlp.properties_file"), byline = FALSE, method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){

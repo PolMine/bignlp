@@ -28,7 +28,7 @@ purge <- function(x, replacements, progress = TRUE){
 #' corenlp_dir <- "/opt/stanford-corenlp/stanford-corenlp-full-2017-06-09"
 #' properties_german_fast <- corenlp_get_properties_file(lang = "de")
 #' y <- corenlp_annotate(
-#'   x = data.table(id = 1L:length(txt), text = txt),
+#'   input = data.table(id = 1L:length(txt), text = txt),
 #'   properties_file = properties_german_fast, corenlp_dir = corenlp_dir,
 #'   )
 corenlp_postprocessing_replacements <- list(
