@@ -64,6 +64,11 @@ chunk_table_split <- function(input, output = NULL, n, verbose = TRUE){
     file.info(input)$isdir == FALSE
     )
   
+  if (n == 1L){
+    message("... with n = 1, no splitting required: returning input filename")
+    return(input)
+  }
+  
   if (verbose) message("... number of rows in input file: ", appendLF = FALSE)
   n_lines_input <- chunk_table_get_nrow(input)
   if (verbose) message(sprintf("%d (including header)", n_lines_input))
