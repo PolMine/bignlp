@@ -1,3 +1,10 @@
+# bignlp 0.0.6
+
+* Unicode character 'non-breaking hyphen' (\u2011) added to corenlp_preprocessing_replacements,
+as it throws a warning from CoreNLP
+* Checks added to corenlp_annotate()-methods whether output files already exists; existing files
+are deleted to avoid that an already existing file is appended unwantedly.
+
 # bignlp 0.0.5
 
 * progess report for multicore operation using jobstatus package

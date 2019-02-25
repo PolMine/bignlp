@@ -40,4 +40,4 @@ corenlp_postprocessing_replacements <- list(
 
 #' @export corenlp_preprocessing_replacements
 #' @rdname purge
-corenlp_preprocessing_replacements <- list(c("\u202F", ""), c("\uFFFD", ""))
+corenlp_preprocessing_replacements <- list(c("\u202F", ""), c("\uFFFD", ""), c("\u2011", "-"))

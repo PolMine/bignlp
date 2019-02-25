@@ -73,6 +73,7 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
   
   if (threads == 1L){
     return_string <- if (is.null(output)) {output <- tempfile(); TRUE} else FALSE
+    if (file.exists(output)) file.remove(output)
     Annotator <- AnnotatorCoreNLP$new(
       method = method,
       destfile = output,
@@ -86,12 +87,15 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
   } else if (threads > 1L){
     
     if (is.null(output)) output <- tempdir()
+    outfiles <- sprintf(file.path(output, "corenlp_%d.ndjson"), 1L:threads)
+    if (any(file.exists(outfiles))) for (x in outfiles[file.exists(outfiles)]) file.remove(x) 
+    
     jvm_is_initialized()
     if (Sys.getenv("RSTUDIO") == "1")
       warning("for some unknown reason, parallelization does not work when RStudio is running")
     
     chunks <- text2vec::split_into(1L:nrow(input), n = threads)
-    outfiles <- sprintf(file.path(output, "corenlp_%d.ndjson"), 1L:threads)
+    
     if (progress == FALSE){
       fn_no_progress <- function(i, progress = FALSE){
         options(java.parameters = "-Xmx4g")
@@ -142,7 +146,10 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
       jobstatus::with_jobstatus({
         
         # create futures
-        fns <- sprintf("fn%d <- jobstatus::subjob_future(expr = fn_with_progress(%d))", 1L:threads, 1L:threads)
+        fns <- sprintf(
+          "fn%d <- jobstatus::subjob_future(expr = fn_with_progress(%d))",
+          1L:threads, 1L:threads
+        )
         eval(parse(text = paste(fns, collapse = ";")))
         
 
@@ -224,6 +231,7 @@ setMethod("corenlp_annotate", "character", function(input, output = NULL, corenl
             sep = "."
           )
         )
+        if (file.exists(output)) file.remove(output)
       }
       if (progress) chunks_total <- chunk_table_get_nrow(input) - 1L # leave header out of calculation
       Annotator <- AnnotatorCoreNLP$new(
@@ -252,6 +260,7 @@ setMethod("corenlp_annotate", "character", function(input, output = NULL, corenl
           tempdir(),
           paste(gsub("^(.*)\\..*?$", "\\1", basename(input)), method, sep = ".")
         )
+        if (file.exists(output)) file.remove(output)
       }
       
       fn <- function(i){
