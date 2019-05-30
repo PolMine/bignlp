@@ -1,3 +1,11 @@
+# bignlp v0.0.7
+
+* updated vignette so that annex explains installation of CoreNLP v3.9.2 (2018-10-05)
+* Hard coded download paths within the package have been updated, so that CoreNLP v3.9.2 (2018-10-05) is downloaded.
+* An error the occurred when multiple files served as input for `corenlp_annotate` has been removed (by wrapping checks whether files already exist into `any`).
+* The properties file for German that excludes dependency parsing has been updated to work with CoreNLP v3.9.2
+
+
 # bignlp 0.0.6
 
 * Unicode character 'non-breaking hyphen' (\u2011) added to corenlp_preprocessing_replacements,

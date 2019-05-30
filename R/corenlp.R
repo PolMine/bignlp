@@ -218,7 +218,7 @@ setMethod("corenlp_annotate", "character", function(input, output = NULL, corenl
       preclean = TRUE, method = "json", threads = 1L,
       progress = TRUE, verbose = TRUE
     )
-  } else if (byline == TRUE){
+  } else if (byline){
     if (length(input) != threads) stop("In byline mode, corenlp_annotate requires the number of input files to be identical with the number of threads.")
     if (threads == 1L){
       if (file.info(input)$isdir == TRUE) stop("The input is a directory, a single file is expected.")
@@ -260,7 +260,7 @@ setMethod("corenlp_annotate", "character", function(input, output = NULL, corenl
           tempdir(),
           paste(gsub("^(.*)\\..*?$", "\\1", basename(input)), method, sep = ".")
         )
-        if (file.exists(output)) file.remove(output)
+        if (any(file.exists(output))) file.remove(output)
       }
       
       fn <- function(i){
@@ -341,7 +341,7 @@ corenlp_install <- function(lang = "de", loc){
   corenlp_dir <- file.path(exttools_dir, "corenlp")
   if (!file.exists(corenlp_dir)) dir.create(corenlp_dir)
   
-  corenlp_url <- "http://nlp.stanford.edu/software/stanford-corenlp-full-2017-06-09.zip"
+  corenlp_url <- "http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip"
   zipfile <- file.path(corenlp_dir, basename(corenlp_url))
   download.file(url = corenlp_url, destfile = zipfile)
   unzip(zipfile = zipfile, exdir = corenlp_dir)
@@ -349,23 +349,23 @@ corenlp_install <- function(lang = "de", loc){
   
   options(
     bignlp.corenlp_dir = system.file(
-      package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2017-06-09"
+      package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2018-10-05"
       )
     )
   
   languages <- list(
     de = function(){
       message("... installing model files for: German")
-      german_jar_url <- "http://nlp.stanford.edu/software/stanford-german-corenlp-2017-06-09-models.jar"
-      german_jar <- file.path(corenlp_dir, "stanford-corenlp-full-2017-06-09", basename(german_jar_url))
+      german_jar_url <- "http://nlp.stanford.edu/software/stanford-german-corenlp-2018-10-05-models.jar"
+      german_jar <- file.path(corenlp_dir, "stanford-corenlp-full-2018-10-05", basename(german_jar_url))
       download.file(url = german_jar_url, destfile = german_jar)
       unzip(german_jar, files = "StanfordCoreNLP-german.properties")
       zip(zipfile = german_jar, files = "StanfordCoreNLP-german.properties", flags = "-d")
     },
     en = function(){
       message("... installing model files for: English")
-      english_jar_url <- "http://nlp.stanford.edu/software/stanford-english-corenlp-2018-02-27-models.jar"
-      english_jar <- file.path(corenlp_dir, "stanford-corenlp-full-2017-06-09", basename(english_jar_url))
+      english_jar_url <- "http://nlp.stanford.edu/software/stanford-english-corenlp-2018-10-05-models.jar"
+      english_jar <- file.path(corenlp_dir, "stanford-corenlp-full-2018-10-05", basename(english_jar_url))
       download.file(url = english_jar_url, destfile = english_jar)
       unzip(english_jar, files = "StanfordCoreNLP.properties")
       zip(zipfile = english_jar, files = "StanfordCoreNLP.properties", flags = "-d")
@@ -395,8 +395,8 @@ corenlp_get_properties_file <- function(lang = c("en", "de"), fast = TRUE){
 corenlp_get_jar_dir <- function(){
   if (nchar(Sys.getenv("CORENLP_DIR")) > 0L){
     Sys.getenv("CORENLP_DIR")
-  } else if (file.exists(system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2017-06-09"))){
-    system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2017-06-09")
+  } else if (file.exists(system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2018-10-05"))){
+    system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2018-10-05")
   } else if (file.exists(system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"))){
     system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31")
   } else {

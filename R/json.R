@@ -85,16 +85,18 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
   } else {
     if (!progress){
       if (is.null(output)){
-        i <- 1L
         y <- list()
+        i <- 1L
+      } else {
+        if (any(file.exists(output))) file.remove(output)
       }
-      for (filename in input){
-        if (verbose) message("... processing ndjson file: ", filename)
-        con <- file(filename, "r")
+      for (i in seq_along(input)){
+        if (verbose) message("... processing ndjson file: ", input[[i]])
+        con <- file(input[[i]], "r")
         while ( TRUE ) {
           line <- readLines(con, n = 1L)
           if ( length(line) == 0 ) break
-          y_tmp <- corenlp_parse_json(input = line, cols_to_keep = cols_to_keep, output = output, logfile = logfile)
+          y_tmp <- corenlp_parse_json(input = line, cols_to_keep = cols_to_keep, output = output[[i]], logfile = logfile)
           if (is.null(output)){
             y[[i]] <- y_tmp
             i <- i + 1L
@@ -143,7 +145,7 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
 #' @export corenlp_parse_json
 #' @rdname corenlp_json
 corenlp_parse_json = function(input, cols_to_keep = c("sentence", "index", "word", "pos", "ner"), output = NULL, logfile = NULL, progress = TRUE){
-  if (length(input) == 1){
+  if (length(input) == 1L){
     # run the parsing within try - coding issues may cause problems
     json_parsed <- try( jsonlite::fromJSON(input) )
     if (class(json_parsed)[1] == "try-error"){
@@ -153,7 +155,7 @@ corenlp_parse_json = function(input, cols_to_keep = c("sentence", "index", "word
     }
     
     # to cope with '{"chunk": 2859285,  "sentences": [ ] }'
-    if (length(json_parsed$sentences$tokens) == 0){
+    if (length(json_parsed$sentences$tokens) == 0L){
       warning("JSON string without tokens: ", input)
       if (!is.null(logfile)) cat(input, file = logfile, append = TRUE)
       return( NULL )
