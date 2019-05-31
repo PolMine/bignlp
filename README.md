@@ -1,0 +1,123 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+[![License](https://img.shields.io/aur/license/yaourt.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
+[![Travis-CI Build
+Status](https://api.travis-ci.org/PolMine/bignlp.svg?branch=master)](https://travis-ci.org/PolMine/bignlp)
+[![codecov](https://codecov.io/gh/PolMine/bignlp/branch/master/graph/badge.svg)](https://codecov.io/gh/PolMine/bignlp/branch/master)
+
+## The ‘bignlp’-package: Objectives
+
+R users who want to add a linguistic annotation to a corpus are already
+offered a few available packages for Natural Language Processing (NLP).
+These packages are not “pure R” NLP-tools.
+[openNLP](https://CRAN.R-project.org/package=openNLP),
+[cleanNLP](https://CRAN.R-project.org/package=cleanNLP),
+[coreNLP](https://CRAN.R-project.org/package=coreNLP), or
+[spacyr](https://CRAN.R-project.org/package=spacyr) offer interfaces to
+standard NLP tools implemented in other programming languages. The
+[cleanNLP](https://CRAN.R-project.org/package=cleanNLP) R package offers
+to combine these external tools in one coherent framework. So why yet
+another NLP R package?
+
+As a matter of design, the existing packages are not good to deal with
+large volumes of text. The thrust of the bignlp-package is to use a
+standard tool ([Stanford
+CoreNLP](https://stanfordnlp.github.io/CoreNLP/)) in parallel mode. To
+be parsimonious with the memory available, it implements line-by-line
+processing, so that annotated data is not be kept in memory. The bignlp
+is the package you may want to use if your data is substantially big.
+
+## Workflow
+
+There are three steps of the NLP pipeline using bignlp: Turn input data
+into tabular format, call the annotator that generates an NDJSON output,
+parse the NDJSON and get a tabular output format. To explain this in
+more detail:
+
+1.  Input data (XML, for instance) needs to be dissected into a
+    two-column `data.table` with one column with sections of text
+    (column “text”) and a column “id”. The purpose of the id is to serve
+    as a link to connect chunks with metadata that is stored somewhere
+    else, typically in another table that also has an id column for
+    matching purposes.
+
+2.  The input `data.table` is processed in single- or multi-threaded
+    mode, using Stanford CoreNLP. The output of the
+    `corenlp_annotate()`-function is written to one or several NDJSON
+    files (NDJSON stands for newline-delimited JSON). Each line of the
+    NDJSON files is a valid JSON string with the annotation data, and
+    includes the id.
+
+3.  The NDJSON files are processed a line-by-line manner, resulting in a
+    `data.table` with the chunk ids, and the tokenized and annotated
+    text using the `corenlp_parse_ndjson()`-function.
+
+## Installation
+
+The bignlp package itself is a pure R package. It does not include
+compiled code, and the installation of the package itself is unlikely to
+cause problem. However, bignlp depends on the [Stanford
+CoreNLP](https://stanfordnlp.github.io/CoreNLP/) toolset, a Java
+library, which requires a specific Java version (1.8). CoreNLP is
+accessed using the [rJava](https://CRAN.R-project.org/package=rJava)
+package. Both can cause headaches.
+
+### Oracle Java required\!
+
+Stanford CoreNLP requires Oracle Java v1.8+, see [the CoreNLP
+Website](https://stanfordnlp.github.io/CoreNLP/). Using CoreNLP in
+combination with OpenJDK, the default Java that is available on many
+systems, does not work. Errors that result from using the “wrong” Java
+may be difficult to interpret. So take care to ensure that you have the
+“correct”" Java (Java Development Kit / JDK) installed.
+
+Oracle Java can be installed from [this
+website](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).
+Note that Oracle licenses have become more restrictive, and registration
+may be necessary. This will not be a problem for academic/non-commercial
+contexts.
+
+Once downloading and installing Oracle Java 1.8+ is completed, making
+this Java version the one that is actually used may be tricky. For
+macOS, we found the jEnv tool to be useful, see [this
+link](https://medium.com/@danielnenkov/multiple-jdk-versions-on-mac-os-x-with-jenv-5ea5522ddc9b).
+
+To get R use Java 1.8, you may finalle have to call R CMD javareconf
+from the command line.
+
+``` sh
+R CMD javareconf
+```
+
+To check within R that everything works, run this snippet from within R.
+
+``` r
+library(rJava)
+.jinit()
+.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
+```
+
+The output you see (something like “1.8.0\_211-b12”) on your system
+depend on the Java version you have installed.
+
+### Issues with rJava
+
+An issue we have seen on macOS in combination with RStudio is that the
+rJava dynamic library called from the RStudio session does not link
+correctly agains the dynamic library of the Java virtual machine. We use
+the follwing snippet to induce the correct link. (Note that paths may
+have to be updated to reflect the correct R and Java version\!)
+
+``` sh
+install_name_tool -change "@rpath/libjvm.dylib" \
+  "/Library/Java/JavaVirtualMachines/jdk1.8.0_211.jdk/Contents/Home/jre/lib/server/libjvm.dylib" \
+  /Library/Frameworks/R.framework/Versions/3.5/Resources/library/rJava/libs/rJava.so
+```
+
+### Issues with RStudio
+
+We have seen problems with the parallel annotation with from an RStudio
+session. Running bignlp from a simple terminal window is a good
+solution. For a large annotation project, omitting an IDE may be a good
+idea anyway.

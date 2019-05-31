@@ -29,7 +29,7 @@ More technically speaking, there are three steps envisaged by in a bignlp workfl
 Before we introduce code for realistic workflows using this approach, we explain the installation requirements.
 
 
-## Installation
+## Basic Installation
 
 At this stage, the bignlp package uses [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/). The CoreNLP code jar and models for specific languages can be downloaded from the project website without restrictions. It is important to have the correct version of Java installed. See the the Stanford CoreNLP project website for further details. To check which Java version is used by R, run the follwing code:
 
@@ -43,7 +43,7 @@ The easiest way to download Stanford CoreNLP is to (ab)use the installation mech
 
 Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary.
 
-```{r}
+```{r, eval = TRUE}
 library(bignlp)
 if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "en")
 ```
@@ -51,9 +51,7 @@ if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "en")
 Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the `system.file()`-function to find out where that is.
 
 ```{r}
-options(
-  bignlp.properties_file = system.file(package = "cleanNLP", "extdata", "StanfordCoreNLP-english-fast.properties")
-)
+options(bignlp.properties_file = bignlp::corenlp_get_properties_file(lang = "en", fast = TRUE))
 ```
 
 Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. CoreNLP and properties files can be stored anywhere on your system, and functions of the bignlp package take the paths as input.
@@ -189,7 +187,7 @@ nano StanfordCoreNLP-german.properties
 
 Note that the bignlp package already includes a properties file that has been edited for annotating large amounts of data quickly. You will find it as follows:
 
-```{r}
+```{r, eval = FALSE}
 options(bignlp.properties_file = corenlp_get_properties_file(lang = "de", fast = TRUE))
 ```
 
@@ -198,42 +196,10 @@ Again, note that the properties file in the German model jar needs to be removed
 
 #### Install models for English
 
-```{r}
+```{sh, eval = FALSE}
 wget http://nlp.stanford.edu/software/stanford-english-corenlp-2018-10-05-models.jar
 unzip stanford-english-corenlp-2018-10-05-models.jar StanfordCoreNLP.properties
 zip -d stanford-english-corenlp-2018-10-05-models.jar StanfordCoreNLP.properties
 ```
 
 
-### Installing Java
-
-A potentially big, confusing issue is that Stanford CoreNLP requires Oracle Java v1.8+, see [this respective note](https://stanfordnlp.github.io/CoreNLP/). The statement that Oracle Java is needed is not too obvious. But trying to use OpenJDK in combination with CoreNLP does not work, but you do not see immediately what might be the problem.
-
-Oracle Java can be installed from [this website](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html). Note that Oracle licenses have become more restrictive, but this will not be a problem for academic/non-commercial contexts.
-
-Once you have Oracle Java 1.8 on your system, making this Java version the one that is actually used may be a bit tricky. For macOS, we found the jEnv tool to be useful, see [this link](https://medium.com/@danielnenkov/multiple-jdk-versions-on-mac-os-x-with-jenv-5ea5522ddc9b).
-
-To make R use Java 1.8, you may have to call R CMD javareconf from the command line.
-
-```{sh}
-R CMD javareconf
-```
-
-To check within R that everything works, run this snippet.
-
-```{r, eval = FALSE}
-library(rJava)
-.jinit()
-.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
-```
-
-
-### Getting rJava going
-
-An issue we have seen on macOS in combination with RStudio is that the rJava dynamic library called from the RStudio session does not link correctly agains the dynamic library of the Java virtual machine. Use the follwing snippet to induce the correct link. (Note that paths may have to be updated to reflect the correct R and Java version!)
-
-```{sh, eval = TRUE}
-install_name_tool -change "@rpath/libjvm.dylib" \
-  "/Library/Java/JavaVirtualMachines/jdk1.8.0_211.jdk/Contents/Home/jre/lib/server/libjvm.dylib" \
-  /Library/Frameworks/R.framework/Versions/3.5/Resources/library/rJava/libs/rJava.so
-```
