@@ -122,10 +122,13 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
         stop("Package 'future' required but not available.")
       }
       
-      library(future) # how to omit this?
-      library(jobstatus) # how to omit this?
-      library(progress) # how to omit this?
-      
+      # library(future) # how to omit this?
+      attach(what = getNamespace("future"))
+      on.exit(detach(getNamespace("future")))
+      # library(jobstatus) # how to omit this?
+      attach(what = getNamespace("jobstatus"))
+      on.exit(detach(getNamespace("jobstatus")))
+
       future::plan(strategy = "multiprocess") # in package 'future'
       
       fn_with_progress <- function(i){
@@ -294,10 +297,14 @@ setMethod("corenlp_annotate", "character", function(input, output = NULL, corenl
         
         if (!requireNamespace("future", quietly = TRUE)) stop("Package 'future' required but not available.")
         
-        library(future) # how to omit this?
-        library(jobstatus) # how to omit this?
-        library(progress) # how to omit this?
+        # library(future) # how to omit this?
+        attach(what = getNamespace("future"))
+        on.exit(detach(getNamespace("future")))
+        # library(jobstatus) # how to omit this?
+        attach(what = getNamespace("jobstatus"))
+        on.exit(detach(getNamespace("jobstatus")))
         
+
         future::plan(strategy = "multiprocess")
         
         jobstatus::with_jobstatus({
