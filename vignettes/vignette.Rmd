@@ -33,7 +33,7 @@ Before we introduce code for realistic workflows using this approach, we explain
 
 At this stage, the bignlp package uses [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/). The CoreNLP code jar and models for specific languages can be downloaded from the project website without restrictions. It is important to have the correct version of Java installed. See the the Stanford CoreNLP project website for further details. To check which Java version is used by R, run the follwing code:
 
-```{r, eval = FALSE}
+```{r check_java_version, eval = FALSE}
 library(rJava)
 .jinit()
 .jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
@@ -43,14 +43,14 @@ The easiest way to download Stanford CoreNLP is to (ab)use the installation mech
 
 Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary.
 
-```{r, eval = TRUE}
+```{r load_bignlp, eval = TRUE}
 library(bignlp)
 if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "en")
 ```
 
 Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the `system.file()`-function to find out where that is.
 
-```{r}
+```{r set_options}
 options(bignlp.properties_file = bignlp::corenlp_get_properties_file(lang = "en", fast = TRUE))
 ```
 
@@ -65,14 +65,14 @@ There is an unexported function `rJava:::.check.JVM()` in the rJava package that
 
 The JVMs initialized for tagging in parallel need a lot of memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else. 
 
-```{r load_ctk, eval = TRUE}
+```{r set_java_options, eval = TRUE}
 options(java.parameters = "-Xmx4g") # needs to be set before a JVM is initialized.
 noCores <- parallel::detectCores() - 2L
 ```
 
 With bignlp, the logic is to write intermediate results to disk, so we do not have to keep everything in memory at a time. So we create the appropriate directory structure before anything else.
 
-```{r}
+```{r create_dir}
 outdir <- tempdir()
 tsv_file <- file.path(outdir, "unga.tsv")
 ndjson_file <- file.path(outdir, "unga.ndjson")
@@ -81,13 +81,13 @@ tsv_file_tagged <- file.path(outdir, "unga_tagged.tsv")
 
 Finally, we load bignlp.
 
-```{r}
+```{r pkg_version_bignlp}
 packageVersion("bignlp")
 ```
 
 The packages we will also need is the `data.table` package, mostly for its impressively `fread` and `fwrite` functions.
 
-```{r}
+```{r load_other_libraries}
 library(data.table)
 library(cwbtools)
 ```
@@ -97,7 +97,7 @@ library(cwbtools)
 
 As a first step, we generate a tsv file with the text chunks that shall be processed.
 
-```{r}
+```{r create_unga_tsv}
 unga_xml_files <- list.files(
   system.file(package = "bignlp", "extdata", "xml"),
   full.names = TRUE
@@ -109,19 +109,19 @@ fwrite(x = CD$chunktable, file = tsv_file)
 
 Second, we call the tagger, producing NDJSON output.
 
-```{r}
+```{r tsv2ndjson}
 filenames_ndjson <- corenlp_annotate(input = tsv_file, output = ndjson_file)
 ```
 
 The NDJSON output is parsed into a table ... 
 
-```{r}
+```{r ndjson2tsv}
 filenames_tsv_tagged <- corenlp_parse_ndjson(input = ndjson_file, output = tsv_file_tagged)
 ```
 
 Finally, let us have a look at the table that is on disk.
 
-```{r}
+```{r read_result}
 y <- data.table::fread(tsv_file_tagged)
 ```
 
@@ -129,7 +129,7 @@ This is exactly what we need to fill the `tokenstream`-slot of our CorpusData ob
 
 The functions are designed to work in a pipe, so we can achieve the same result as follows:
 
-```{r}
+```{r pipe}
 library(magrittr)
 library(data.table)
 
@@ -151,7 +151,7 @@ Enjoy!
 
 A good and conventional place for installing a tool such as CoreNLP is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file.
 
-```{sh eval = FALSE}
+```{sh download_corenlp, eval = FALSE}
 mkdir /opt/stanford-corenlp
 cd /opt/stanford-corenlp
 wget http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip
@@ -164,20 +164,20 @@ rm stanford-corenlp-full-2018-10-05.zip
 
 In the PolMine Project, we very often work with German data. So we illustrate getting models for a specific language for German. We go into the CoreNLP directory and download the model to this place.
 
-```{sh, eval = FALSE}
+```{sh download_german_model, eval = FALSE}
 cd stanford-corenlp-full-2018-10-05
 wget http://nlp.stanford.edu/software/stanford-german-corenlp-2018-10-05-models.jar
 ```
 
 The jar file with the model include a default properties file for processing German data (StanfordCoreNLP-german.properties). You can see this by displaying the content of the jar as follows.
 
-```{sh, eval = FALSE}
+```{sh inspect_jar, eval = FALSE}
 jar tf stanford-german-corenlp-2018-10-05-models.jar # see content of jar
 ```
 
 The inclusion of this properties file in the jar may become a problem. If you want to configure the parser yourself, you may encounter the issue that this properties file included in the jar will override any other properties file you may want to use. The solution we found to work is to (a) extract the properties file from the jar, (b) remove it from the jar and (c) edit it by hand to serve your needs.
 
-```{sh, eval = FALSE}
+```{sh modify_model_jar, eval = FALSE}
 # extract StanfordCoreNLP-german.properties from jar
 unzip stanford-german-corenlp-2018-10-05-models.jar StanfordCoreNLP-german.properties
 # remove StanfordCoreNLP-german.properties from jar
@@ -187,7 +187,7 @@ nano StanfordCoreNLP-german.properties
 
 Note that the bignlp package already includes a properties file that has been edited for annotating large amounts of data quickly. You will find it as follows:
 
-```{r, eval = FALSE}
+```{r pkg_properties_file, eval = FALSE}
 options(bignlp.properties_file = corenlp_get_properties_file(lang = "de", fast = TRUE))
 ```
 
@@ -196,7 +196,7 @@ Again, note that the properties file in the German model jar needs to be removed
 
 #### Install models for English
 
-```{sh, eval = FALSE}
+```{sh download_english_model, eval = FALSE}
 wget http://nlp.stanford.edu/software/stanford-english-corenlp-2018-10-05-models.jar
 unzip stanford-english-corenlp-2018-10-05-models.jar StanfordCoreNLP.properties
 zip -d stanford-english-corenlp-2018-10-05-models.jar StanfordCoreNLP.properties

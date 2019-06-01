@@ -11,14 +11,15 @@ corenlp_annotate(input, ...)
 
 \S4method{corenlp_annotate}{data.table}(input, output = NULL,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
-  properties_file = getOption("bignlp.properties_file"), method = "json",
-  threads = 1L, progress = TRUE, preclean = TRUE, verbose = TRUE)
+  properties_file = getOption("bignlp.properties_file"),
+  method = "json", threads = 1L, progress = TRUE, preclean = TRUE,
+  verbose = TRUE)
 
 \S4method{corenlp_annotate}{character}(input, output = NULL,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
-  properties_file = getOption("bignlp.properties_file"), byline = FALSE,
-  method = "json", threads = 1L, progress = TRUE, preclean = TRUE,
-  verbose = TRUE)
+  properties_file = getOption("bignlp.properties_file"),
+  byline = FALSE, method = "json", threads = 1L, progress = TRUE,
+  preclean = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{input}{Either a \code{data.table} (required to have the columns 'id' and

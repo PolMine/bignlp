@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Andreas Blaette (andreas.blaette@uni-due.de)" />
+
+<meta name="date" content="2019-06-01" />
+
+<title>bignlp</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">bignlp</h1>
+<h3 class="subtitle"><em>Pipeline to annotate big corpora</em></h3>
+<h4 class="author"><em>Andreas Blaette (<a href="mailto:andreas.blaette@uni-due.de" class="email">andreas.blaette@uni-due.de</a>)</em></h4>
+<h4 class="date"><em>2019-06-01</em></h4>
+
+
+
+<div id="the-rationale-of-the-bignlp-package" class="section level2">
+<h2>The rationale of the bignlp-package</h2>
+<p>There are already a few packages for Natural Language Processing (NLP). These packages are not “pure R” NLP-tools. OpenNLP, coreNLP, or spaCy offer interfaces to standard NLP tools implemented in other programming languages. The cleanNLP R package manages to combine these external tools in one coherent framework. So why yet another NLP R package?</p>
+<p>The existing packages are not good at dealing with large volumes of text. The thrust of the bignlp-package is to use a standard tool (Stanford CoreNLP) in parallel mode. To be parsimonious with the memory available, it implements line-by-line processing, so that annotated data is not be kept in memory.</p>
+<p>More technically speaking, there are three steps envisaged by in a bignlp workflow:</p>
+<ol style="list-style-type: decimal">
+<li><p>Input data (XML, for instance) needs to be dissected into a two-column <code>data.table</code> with chunks of text (column “text”) and a chunk id (column “id”). The purpose of the id is to serve as a link to relate chunks with metadata that is stored in another table (and that also has an id column).</p></li>
+<li><p>The input <code>data.table</code> is processed in single- or multi-threaded mode, using Stanford CoreNLP. The output of the <code>corenlp_annotate()</code>-function is written to one or several NDJSON files (NDJSON stands for newline-delimited JSON). Each line of the NDJSON files is a valid JSON string with the annotation data, and including the id.</p></li>
+<li><p>The NDJSON files are processed a line-by-line manner, resulting in a <code>data.table</code> with the chunk ids, and the tokenized and annotated text, of course.</p></li>
+</ol>
+<p>Before we introduce code for realistic workflows using this approach, we explain the installation requirements.</p>
+</div>
+<div id="basic-installation" class="section level2">
+<h2>Basic Installation</h2>
+<p>At this stage, the bignlp package uses <a href="https://stanfordnlp.github.io/CoreNLP/">Stanford CoreNLP</a>. The CoreNLP code jar and models for specific languages can be downloaded from the project website without restrictions. It is important to have the correct version of Java installed. See the the Stanford CoreNLP project website for further details. To check which Java version is used by R, run the follwing code:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(rJava)</a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">.jinit</span>()</a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="kw">.jcall</span>(<span class="st">&quot;java/lang/System&quot;</span>, <span class="st">&quot;S&quot;</span>, <span class="st">&quot;getProperty&quot;</span>, <span class="st">&quot;java.runtime.version&quot;</span>)</a></code></pre></div>
+<p>The easiest way to download Stanford CoreNLP is to (ab)use the installation mechanism included in the cleanNLP package. In the following example, we will annotate a few documents from the UN General Assembly corpus, so we need the English annotation tools.</p>
+<p>Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">library</span>(bignlp)</a></code></pre></div>
+<pre><code>## CoreNLP jar directory: /opt/stanford-corenlp/stanford-corenlp-full-2018-10-05</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="cf">if</span> (<span class="kw">getOption</span>(<span class="st">&quot;bignlp.corenlp_dir&quot;</span>) <span class="op">==</span><span class="st"> &quot;&quot;</span>) <span class="kw">corenlp_install</span>(<span class="dt">lang =</span> <span class="st">&quot;en&quot;</span>)</a></code></pre></div>
+<p>Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the <code>system.file()</code>-function to find out where that is.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">options</span>(<span class="dt">bignlp.properties_file =</span> bignlp<span class="op">::</span><span class="kw">corenlp_get_properties_file</span>(<span class="dt">lang =</span> <span class="st">&quot;en&quot;</span>, <span class="dt">fast =</span> <span class="ot">TRUE</span>))</a></code></pre></div>
+<p>Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. CoreNLP and properties files can be stored anywhere on your system, and functions of the bignlp package take the paths as input.</p>
+</div>
+<div id="preparations-for-text-annotation" class="section level2">
+<h2>Preparations for text annotation</h2>
+<p>To be able to parallelize the annotation, <em>rJava may not be loaded</em> before initializing the CoreNLP annotator. This is a known <a href="https://github.com/s-u/rJava/issues/25">rJava issue</a>. It is important to consider that other packages may have instantiated a JVM already. The result may be that you cannot assign sufficient memory to the newly instantiated JVMs, the model cannot be loaded, and the process will fail.</p>
+<p>There is an unexported function <code>rJava:::.check.JVM()</code> in the rJava package that you may use in an interactive session to check whether the JVM has been initialized already.</p>
+<p>The JVMs initialized for tagging in parallel need a lot of memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">options</span>(<span class="dt">java.parameters =</span> <span class="st">&quot;-Xmx4g&quot;</span>) <span class="co"># needs to be set before a JVM is initialized.</span></a>
+<a class="sourceLine" id="cb6-2" title="2">noCores &lt;-<span class="st"> </span>parallel<span class="op">::</span><span class="kw">detectCores</span>() <span class="op">-</span><span class="st"> </span>2L</a></code></pre></div>
+<p>With bignlp, the logic is to write intermediate results to disk, so we do not have to keep everything in memory at a time. So we create the appropriate directory structure before anything else.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">outdir &lt;-<span class="st"> </span><span class="kw">tempdir</span>()</a>
+<a class="sourceLine" id="cb7-2" title="2">tsv_file &lt;-<span class="st"> </span><span class="kw">file.path</span>(outdir, <span class="st">&quot;unga.tsv&quot;</span>)</a>
+<a class="sourceLine" id="cb7-3" title="3">ndjson_file &lt;-<span class="st"> </span><span class="kw">file.path</span>(outdir, <span class="st">&quot;unga.ndjson&quot;</span>)</a>
+<a class="sourceLine" id="cb7-4" title="4">tsv_file_tagged &lt;-<span class="st"> </span><span class="kw">file.path</span>(outdir, <span class="st">&quot;unga_tagged.tsv&quot;</span>)</a></code></pre></div>
+<p>Finally, we load bignlp.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">packageVersion</span>(<span class="st">&quot;bignlp&quot;</span>)</a></code></pre></div>
+<pre><code>## [1] &#39;0.0.7&#39;</code></pre>
+<p>The packages we will also need is the <code>data.table</code> package, mostly for its impressively <code>fread</code> and <code>fwrite</code> functions.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">library</span>(data.table)</a>
+<a class="sourceLine" id="cb10-2" title="2"><span class="kw">library</span>(cwbtools)</a></code></pre></div>
+</div>
+<div id="example-tagging-the-unga-corpus" class="section level2">
+<h2>Example: Tagging the UNGA corpus</h2>
+<p>As a first step, we generate a tsv file with the text chunks that shall be processed.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1">unga_xml_files &lt;-<span class="st"> </span><span class="kw">list.files</span>(</a>
+<a class="sourceLine" id="cb11-2" title="2">  <span class="kw">system.file</span>(<span class="dt">package =</span> <span class="st">&quot;bignlp&quot;</span>, <span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;xml&quot;</span>),</a>
+<a class="sourceLine" id="cb11-3" title="3">  <span class="dt">full.names =</span> <span class="ot">TRUE</span></a>
+<a class="sourceLine" id="cb11-4" title="4">  )</a>
+<a class="sourceLine" id="cb11-5" title="5">CD &lt;-<span class="st"> </span>CorpusData<span class="op">$</span><span class="kw">new</span>()</a>
+<a class="sourceLine" id="cb11-6" title="6">CD<span class="op">$</span><span class="kw">import_xml</span>(<span class="dt">filenames =</span> unga_xml_files)</a>
+<a class="sourceLine" id="cb11-7" title="7"><span class="kw">fwrite</span>(<span class="dt">x =</span> CD<span class="op">$</span>chunktable, <span class="dt">file =</span> tsv_file)</a></code></pre></div>
+<p>Second, we call the tagger, producing NDJSON output.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" title="1">filenames_ndjson &lt;-<span class="st"> </span><span class="kw">corenlp_annotate</span>(<span class="dt">input =</span> tsv_file, <span class="dt">output =</span> ndjson_file)</a></code></pre></div>
+<pre><code>## Status of the Java Virtual Machine: 0</code></pre>
+<pre><code>## Java version: 1.8.0_211-b12</code></pre>
+<p>The NDJSON output is parsed into a table …</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" title="1">filenames_tsv_tagged &lt;-<span class="st"> </span><span class="kw">corenlp_parse_ndjson</span>(<span class="dt">input =</span> ndjson_file, <span class="dt">output =</span> tsv_file_tagged)</a></code></pre></div>
+<pre><code>## ... processing ndjson file: /var/folders/m_/431fjnbs1t32_62d35wvs7pr0000gp/T//RtmpjL8wTN/unga.ndjson</code></pre>
+<p>Finally, let us have a look at the table that is on disk.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" title="1">y &lt;-<span class="st"> </span>data.table<span class="op">::</span><span class="kw">fread</span>(tsv_file_tagged)</a></code></pre></div>
+<p>This is exactly what we need to fill the <code>tokenstream</code>-slot of our CorpusData object.</p>
+<p>The functions are designed to work in a pipe, so we can achieve the same result as follows:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">library</span>(magrittr)</a>
+<a class="sourceLine" id="cb18-2" title="2"><span class="kw">library</span>(data.table)</a>
+<a class="sourceLine" id="cb18-3" title="3"></a>
+<a class="sourceLine" id="cb18-4" title="4">dt &lt;-<span class="st"> </span><span class="kw">corenlp_annotate</span>(<span class="dt">input =</span> tsv_file, <span class="dt">output =</span> ndjson_file) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb18-5" title="5"><span class="st">  </span><span class="kw">corenlp_parse_ndjson</span>(<span class="dt">output =</span> tsv_file_tagged) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb18-6" title="6"><span class="st">  </span><span class="kw">lapply</span>(fread) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb18-7" title="7"><span class="st">  </span><span class="kw">rbindlist</span>()</a></code></pre></div>
+<pre><code>## Status of the Java Virtual Machine: 1</code></pre>
+<pre><code>## Java version: 1.8.0_211-b12</code></pre>
+<pre><code>## ... processing ndjson file: /var/folders/m_/431fjnbs1t32_62d35wvs7pr0000gp/T//RtmpjL8wTN/unga.ndjson</code></pre>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>Enjoy!</p>
+</div>
+<div id="appendix-installing-dependencies" class="section level2">
+<h2>Appendix: Installing Dependencies</h2>
+<div id="installing-stanford-corenlp" class="section level3">
+<h3>Installing Stanford CoreNLP</h3>
+<p>A good and conventional place for installing a tool such as CoreNLP is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb22-1" title="1"><span class="fu">mkdir</span> /opt/stanford-corenlp</a>
+<a class="sourceLine" id="cb22-2" title="2"><span class="bu">cd</span> /opt/stanford-corenlp</a>
+<a class="sourceLine" id="cb22-3" title="3"><span class="fu">wget</span> http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip</a>
+<a class="sourceLine" id="cb22-4" title="4"><span class="fu">unzip</span> stanford-corenlp-full-2018-10-05.zip</a>
+<a class="sourceLine" id="cb22-5" title="5"><span class="fu">rm</span> stanford-corenlp-full-2018-10-05.zip</a></code></pre></div>
+<div id="install-models-for-german" class="section level4">
+<h4>Install models for German</h4>
+<p>In the PolMine Project, we very often work with German data. So we illustrate getting models for a specific language for German. We go into the CoreNLP directory and download the model to this place.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb23-1" title="1"><span class="bu">cd</span> stanford-corenlp-full-2018-10-05</a>
+<a class="sourceLine" id="cb23-2" title="2"><span class="fu">wget</span> http://nlp.stanford.edu/software/stanford-german-corenlp-2018-10-05-models.jar</a></code></pre></div>
+<p>The jar file with the model include a default properties file for processing German data (StanfordCoreNLP-german.properties). You can see this by displaying the content of the jar as follows.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb24-1" title="1"><span class="ex">jar</span> tf stanford-german-corenlp-2018-10-05-models.jar <span class="co"># see content of jar</span></a></code></pre></div>
+<p>The inclusion of this properties file in the jar may become a problem. If you want to configure the parser yourself, you may encounter the issue that this properties file included in the jar will override any other properties file you may want to use. The solution we found to work is to (a) extract the properties file from the jar, (b) remove it from the jar and (c) edit it by hand to serve your needs.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb25-1" title="1"><span class="co"># extract StanfordCoreNLP-german.properties from jar</span></a>
+<a class="sourceLine" id="cb25-2" title="2"><span class="fu">unzip</span> stanford-german-corenlp-2018-10-05-models.jar StanfordCoreNLP-german.properties</a>
+<a class="sourceLine" id="cb25-3" title="3"><span class="co"># remove StanfordCoreNLP-german.properties from jar</span></a>
+<a class="sourceLine" id="cb25-4" title="4"><span class="fu">zip</span> -d stanford-german-corenlp-2018-10-05-models.jar StanfordCoreNLP-german.properties</a>
+<a class="sourceLine" id="cb25-5" title="5"><span class="fu">nano</span> StanfordCoreNLP-german.properties </a></code></pre></div>
+<p>Note that the bignlp package already includes a properties file that has been edited for annotating large amounts of data quickly. You will find it as follows:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" title="1"><span class="kw">options</span>(<span class="dt">bignlp.properties_file =</span> <span class="kw">corenlp_get_properties_file</span>(<span class="dt">lang =</span> <span class="st">&quot;de&quot;</span>, <span class="dt">fast =</span> <span class="ot">TRUE</span>))</a></code></pre></div>
+<p>Again, note that the properties file in the German model jar needs to be removed in the manner described before to make using the handcrafted properties file possible.</p>
+</div>
+<div id="install-models-for-english" class="section level4">
+<h4>Install models for English</h4>
+<div class="sourceCode" id="cb27"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb27-1" title="1"><span class="fu">wget</span> http://nlp.stanford.edu/software/stanford-english-corenlp-2018-10-05-models.jar</a>
+<a class="sourceLine" id="cb27-2" title="2"><span class="fu">unzip</span> stanford-english-corenlp-2018-10-05-models.jar StanfordCoreNLP.properties</a>
+<a class="sourceLine" id="cb27-3" title="3"><span class="fu">zip</span> -d stanford-english-corenlp-2018-10-05-models.jar StanfordCoreNLP.properties</a></code></pre></div>
+</div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

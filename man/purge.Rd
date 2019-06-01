@@ -29,7 +29,7 @@ library(data.table)
 options(java.parameters = "-Xmx4g")
 txt <- "Karadžiš!"
 corenlp_dir <- system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31")
-corenlp_dir <- "/opt/stanford-corenlp/stanford-corenlp-full-2017-06-09"
+corenlp_dir <- "/opt/stanford-corenlp/stanford-corenlp-full-2018-10-05"
 properties_german_fast <- corenlp_get_properties_file(lang = "de")
 y <- corenlp_annotate(
   input = data.table(id = 1L:length(txt), text = txt),

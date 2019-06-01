@@ -6,28 +6,31 @@
 \title{Parse NDJSON output.}
 \usage{
 corenlp_parse_ndjson(input, cols_to_keep = c("sentence", "index", "word",
-  "pos", "lemma"), output = NULL, logfile = NULL, threads = 1L,
-  progress = TRUE, verbose = TRUE)
+  "pos", "lemma"), output = tempfile(), logfile = NULL,
+  byline = FALSE, threads = 1L, progress = TRUE, verbose = TRUE)
 
-corenlp_parse_json(input, cols_to_keep = c("sentence", "index", "word", "pos",
-  "ner"), output = NULL, logfile = NULL, progress = TRUE)
+corenlp_parse_json(input, cols_to_keep = c("sentence", "index", "word",
+  "pos", "ner"), output = NULL, logfile = NULL, progress = TRUE)
 }
 \arguments{
 \item{input}{character vector, the JSON string(s) to be parsed}
 
 \item{cols_to_keep}{columns to keep}
 
-\item{output}{a character string naming the file to write to}
+\item{output}{A \code{character} string naming the file to write to.}
 
 \item{logfile}{a character string naming the file to an error log to; if
 provided, json strings will be written to this file if parsing the json
 string string fails}
 
+\item{byline}{A \code{logical} value, whether to process input files in a
+line-by-line mode.}
+
 \item{threads}{integer}
 
-\item{progress}{logical}
+\item{progress}{A \code{logical} value, whether to show progress bar.}
 
-\item{verbose}{logical}
+\item{verbose}{A \code{logical} value, whether to output intermediate messages.}
 }
 \value{
 A character vector with the target files.
@@ -39,6 +42,8 @@ Parse the json output from CoreNLP, either text files, or
 NDJSON written to one or multiple files.
 }
 \details{
+See \url{https://stackoverflow.com/questions/51032141/reading-in-very-very-large-ndjson}.
+
 The JSON results of applying the Stanford CoreNLP annotators can be
   written to a streaming JSON file (ndjson format). \code{corenlp_parse_json}
   will parse a json string to a data.frame. If output is specified, the
@@ -50,29 +55,38 @@ The JSON results of applying the Stanford CoreNLP annotators can be
   written/appended to that file. Otherwise, a \code{data.frame} is returned.
 }
 \examples{
+# parse an ndjson string
 ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
-json_string <- readLines(ndjson_file)
-dt <- corenlp_parse_json(json_string, cols = c("word", "pos", "lemma"), progress = FALSE)
+ndjson_string <- readLines(ndjson_file)
+dt <- corenlp_parse_json(ndjson_string, cols = c("word", "pos", "lemma"), progress = FALSE)
 
-dt <- corenlp_parse_ndjson(input = ndjson_file, output = NULL, progress = FALSE)
-dt <- corenlp_parse_ndjson(input = ndjson_file, output = NULL, progress = TRUE)
+# parse ndjson file with / without progress bar
+destfile <- corenlp_parse_ndjson(input = ndjson_file, output = tempfile(), progress = FALSE)
+dt <- data.table::fread(destfile)
+destfile <- corenlp_parse_ndjson(input = ndjson_file, output = tempfile(), progress = TRUE)
+dt <- data.table::fread(destfile)
 
-tsv_file <- tempfile()
-dt <- corenlp_parse_ndjson(input = ndjson_file, output = tsv_file, progress = FALSE)
-y <- data.table::fread(tsv_file)
-dt <- corenlp_parse_ndjson(input = ndjson_file, output = tsv_file, progress = TRUE)
-y <- data.table::fread(tsv_file)
-
+# parse all ndjson files in a directory
 ndjson_dir <- system.file(package = "bignlp", "extdata", "ndjson")
 tsv_file <- tempfile()
-corenlp_parse_ndjson(input = ndjson_dir, output = tsv_file, threads = 1L)
-y <- data.table::fread(tsv_file)
-tsv_dir <- tempdir()
-tsv_files <- sprintf("\%s/reuters_annotated_\%d.tsv", tsv_dir, 1L:4L)
-corenlp_parse_ndjson(
+destfile <- corenlp_parse_ndjson(input = ndjson_dir, output = tempfile(), threads = 1L)
+dt <- data.table::fread(destfile)
+
+# parse a set files with specified output files
+destfiles <- corenlp_parse_ndjson(
   input = list.files(ndjson_dir, full.names = TRUE),
-  output = tsv_files,
+  output = sprintf("\%s/reuters_annotated_\%d.tsv", tempdir(), 1L:4L),
   threads = 1L
   )
-dt <- data.table::rbindlist(lapply(tsv_files, data.table::fread))
+dt <- data.table::rbindlist(lapply(destfiles, data.table::fread))
+
+if (requireNamespace("jobstatus") && requireNamespace("future")){
+destfiles <- corenlp_parse_ndjson(
+  input = list.files(ndjson_dir, full.names = TRUE),
+  output = sprintf("\%s/reuters_annotated_\%d.tsv", tempdir(), 1L:4L),
+  threads = 4L,
+  byline = TRUE,
+  progress = TRUE
+)
+}
 }

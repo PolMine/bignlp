@@ -2,7 +2,7 @@ Package: bignlp
 Type: Package
 Title: NLP for Big Corpora
 Version: 0.0.7
-Date: 2019-05-30
+Date: 2019-06-01
 Authors@R: person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de")
 Description: Parallel line-by-line NLP processing for big corpora using Stanford CoreNLP.
 Imports:
@@ -24,7 +24,7 @@ Suggests:
     cwbtools,
     magrittr,
     jobstatus,
-    future,
+    future
 Additional_repositories: https://polmine.github.io/drat/
 BugReports: https://github.com/PolMine/bignlp/issues
 VignetteBuilder: knitr
@@ -41,4 +41,4 @@ Collate:
     'purge.R'
     'utils.R'
     'zzz.R'
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1

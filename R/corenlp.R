@@ -29,6 +29,7 @@
 #' @importFrom R6 R6Class
 #' @importFrom cleanNLP cnlp_download_corenlp
 #' @importFrom stats setNames
+#' @importFrom progress progress_bar
 #' @rdname corenlp_annotate
 #' @examples 
 #' library(data.table)

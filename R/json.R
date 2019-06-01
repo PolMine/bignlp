@@ -2,15 +2,19 @@
 #' 
 #' Turn json or ndjson output from Stanford CoreNLP into tabular format
 #' 
+#' See \url{https://stackoverflow.com/questions/51032141/reading-in-very-very-large-ndjson}.
+#' 
 #' @param input character vector, the JSON string(s) to be parsed
 #' @param cols_to_keep columns to keep
-#' @param output a character string naming the file to write to
+#' @param output A \code{character} string naming the file to write to.
 #' @param logfile a character string naming the file to an error log to; if
 #'   provided, json strings will be written to this file if parsing the json
 #'   string string fails
 #' @param threads integer
-#' @param progress logical 
-#' @param verbose logical
+#' @param byline A \code{logical} value, whether to process input files in a
+#'   line-by-line mode.
+#' @param progress A \code{logical} value, whether to show progress bar.
+#' @param verbose A \code{logical} value, whether to output intermediate messages.
 #' @return A character vector with the target files.
 #' @export corenlp_parse_ndjson
 #' @rdname corenlp_json
@@ -131,7 +135,7 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
       corenlp_parse_json(
         input = lines,
         cols_to_keep,
-        output = output[[i]],
+        output = outfile,
         logfile = logfile,
         progress = progress
       )
@@ -188,7 +192,7 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
         library(jobstatus) # how to omit this?
         library(progress) # how to omit this?
         
-        future::plan(multiprocess) # in package 'future'
+        future::plan(strategy = "multiprocess") # in package 'future'
 
         if (byline){
           
@@ -198,7 +202,7 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
             while (length(chunk <- readBin(f, "raw", 65536)) > 0) nlines <- nlines + sum(chunk == as.raw(10L))
             close(f)
             
-            status <- jobstatus$new(nlines)
+            status <- jobstatus::jobstatus$new(nlines)
             con <- file(infile, "r")
             while (length(line <- readLines(con, n = 1L)) > 0L){
               Sys.sleep(1)
@@ -215,7 +219,7 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
             con <- file(infile, "r")
             lines <- readLines(con)
             close(con)
-            status <- jobstatus$new(length(lines))
+            status <- jobstatus::jobstatus$new(length(lines))
             lapply(
               lines,
               function(line){
