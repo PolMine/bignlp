@@ -65,7 +65,7 @@ There is an unexported function `rJava:::.check.JVM()` in the rJava package that
 
 The JVMs initialized for tagging in parallel need a lot of memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else. 
 
-```{r load_ctk, eval = FALSE}
+```{r load_ctk, eval = TRUE}
 options(java.parameters = "-Xmx4g") # needs to be set before a JVM is initialized.
 noCores <- parallel::detectCores() - 2L
 ```

@@ -20,9 +20,7 @@
 chunk_table_get_nrow <- function(filename){
   f <- file(filename, open = "rb")
   nlines <- 0L
-  while (length(chunk <- readBin(f, "raw", 65536)) > 0) {
-    nlines <- nlines + sum(chunk == as.raw(10L))
-  }
+  while (length(chunk <- readBin(f, "raw", 65536)) > 0) nlines <- nlines + sum(chunk == as.raw(10L))
   close(f)
   nlines
 }
