@@ -1,28 +1,40 @@
 #' Parse NDJSON output.
 #' 
-#' Turn json or ndjson output from Stanford CoreNLP into tabular format
+#' Turn Stanford CoreNLP json or ndjson output into tabular format.
+#' 
+#' \code{corenlp_parse_json} parses json output of CoreNLP, returning a
+#' \code{data.frame}. It serves as the worker for \code{corenlp_parse_ndjson},
+#' which can process an entire file, a set of files, or all files in a
+#' directory. The arguments \code{byline}, \code{threads} and \code{progress}
+#' offer combinations to process input files in a line-by-line mode, using
+#' multiple threads, and displaying progress bars.
 #' 
 #' See \url{https://stackoverflow.com/questions/51032141/reading-in-very-very-large-ndjson}.
 #' 
-#' @param input character vector, the JSON string(s) to be parsed
-#' @param cols_to_keep columns to keep
-#' @param output A \code{character} string naming the file to write to.
-#' @param logfile a character string naming the file to an error log to; if
-#'   provided, json strings will be written to this file if parsing the json
-#'   string string fails
-#' @param threads integer
+#' @param input For \code{corenlp_parse_json} a \code{character} vector with one
+#'   or several JSON string(s) to be parsed. For \code{corenlp_parse_ndjson}, a
+#'   directory with ndjson files, a single or multiple files.
+#' @param cols_to_keep A \code{character} vector, columns of the parsed json
+#'   input to keep.
+#' @param output A \code{character} string naming the file, or the files to
+#'   write to.
+#' @param logfile A \code{character} vector naming the file to an error log to;
+#'   if provided, json strings will be written to this file if parsing the json
+#'   string string fails.
+#' @param threads An \code{integer} value, number of threads to use.
 #' @param byline A \code{logical} value, whether to process input files in a
 #'   line-by-line mode.
 #' @param progress A \code{logical} value, whether to show progress bar.
-#' @param verbose A \code{logical} value, whether to output intermediate messages.
-#' @return A character vector with the target files.
+#' @param verbose A \code{logical} value, whether to output intermediate
+#'   messages.
+#' @return A \code{character} vector with the target files.
 #' @export corenlp_parse_ndjson
 #' @rdname corenlp_json
 #' @examples
 #' # parse an ndjson string
 #' ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
 #' ndjson_string <- readLines(ndjson_file)
-#' dt <- corenlp_parse_json(ndjson_string, cols = c("word", "pos", "lemma"), progress = FALSE)
+#' df <- corenlp_parse_json(ndjson_string, cols = c("word", "pos", "lemma"), progress = FALSE)
 #' 
 #' # parse ndjson file with / without progress bar
 #' destfile <- corenlp_parse_ndjson(input = ndjson_file, output = tempfile(), progress = FALSE)

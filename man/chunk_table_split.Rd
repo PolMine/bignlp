@@ -4,25 +4,35 @@
 \alias{chunk_table_split}
 \title{Split up file into subsets.}
 \usage{
-chunk_table_split(input, output = NULL, n, verbose = TRUE)
+chunk_table_split(input, output = NULL, n, byline = TRUE,
+  verbose = TRUE)
 }
 \arguments{
-\item{input}{Filename (full path) of a chunk table.}
+\item{input}{A length-one \code{character} vector, path name (full path) of a
+chunk table file.}
 
-\item{output}{The output file(s). If \code{NULL}, files will be written to the
-session temporary directory.}
+\item{output}{The output file(s). If \code{NULL}, files will be written to
+the session temporary directory.}
 
-\item{n}{The number of (rougly equally sized) files to generate.}
+\item{n}{An \code{integer} value, the number of (rougly equally sized) files
+to generate.}
 
-\item{verbose}{Logical, whether to print messages.}
+\item{byline}{A \code{logical} value, whether to process files in a
+line-by-line mode.}
+
+\item{verbose}{A \code{logical} value, whether to print messages.}
 }
 \description{
 Split up a chunk table file into equally sized files for parallel processing.
 }
 \details{
-The file specified by \code{input} needs to be a single file that exists. It
-will be splitted into \code{n} number of subsets. If \code{output} is
+The file specified by \code{input} needs to be a single existing file. It
+will be splitted into \code{n} roughly equally sized files. If \code{output} is
 \code{NULL}, the files will be generated in the session temporary directory.
+
+If \code{byline} is \code{TRUE} (default), the input file is processed in a 
+line-by-line mode, to keep memory consumption minimal. (Note that only byline
+mode is implemented for this function at this stage.)
 
 The return value is the files that have been written, so that the
 \code{chunk_table_split}-function can be used in a pipe.
@@ -31,9 +41,10 @@ Note that the input file is assumed to have a header (first line with
 colnames). This header will be prefixed to all output files.
 }
 \examples{
+library(data.table)
 infile <- system.file(package = "bignlp", "extdata", "tsv", "unga.tsv")
 outfiles <- chunk_table_split(infile, n = 3L)
 
-dts <- lapply(outfiles, data.table::fread)
-sapply(dts, nrow)
+n_output_tables <- sapply(lapply(outfiles, data.table::fread), nrow)
+sum(n_output_tables) == nrow(fread(infile))
 }

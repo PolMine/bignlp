@@ -13,35 +13,47 @@ corenlp_parse_json(input, cols_to_keep = c("sentence", "index", "word",
   "pos", "ner"), output = NULL, logfile = NULL, progress = TRUE)
 }
 \arguments{
-\item{input}{character vector, the JSON string(s) to be parsed}
+\item{input}{For \code{corenlp_parse_json} a \code{character} vector with one
+or several JSON string(s) to be parsed. For \code{corenlp_parse_ndjson}, a
+directory with ndjson files, a single or multiple files.}
 
-\item{cols_to_keep}{columns to keep}
+\item{cols_to_keep}{A \code{character} vector, columns of the parsed json
+input to keep.}
 
-\item{output}{A \code{character} string naming the file to write to.}
+\item{output}{A \code{character} string naming the file, or the files to
+write to.}
 
-\item{logfile}{a character string naming the file to an error log to; if
-provided, json strings will be written to this file if parsing the json
-string string fails}
+\item{logfile}{A \code{character} vector naming the file to an error log to;
+if provided, json strings will be written to this file if parsing the json
+string string fails.}
 
 \item{byline}{A \code{logical} value, whether to process input files in a
 line-by-line mode.}
 
-\item{threads}{integer}
+\item{threads}{An \code{integer} value, number of threads to use.}
 
 \item{progress}{A \code{logical} value, whether to show progress bar.}
 
-\item{verbose}{A \code{logical} value, whether to output intermediate messages.}
+\item{verbose}{A \code{logical} value, whether to output intermediate
+messages.}
 }
 \value{
-A character vector with the target files.
+A \code{character} vector with the target files.
 }
 \description{
-Turn json or ndjson output from Stanford CoreNLP into tabular format
+Turn Stanford CoreNLP json or ndjson output into tabular format.
 
 Parse the json output from CoreNLP, either text files, or 
 NDJSON written to one or multiple files.
 }
 \details{
+\code{corenlp_parse_json} parses json output of CoreNLP, returning a
+\code{data.frame}. It serves as the worker for \code{corenlp_parse_ndjson},
+which can process an entire file, a set of files, or all files in a
+directory. The arguments \code{byline}, \code{threads} and \code{progress}
+offer combinations to process input files in a line-by-line mode, using
+multiple threads, and displaying progress bars.
+
 See \url{https://stackoverflow.com/questions/51032141/reading-in-very-very-large-ndjson}.
 
 The JSON results of applying the Stanford CoreNLP annotators can be
@@ -58,7 +70,7 @@ The JSON results of applying the Stanford CoreNLP annotators can be
 # parse an ndjson string
 ndjson_file <- system.file(package = "bignlp", "extdata", "ndjson", "reuters_1.ndjson")
 ndjson_string <- readLines(ndjson_file)
-dt <- corenlp_parse_json(ndjson_string, cols = c("word", "pos", "lemma"), progress = FALSE)
+df <- corenlp_parse_json(ndjson_string, cols = c("word", "pos", "lemma"), progress = FALSE)
 
 # parse ndjson file with / without progress bar
 destfile <- corenlp_parse_ndjson(input = ndjson_file, output = tempfile(), progress = FALSE)

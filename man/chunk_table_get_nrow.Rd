@@ -10,9 +10,10 @@ chunk_table_get_nrow(filename)
 \item{filename}{Name of a file (full path).}
 }
 \description{
-The code for \code{chunk_table_get_nrow} is derived from a solution suggested
-in a [discussion at Stack
-Overflow](https://stackoverflow.com/questions/23456170/get-the-number-of-lines-in-a-text-file-using-r)
+Auxiliary function to get the number of rows of a file as fast as possible.
+The implementation of \code{chunk_table_get_nrow} follows closely the fastest
+pure R solution suggested in a [discussion at Stack
+Overflow](https://stackoverflow.com/questions/23456170/get-the-number-of-lines-in-a-text-file-using-r).
 }
 \examples{
 library(data.table)
@@ -25,5 +26,5 @@ data.table::fwrite(x = reuters_dt, file = reuters_chunk_table)
 
 # Get nrow of the file. Note that the file includes colnames, so there is
 # one row in addition to the nrow of the original chunk_table
-chunk_table_get_nrow(reuters_chunk_table)
+n <- chunk_table_get_nrow(reuters_chunk_table)
 }

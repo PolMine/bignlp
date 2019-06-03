@@ -1,8 +1,9 @@
 #' Get number of rows for chunk table on disk.
 #' 
-#' The code for \code{chunk_table_get_nrow} is derived from a solution suggested
-#' in a [discussion at Stack
-#' Overflow](https://stackoverflow.com/questions/23456170/get-the-number-of-lines-in-a-text-file-using-r)
+#' Auxiliary function to get the number of rows of a file as fast as possible.
+#' The implementation of \code{chunk_table_get_nrow} follows closely the fastest
+#' pure R solution suggested in a [discussion at Stack
+#' Overflow](https://stackoverflow.com/questions/23456170/get-the-number-of-lines-in-a-text-file-using-r).
 #' @param filename Name of a file (full path).
 #' @export chunk_table_get_nrow
 #' @examples
@@ -16,7 +17,7 @@
 #' 
 #' # Get nrow of the file. Note that the file includes colnames, so there is
 #' # one row in addition to the nrow of the original chunk_table
-#' chunk_table_get_nrow(reuters_chunk_table)
+#' n <- chunk_table_get_nrow(reuters_chunk_table)
 chunk_table_get_nrow <- function(filename){
   f <- file(filename, open = "rb")
   nlines <- 0L
@@ -30,9 +31,13 @@ chunk_table_get_nrow <- function(filename){
 #' 
 #' Split up a chunk table file into equally sized files for parallel processing.
 #'
-#' The file specified by \code{input} needs to be a single file that exists. It
-#' will be splitted into \code{n} number of subsets. If \code{output} is
+#' The file specified by \code{input} needs to be a single existing file. It
+#' will be splitted into \code{n} roughly equally sized files. If \code{output} is
 #' \code{NULL}, the files will be generated in the session temporary directory.
+#' 
+#' If \code{byline} is \code{TRUE} (default), the input file is processed in a 
+#' line-by-line mode, to keep memory consumption minimal. (Note that only byline
+#' mode is implemented for this function at this stage.)
 #'
 #' The return value is the files that have been written, so that the
 #' \code{chunk_table_split}-function can be used in a pipe.
@@ -40,19 +45,24 @@ chunk_table_get_nrow <- function(filename){
 #' Note that the input file is assumed to have a header (first line with
 #' colnames). This header will be prefixed to all output files.
 #' 
-#' @param input Filename (full path) of a chunk table.
-#' @param n The number of (rougly equally sized) files to generate.
-#' @param output The output file(s). If \code{NULL}, files will be written to the
-#'   session temporary directory.
-#' @param verbose Logical, whether to print messages.
+#' @param input A length-one \code{character} vector, path name (full path) of a
+#'   chunk table file.
+#' @param n An \code{integer} value, the number of (rougly equally sized) files
+#'   to generate.
+#' @param output The output file(s). If \code{NULL}, files will be written to
+#'   the session temporary directory.
+#' @param byline A \code{logical} value, whether to process files in a
+#'   line-by-line mode.
+#' @param verbose A \code{logical} value, whether to print messages.
 #' @examples
+#' library(data.table)
 #' infile <- system.file(package = "bignlp", "extdata", "tsv", "unga.tsv")
 #' outfiles <- chunk_table_split(infile, n = 3L)
 #' 
-#' dts <- lapply(outfiles, data.table::fread)
-#' sapply(dts, nrow)
+#' n_output_tables <- sapply(lapply(outfiles, data.table::fread), nrow)
+#' sum(n_output_tables) == nrow(fread(infile))
 #' @export chunk_table_split
-chunk_table_split <- function(input, output = NULL, n, verbose = TRUE){
+chunk_table_split <- function(input, output = NULL, n, byline = TRUE, verbose = TRUE){
   
   # input needs to be a filename (not a directory) of an existing file
   stopifnot(
@@ -92,16 +102,22 @@ chunk_table_split <- function(input, output = NULL, n, verbose = TRUE){
     }
   }
   
-  file_input <- file(input, open = "r")
-  header <- readLines(file_input, n = 1L)
-  for (i in 1L:n){
-    if (verbose) message(sprintf("... writing %d lines (excluding header) to file:\n\t %s", subsets[i,2] - subsets[i,1] + 1, output[i]))
-    y <- file(output[i], open = "w")
-    writeLines(text = header, con = y)
-    for (j in subsets[i,1]:subsets[i,2])
-      writeLines(text = readLines(file_input, n = 1L), con = y)
-    close(y)
+  if (byline){
+    file_input <- file(input, open = "r")
+    header <- readLines(file_input, n = 1L)
+    for (i in 1L:n){
+      if (verbose) message(
+        sprintf("... writing %d lines (excluding header) to file:\n\t %s", subsets[i,2] - subsets[i,1] + 1, output[i])
+      )
+      y <- file(output[i], open = "w")
+      writeLines(text = header, con = y)
+      for (j in subsets[i,1]:subsets[i,2])
+        writeLines(text = readLines(file_input, n = 1L), con = y)
+      close(y)
+    }
+    close(file_input)
+  } else {
+    stop("Argument byline is FALSE, but function chunk_table_split only implemented for byline mode at this stage.")
   }
-  close(file_input)
   output
 }
