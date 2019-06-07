@@ -200,12 +200,12 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
         
         if (!requireNamespace("future", quietly = TRUE)) stop("Package 'future' required but not available.")
         
-        # library(future) # how to omit this?
-        attach(what = getNamespace("future"))
-        on.exit(detach(getNamespace("future")))
-        # library(jobstatus) # how to omit this?
-        attach(what = getNamespace("jobstatus"))
-        on.exit(detach(getNamespace("jobstatus")))
+        do.call("library", list("future")) # how to omit this?
+        # attach(what = getNamespace("future"))
+        # on.exit(detach(getNamespace("future")))
+        do.call("library", list("jobstatus")) # how to omit this?
+        # attach(what = getNamespace("jobstatus"))
+        # on.exit(detach(getNamespace("jobstatus")))
         
 
         future::plan(strategy = "multiprocess") # in package 'future'
