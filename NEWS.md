@@ -1,3 +1,8 @@
+# bignlp v0.0.8
+
+* The byline processing mode of `corenlp_annotate()` recognizes whether chunk data is wrapped into quotes, and removes quotes if necessary.
+
+
 # bignlp v0.0.7
 
 * updated vignette so that annex explains installation of CoreNLP v3.9.2 (2018-10-05)

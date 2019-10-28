@@ -248,6 +248,10 @@ setMethod("corenlp_annotate", "character", function(input, output = NULL, corenl
       readLines(f, n = 1L) # skip header
       while(length(line_to_process <- readLines(f, n = 1L)) > 0){
         chunk_data <- setNames(strsplit(x = line_to_process, split = "\\t")[[1]], c("id", "text"))
+        # If chunk data has been saved using data.table::fwrite(), argument 'quote = "auto"' may
+        # have as a consequence that the chunk data text is wrapped into quotes - remove quotes if 
+        # necessary
+        if (grepl('^".*"$', chunk_data[["text"]])) chunk_data[["text"]] <- gsub('^"(.*)"$', "\\1", chunk_data[["text"]])
         Annotator$annotate(txt = chunk_data[["text"]], id = as.integer(chunk_data[["id"]]))
         if (progress) pb$tick()
       }
