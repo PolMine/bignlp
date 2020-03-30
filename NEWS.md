@@ -1,3 +1,7 @@
+# bignlp v0.0.XXX
+
+* New slots logfile, target (total number of annotation tasks) and current (annotation task) have been added to the AnnotatorCoreNLP class.
+
 # bignlp v0.0.8
 
 * The byline processing mode of `corenlp_annotate()` recognizes whether chunk data is wrapped into quotes, and removes quotes if necessary.

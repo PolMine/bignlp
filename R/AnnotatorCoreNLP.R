@@ -52,6 +52,11 @@ AnnotatorCoreNLP <- R6Class(
     method = NULL,
     cols_to_keep = NULL,
     destfile = NULL,
+    logfile = NULL,
+    target = NULL, # The total number of annotation tasks to perform
+    current = NULL, # The current annotation task
+    report_interval = NULL,
+    gc_interval = NULL,
 
 
     initialize = function(
@@ -59,7 +64,11 @@ AnnotatorCoreNLP <- R6Class(
       properties_file, 
       method = c("txt", "json", "xml"),
       cols_to_keep = c("sentence", "id", "token", "pos", "ner"),
-      destfile = NULL
+      destfile = NULL,
+      logfile = NULL,
+      target = NULL,
+      report_interval = 1L,
+      gc_interval = 100L
     ){
       
       self$cols_to_keep <- cols_to_keep
@@ -86,6 +95,11 @@ AnnotatorCoreNLP <- R6Class(
 
       self$append <- if (is.null(destfile)) FALSE else TRUE
       if (!is.null(destfile)) self$destfile <- destfile
+      if (!is.null(logfile)) self$logfile <- logfile
+      
+      if (!is.null(target)) self$target <- target
+      self$report_interval <- report_interval
+      self$gc_interval <- gc_interval
 
       invisible( self )
     },
@@ -117,9 +131,33 @@ AnnotatorCoreNLP <- R6Class(
       if (self$append == FALSE) parse_pretty_print(filename) else NULL
     },
 
-    annotate = function(txt, id = NULL, purge = TRUE){
+    annotate = function(txt, id = NULL, current = -1L, purge = TRUE){
       if (purge) txt <- purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+      
       anno <- rJava::.jcall(self$tagger, "Ledu/stanford/nlp/pipeline/Annotation;", "process", txt)
+      
+      # output message upon every nth chunk processed
+      share <- current / self$report_interval
+      if (share - trunc(share) == 0){
+        jvm_runtime <- rJava::J("java/lang/Runtime")$getRuntime()
+        log_msg <- sprintf(
+          "Time: %s | Chunks processed: %d/%d (%.1f %%)| Memory used: %d | Memory free: %d",
+          format(Sys.time()), current, self$target, current / self$target * 100, jvm_runtime$totalMemory(), jvm_runtime$getRuntime()$freeMemory()
+        )
+        if (!is.null(self$logfile)){
+          cat(log_msg, file = self$logfile, sep = "\n", append = TRUE)
+        } else {
+          message(log_msg)
+        }
+      }
+      
+      # garbage collection upon every nth chunk processed
+      gc_div <- current / self$gc_interval
+      if (gc_div - trunc(gc_div) == 0){
+        message("... triggering JVM garbagee collection")
+        rJava::J("java/lang/Runtime")$getRuntime()$gc()
+      }
+
       switch(
         self$method,
         xml = self$annotation_to_xml(anno),
@@ -128,5 +166,6 @@ AnnotatorCoreNLP <- R6Class(
       )
     }
     
+
   )
 )

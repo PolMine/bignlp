@@ -12,6 +12,8 @@
 #'   are assumed to be tsv files with two columns ('id' and 'text').
 #' @param output An output file, if threads > 1, a directory where ndjson files will be stored.
 #' @param properties_file A properties file to configure annotator.
+#' @param logfile A logfile for progress information.
+#' @param report_interval When to report progress report to logfile.
 #' @param threads An integer.
 #' @param corenlp_dir The directory where corenlp resides.
 #' @param preclean Logical, whether to preprocess string.
@@ -69,7 +71,7 @@ setGeneric("corenlp_annotate", function(input, ...) standardGeneric("corenlp_ann
 
 
 #' @rdname corenlp_annotate
-setMethod("corenlp_annotate", "data.table", function(input, output = NULL, corenlp_dir = getOption("bignlp.corenlp_dir"), properties_file = getOption("bignlp.properties_file"), method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
+setMethod("corenlp_annotate", "data.table", function(input, output = NULL, corenlp_dir = getOption("bignlp.corenlp_dir"), properties_file = getOption("bignlp.properties_file"), logfile = NULL, report_interval = 1L, gc_interval = 100L, method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
   stopifnot(c("id", "text") %in% colnames(input))
   
   if (threads == 1L){
@@ -79,9 +81,13 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
       method = method,
       destfile = output,
       corenlp_dir = corenlp_dir,
-      properties_file = properties_file
+      properties_file = properties_file,
+      logfile = logfile,
+      target = nrow(input),
+      report_interval = report_interval,
+      gc_interval = gc_interval
     )
-    .annotate <- function(i) Annotator$annotate(input[["text"]][i], id = input[i][["id"]])
+    .annotate <- function(i) Annotator$annotate(input[["text"]][i], id = input[i][["id"]], current = i)
     if (progress) pblapply(1L:nrow(input), .annotate) else lapply(1L:nrow(input), .annotate)
     if (return_string) return( readLines(output) ) else return( output )
     
