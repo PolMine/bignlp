@@ -359,7 +359,7 @@ corenlp_install <- function(lang = "de", loc){
   corenlp_dir <- file.path(exttools_dir, "corenlp")
   if (!file.exists(corenlp_dir)) dir.create(corenlp_dir)
   
-  corenlp_url <- "http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip"
+  corenlp_url <- "http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip"
   zipfile <- file.path(corenlp_dir, basename(corenlp_url))
   download.file(url = corenlp_url, destfile = zipfile)
   unzip(zipfile = zipfile, exdir = corenlp_dir)
@@ -367,23 +367,23 @@ corenlp_install <- function(lang = "de", loc){
   
   options(
     bignlp.corenlp_dir = system.file(
-      package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2018-10-05"
+      package = "bignlp", "extdata", "corenlp", "stanford-corenlp-4.2.0"
       )
     )
   
   languages <- list(
     de = function(){
       message("... installing model files for: German")
-      german_jar_url <- "http://nlp.stanford.edu/software/stanford-german-corenlp-2018-10-05-models.jar"
-      german_jar <- file.path(corenlp_dir, "stanford-corenlp-full-2018-10-05", basename(german_jar_url))
+      german_jar_url <- "http://nlp.stanford.edu/software/stanford-corenlp-4.2.0-models-german.jar"
+      german_jar <- file.path(corenlp_dir, "stanford-corenlp-4.2.0", basename(german_jar_url))
       download.file(url = german_jar_url, destfile = german_jar)
       unzip(german_jar, files = "StanfordCoreNLP-german.properties")
       zip(zipfile = german_jar, files = "StanfordCoreNLP-german.properties", flags = "-d")
     },
     en = function(){
       message("... installing model files for: English")
-      english_jar_url <- "http://nlp.stanford.edu/software/stanford-english-corenlp-2018-10-05-models.jar"
-      english_jar <- file.path(corenlp_dir, "stanford-corenlp-full-2018-10-05", basename(english_jar_url))
+      english_jar_url <- "http://nlp.stanford.edu/software/stanford-corenlp-4.2.0-models-english.jar"
+      english_jar <- file.path(corenlp_dir, "stanford-corenlp-4.2.0", basename(english_jar_url))
       download.file(url = english_jar_url, destfile = english_jar)
       unzip(english_jar, files = "StanfordCoreNLP.properties")
       zip(zipfile = english_jar, files = "StanfordCoreNLP.properties", flags = "-d")
