@@ -413,8 +413,8 @@ corenlp_get_properties_file <- function(lang = c("en", "de"), fast = TRUE){
 corenlp_get_jar_dir <- function(){
   if (nchar(Sys.getenv("CORENLP_DIR")) > 0L){
     Sys.getenv("CORENLP_DIR")
-  } else if (file.exists(system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2018-10-05"))){
-    system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-full-2018-10-05")
+  } else if (file.exists(system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-4.2.0"))){
+    system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-4.2.0")
   } else if (file.exists(system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"))){
     system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31")
   } else {
