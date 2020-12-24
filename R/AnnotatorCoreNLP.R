@@ -38,6 +38,30 @@ NULL
 #'   properties_file = corenlp_get_properties_file(lang = "de")
 #' )
 #' CNLP$annotate(txt = txt)
+#' 
+#' \dontrun{
+#' # Java parallellization
+#' options(java.parameters = "-Xmx4g")
+#' library(polmineR)
+#' library(bignlp)
+#' properties <- list(
+#'   "threads" = "6",
+#'   "annotators" = "tokenize, ssplit, pos, lemma, ner",
+#'   "tokenize.language" = "de",
+#'   "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
+#'   "pos.model" = "edu/stanford/nlp/models/pos-tagger/german-ud.tagger",
+#'   "ner.model" = "edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz",
+#'   "ner.applyNumericClassifiers" = "false",
+#'   "ner.applyFineGrained" = "false",
+#'   "ner.useSUTime" = "false",
+#'   "ner.nthreads" = "6"
+#' )
+#' CNLP <- AnnotatorCoreNLP$new(method = "json", properties_file = properties)
+#' merkel <- corpus("GERMAPARL") %>%
+#'   subset(speaker == "Angela Merkel" & interjection == "FALSE") %>%
+#'   get_token_stream(beautify = TRUE, collapse = " ")
+#' system.time(foo <- CNLP$annotate(merkel))
+#' }
 AnnotatorCoreNLP <- R6Class(
   
   classname = "CoreNLP",
@@ -83,8 +107,15 @@ AnnotatorCoreNLP <- R6Class(
 
       stanford_path <- Sys.glob(paste0(corenlp_dir,"/*.jar"))
       rJava::.jaddClassPath(stanford_path)
-      rJava::.jaddClassPath(dirname(properties_file))
-      self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", basename(properties_file))
+      if (is.character(properties_file)){
+        if (!file.exists(properties_file)) stop("Argument 'properties_file' does not refer to existing file.")
+        rJava::.jaddClassPath(dirname(properties_file))
+        self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", basename(properties_file))
+      } else if (is.list(properties_file)){
+        props <- rJava::.jnew("java.util.Properties")
+        lapply(names(properties_file), function(property) props$put(property, properties_file[[property]]))
+        self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
+      }
 
       self$method <- method
       if (self$method == "xml") self$xmlifier <- rJava::.jnew("edu.stanford.nlp.pipeline.XMLOutputter")

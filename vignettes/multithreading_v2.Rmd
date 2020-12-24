@@ -1,0 +1,129 @@
+---
+title: "A new take on multithreading"
+author: "Andreas Blaette (andreas.blaette@uni-due.de)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{multithreading2}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(pbapply)
+library(bignlp)
+```
+  
+## The rationale of the bignlp-package
+
+```{r}
+chunksize <- 10
+tagdir <- "/Users/andreasblaette/Lab/tmp/corenlp"
+if (length(list.files(tagdir)) > 0L)
+  file.remove(list.files(tagdir, full.names = TRUE, recursive = TRUE, include.dirs = FALSE))
+```
+
+```{r}
+options(java.parameters = "-Xmx4g")
+library(rJava)
+
+jvm_status <- rJava::.jinit(force.init = TRUE) # does it harm when called again?
+stanford_path <- Sys.glob("/opt/stanford-corenlp/stanford-corenlp-4.2.0/*.jar")
+rJava::.jaddClassPath(stanford_path)
+
+redwood_config <- .jnew("edu/stanford/nlp/util/logging/RedwoodConfiguration")
+redwood_config$errorLevel()$apply()
+
+properties <- list(
+  "threads" = "6",
+  "annotators" = "tokenize, ssplit, pos, lemma, ner",
+  "tokenize.language" = "de",
+  "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
+  "pos.model" = "edu/stanford/nlp/models/pos-tagger/german-ud.tagger",
+  "ner.model" = "edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz",
+  "ner.applyNumericClassifiers" = "false",
+  "ner.applyFineGrained" = "false",
+  "ner.useSUTime" = "false",
+  "ner.nthreads" = "6",
+  "outputFormat" = "json",
+  "outputDirectory" = "/Users/andreasblaette/Lab/tmp/corenlp/json"
+)
+
+props <- rJava::.jnew("java.util.Properties")
+lapply(names(properties), function(property) props$put(property, properties[[property]]))
+
+tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
+```
+
+
+
+```{r}
+library(polmineR)
+library(data.table)
+
+subcorpora <- corpus("GERMAPARLMINI") %>%
+  subset(interjection == "speech") %>%
+  split(s_attribute = "speaker")
+
+speakers <- get_token_stream(subcorpora, collapse = " ", beautify = TRUE)
+
+dt <- data.table(
+  id = 1L:length(speakers),
+  text = unlist(speakers),
+  speaker = unname(unlist(s_attributes(subcorpora, s_attribute = "speaker")))
+)
+
+chunk_factor <- cut(
+  1:nrow(dt),
+  breaks = c(1L, cumsum(rep(chunksize, floor(nrow(dt) / chunksize))), nrow(dt)),
+  include.lowest = TRUE, right = FALSE
+)
+
+dt_chunks <- split(dt, f = chunk_factor)
+
+dts <- pblapply(
+  1L:length(dt_chunks),
+  function(i){
+    dir.create(file.path(tagdir, i))
+    
+    # Write chunks to disk ---------------------
+    
+    for (j in 1:nrow(dt_chunks[[i]])){
+      cat(
+        dt_chunks[[i]][["text"]][j],
+        file = file.path(file.path(tagdir, i, sprintf("%d.txt", dt_chunks[[i]][["id"]][j])))
+      )
+    }
+    
+    # Process files ----------------------------------
+    
+    file_collection <- .jnew(
+      "edu/stanford/nlp/io/FileSequentialCollection",
+      .jnew("java/io/File", file.path(tagdir, i)),
+      .jnew("java/lang/String", "txt"),
+      FALSE
+    )
+    
+    props$put("outputDirectory", file.path(tagdir, i))
+    tagger$processFiles(
+      .jnew("java/lang/String", file.path(tagdir, i)),
+      file_collection,
+      1L,
+      FALSE,
+      J("java/util/Optional")$empty()
+    )
+    
+    rbindlist(
+      lapply(
+        1:nrow(dt_chunks[[i]]),
+        function(j){
+          corenlp_parse_json(input = file.path(tagdir, i, sprintf("%d.txt.json", dt_chunks[[i]][["id"]][[j]])))
+        }
+      )
+    )
+  }  
+)
+y <- rbindlist(dts)
+```
