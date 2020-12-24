@@ -14,7 +14,7 @@
 
 <meta name="date" content="2020-12-24" />
 
-<title>A new take on multithreading</title>
+<title>Multithreading Reloaded</title>
 
 <script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
 // v0.0.1
@@ -365,7 +365,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<h1 class="title toc-ignore">A new take on multithreading</h1>
+<h1 class="title toc-ignore">Multithreading Reloaded</h1>
 <h4 class="author">Andreas Blaette (<a href="mailto:andreas.blaette@uni-due.de" class="email">andreas.blaette@uni-due.de</a>)</h4>
 <h4 class="date">2020-12-24</h4>
 
@@ -380,35 +380,33 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb3-2"><a href="#cb3-2"></a>tagdir &lt;-<span class="st"> &quot;/Users/andreasblaette/Lab/tmp/corenlp&quot;</span></span>
 <span id="cb3-3"><a href="#cb3-3"></a><span class="cf">if</span> (<span class="kw">length</span>(<span class="kw">list.files</span>(tagdir)) <span class="op">&gt;</span><span class="st"> </span>0L)</span>
 <span id="cb3-4"><a href="#cb3-4"></a>  <span class="kw">file.remove</span>(<span class="kw">list.files</span>(tagdir, <span class="dt">full.names =</span> <span class="ot">TRUE</span>, <span class="dt">recursive =</span> <span class="ot">TRUE</span>, <span class="dt">include.dirs =</span> <span class="ot">FALSE</span>))</span></code></pre></div>
-<pre><code>##  [1] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-## [16] TRUE</code></pre>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">options</span>(<span class="dt">java.parameters =</span> <span class="st">&quot;-Xmx4g&quot;</span>)</span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">library</span>(rJava)</span>
-<span id="cb5-3"><a href="#cb5-3"></a></span>
-<span id="cb5-4"><a href="#cb5-4"></a>jvm_status &lt;-<span class="st"> </span>rJava<span class="op">::</span><span class="kw">.jinit</span>(<span class="dt">force.init =</span> <span class="ot">TRUE</span>) <span class="co"># does it harm when called again?</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a>stanford_path &lt;-<span class="st"> </span><span class="kw">Sys.glob</span>(<span class="st">&quot;/opt/stanford-corenlp/stanford-corenlp-4.2.0/*.jar&quot;</span>)</span>
-<span id="cb5-6"><a href="#cb5-6"></a>rJava<span class="op">::</span><span class="kw">.jaddClassPath</span>(stanford_path)</span>
-<span id="cb5-7"><a href="#cb5-7"></a></span>
-<span id="cb5-8"><a href="#cb5-8"></a>redwood_config &lt;-<span class="st"> </span><span class="kw">.jnew</span>(<span class="st">&quot;edu/stanford/nlp/util/logging/RedwoodConfiguration&quot;</span>)</span>
-<span id="cb5-9"><a href="#cb5-9"></a>redwood_config<span class="op">$</span><span class="kw">errorLevel</span>()<span class="op">$</span><span class="kw">apply</span>()</span>
-<span id="cb5-10"><a href="#cb5-10"></a></span>
-<span id="cb5-11"><a href="#cb5-11"></a>properties &lt;-<span class="st"> </span><span class="kw">list</span>(</span>
-<span id="cb5-12"><a href="#cb5-12"></a>  <span class="st">&quot;threads&quot;</span> =<span class="st"> &quot;6&quot;</span>,</span>
-<span id="cb5-13"><a href="#cb5-13"></a>  <span class="st">&quot;annotators&quot;</span> =<span class="st"> &quot;tokenize, ssplit, pos, lemma, ner&quot;</span>,</span>
-<span id="cb5-14"><a href="#cb5-14"></a>  <span class="st">&quot;tokenize.language&quot;</span> =<span class="st"> &quot;de&quot;</span>,</span>
-<span id="cb5-15"><a href="#cb5-15"></a>  <span class="st">&quot;tokenize.postProcessor&quot;</span> =<span class="st"> &quot;edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor&quot;</span>,</span>
-<span id="cb5-16"><a href="#cb5-16"></a>  <span class="st">&quot;pos.model&quot;</span> =<span class="st"> &quot;edu/stanford/nlp/models/pos-tagger/german-ud.tagger&quot;</span>,</span>
-<span id="cb5-17"><a href="#cb5-17"></a>  <span class="st">&quot;ner.model&quot;</span> =<span class="st"> &quot;edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz&quot;</span>,</span>
-<span id="cb5-18"><a href="#cb5-18"></a>  <span class="st">&quot;ner.applyNumericClassifiers&quot;</span> =<span class="st"> &quot;false&quot;</span>,</span>
-<span id="cb5-19"><a href="#cb5-19"></a>  <span class="st">&quot;ner.applyFineGrained&quot;</span> =<span class="st"> &quot;false&quot;</span>,</span>
-<span id="cb5-20"><a href="#cb5-20"></a>  <span class="st">&quot;ner.useSUTime&quot;</span> =<span class="st"> &quot;false&quot;</span>,</span>
-<span id="cb5-21"><a href="#cb5-21"></a>  <span class="st">&quot;ner.nthreads&quot;</span> =<span class="st"> &quot;6&quot;</span>,</span>
-<span id="cb5-22"><a href="#cb5-22"></a>  <span class="st">&quot;outputFormat&quot;</span> =<span class="st"> &quot;json&quot;</span>,</span>
-<span id="cb5-23"><a href="#cb5-23"></a>  <span class="st">&quot;outputDirectory&quot;</span> =<span class="st"> &quot;/Users/andreasblaette/Lab/tmp/corenlp/json&quot;</span></span>
-<span id="cb5-24"><a href="#cb5-24"></a>)</span>
-<span id="cb5-25"><a href="#cb5-25"></a></span>
-<span id="cb5-26"><a href="#cb5-26"></a>props &lt;-<span class="st"> </span>rJava<span class="op">::</span><span class="kw">.jnew</span>(<span class="st">&quot;java.util.Properties&quot;</span>)</span>
-<span id="cb5-27"><a href="#cb5-27"></a><span class="kw">lapply</span>(<span class="kw">names</span>(properties), <span class="cf">function</span>(property) props<span class="op">$</span><span class="kw">put</span>(property, properties[[property]]))</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">options</span>(<span class="dt">java.parameters =</span> <span class="st">&quot;-Xmx4g&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">library</span>(rJava)</span>
+<span id="cb4-3"><a href="#cb4-3"></a></span>
+<span id="cb4-4"><a href="#cb4-4"></a>jvm_status &lt;-<span class="st"> </span>rJava<span class="op">::</span><span class="kw">.jinit</span>(<span class="dt">force.init =</span> <span class="ot">TRUE</span>) <span class="co"># does it harm when called again?</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>stanford_path &lt;-<span class="st"> </span><span class="kw">Sys.glob</span>(<span class="st">&quot;/opt/stanford-corenlp/stanford-corenlp-4.2.0/*.jar&quot;</span>)</span>
+<span id="cb4-6"><a href="#cb4-6"></a>rJava<span class="op">::</span><span class="kw">.jaddClassPath</span>(stanford_path)</span>
+<span id="cb4-7"><a href="#cb4-7"></a></span>
+<span id="cb4-8"><a href="#cb4-8"></a>redwood_config &lt;-<span class="st"> </span><span class="kw">.jnew</span>(<span class="st">&quot;edu/stanford/nlp/util/logging/RedwoodConfiguration&quot;</span>)</span>
+<span id="cb4-9"><a href="#cb4-9"></a>redwood_config<span class="op">$</span><span class="kw">errorLevel</span>()<span class="op">$</span><span class="kw">apply</span>()</span>
+<span id="cb4-10"><a href="#cb4-10"></a></span>
+<span id="cb4-11"><a href="#cb4-11"></a>properties &lt;-<span class="st"> </span><span class="kw">list</span>(</span>
+<span id="cb4-12"><a href="#cb4-12"></a>  <span class="st">&quot;threads&quot;</span> =<span class="st"> &quot;6&quot;</span>,</span>
+<span id="cb4-13"><a href="#cb4-13"></a>  <span class="st">&quot;annotators&quot;</span> =<span class="st"> &quot;tokenize, ssplit, pos, lemma, ner&quot;</span>,</span>
+<span id="cb4-14"><a href="#cb4-14"></a>  <span class="st">&quot;tokenize.language&quot;</span> =<span class="st"> &quot;de&quot;</span>,</span>
+<span id="cb4-15"><a href="#cb4-15"></a>  <span class="st">&quot;tokenize.postProcessor&quot;</span> =<span class="st"> &quot;edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor&quot;</span>,</span>
+<span id="cb4-16"><a href="#cb4-16"></a>  <span class="st">&quot;pos.model&quot;</span> =<span class="st"> &quot;edu/stanford/nlp/models/pos-tagger/german-ud.tagger&quot;</span>,</span>
+<span id="cb4-17"><a href="#cb4-17"></a>  <span class="st">&quot;ner.model&quot;</span> =<span class="st"> &quot;edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz&quot;</span>,</span>
+<span id="cb4-18"><a href="#cb4-18"></a>  <span class="st">&quot;ner.applyNumericClassifiers&quot;</span> =<span class="st"> &quot;false&quot;</span>,</span>
+<span id="cb4-19"><a href="#cb4-19"></a>  <span class="st">&quot;ner.applyFineGrained&quot;</span> =<span class="st"> &quot;false&quot;</span>,</span>
+<span id="cb4-20"><a href="#cb4-20"></a>  <span class="st">&quot;ner.useSUTime&quot;</span> =<span class="st"> &quot;false&quot;</span>,</span>
+<span id="cb4-21"><a href="#cb4-21"></a>  <span class="st">&quot;ner.nthreads&quot;</span> =<span class="st"> &quot;6&quot;</span>,</span>
+<span id="cb4-22"><a href="#cb4-22"></a>  <span class="st">&quot;outputFormat&quot;</span> =<span class="st"> &quot;json&quot;</span>,</span>
+<span id="cb4-23"><a href="#cb4-23"></a>  <span class="st">&quot;outputDirectory&quot;</span> =<span class="st"> &quot;/Users/andreasblaette/Lab/tmp/corenlp/json&quot;</span></span>
+<span id="cb4-24"><a href="#cb4-24"></a>)</span>
+<span id="cb4-25"><a href="#cb4-25"></a></span>
+<span id="cb4-26"><a href="#cb4-26"></a>props &lt;-<span class="st"> </span>rJava<span class="op">::</span><span class="kw">.jnew</span>(<span class="st">&quot;java.util.Properties&quot;</span>)</span>
+<span id="cb4-27"><a href="#cb4-27"></a><span class="kw">lapply</span>(<span class="kw">names</span>(properties), <span class="cf">function</span>(property) props<span class="op">$</span><span class="kw">put</span>(property, properties[[property]]))</span></code></pre></div>
 <pre><code>## [[1]]
 ## NULL
 ## 
@@ -444,77 +442,72 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## 
 ## [[12]]
 ## NULL</code></pre>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>tagger &lt;-<span class="st"> </span>rJava<span class="op">::</span><span class="kw">.jnew</span>(<span class="st">&quot;edu.stanford.nlp.pipeline.StanfordCoreNLP&quot;</span>, props)</span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">library</span>(polmineR)</span>
-<span id="cb8-2"><a href="#cb8-2"></a><span class="kw">library</span>(data.table)</span>
-<span id="cb8-3"><a href="#cb8-3"></a></span>
-<span id="cb8-4"><a href="#cb8-4"></a>subcorpora &lt;-<span class="st"> </span><span class="kw">corpus</span>(<span class="st">&quot;GERMAPARLMINI&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb8-5"><a href="#cb8-5"></a><span class="st">  </span><span class="kw">subset</span>(interjection <span class="op">==</span><span class="st"> &quot;speech&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb8-6"><a href="#cb8-6"></a><span class="st">  </span><span class="kw">split</span>(<span class="dt">s_attribute =</span> <span class="st">&quot;speaker&quot;</span>)</span>
-<span id="cb8-7"><a href="#cb8-7"></a></span>
-<span id="cb8-8"><a href="#cb8-8"></a>speakers &lt;-<span class="st"> </span><span class="kw">get_token_stream</span>(subcorpora, <span class="dt">collapse =</span> <span class="st">&quot; &quot;</span>, <span class="dt">beautify =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
-<pre><code>## ... creating vector of document ids</code></pre>
-<pre><code>## ... creating vector of corpus positions</code></pre>
-<pre><code>## ... decoding character vectors</code></pre>
-<pre><code>## ... generating list of character vectors</code></pre>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>dt &lt;-<span class="st"> </span><span class="kw">data.table</span>(</span>
-<span id="cb13-2"><a href="#cb13-2"></a>  <span class="dt">id =</span> 1L<span class="op">:</span><span class="kw">length</span>(speakers),</span>
-<span id="cb13-3"><a href="#cb13-3"></a>  <span class="dt">text =</span> <span class="kw">unlist</span>(speakers),</span>
-<span id="cb13-4"><a href="#cb13-4"></a>  <span class="dt">speaker =</span> <span class="kw">unname</span>(<span class="kw">unlist</span>(<span class="kw">s_attributes</span>(subcorpora, <span class="dt">s_attribute =</span> <span class="st">&quot;speaker&quot;</span>)))</span>
-<span id="cb13-5"><a href="#cb13-5"></a>)</span>
-<span id="cb13-6"><a href="#cb13-6"></a></span>
-<span id="cb13-7"><a href="#cb13-7"></a>chunk_factor &lt;-<span class="st"> </span><span class="kw">cut</span>(</span>
-<span id="cb13-8"><a href="#cb13-8"></a>  <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(dt),</span>
-<span id="cb13-9"><a href="#cb13-9"></a>  <span class="dt">breaks =</span> <span class="kw">c</span>(1L, <span class="kw">cumsum</span>(<span class="kw">rep</span>(chunksize, <span class="kw">floor</span>(<span class="kw">nrow</span>(dt) <span class="op">/</span><span class="st"> </span>chunksize))), <span class="kw">nrow</span>(dt)),</span>
-<span id="cb13-10"><a href="#cb13-10"></a>  <span class="dt">include.lowest =</span> <span class="ot">TRUE</span>, <span class="dt">right =</span> <span class="ot">FALSE</span></span>
-<span id="cb13-11"><a href="#cb13-11"></a>)</span>
-<span id="cb13-12"><a href="#cb13-12"></a></span>
-<span id="cb13-13"><a href="#cb13-13"></a>dt_chunks &lt;-<span class="st"> </span><span class="kw">split</span>(dt, <span class="dt">f =</span> chunk_factor)</span>
-<span id="cb13-14"><a href="#cb13-14"></a></span>
-<span id="cb13-15"><a href="#cb13-15"></a>dts &lt;-<span class="st"> </span><span class="kw">pblapply</span>(</span>
-<span id="cb13-16"><a href="#cb13-16"></a>  1L<span class="op">:</span><span class="kw">length</span>(dt_chunks),</span>
-<span id="cb13-17"><a href="#cb13-17"></a>  <span class="cf">function</span>(i){</span>
-<span id="cb13-18"><a href="#cb13-18"></a>    <span class="kw">dir.create</span>(<span class="kw">file.path</span>(tagdir, i))</span>
-<span id="cb13-19"><a href="#cb13-19"></a>    </span>
-<span id="cb13-20"><a href="#cb13-20"></a>    <span class="co"># Write chunks to disk ---------------------</span></span>
-<span id="cb13-21"><a href="#cb13-21"></a>    </span>
-<span id="cb13-22"><a href="#cb13-22"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(dt_chunks[[i]])){</span>
-<span id="cb13-23"><a href="#cb13-23"></a>      <span class="kw">cat</span>(</span>
-<span id="cb13-24"><a href="#cb13-24"></a>        dt_chunks[[i]][[<span class="st">&quot;text&quot;</span>]][j],</span>
-<span id="cb13-25"><a href="#cb13-25"></a>        <span class="dt">file =</span> <span class="kw">file.path</span>(<span class="kw">file.path</span>(tagdir, i, <span class="kw">sprintf</span>(<span class="st">&quot;%d.txt&quot;</span>, dt_chunks[[i]][[<span class="st">&quot;id&quot;</span>]][j])))</span>
-<span id="cb13-26"><a href="#cb13-26"></a>      )</span>
-<span id="cb13-27"><a href="#cb13-27"></a>    }</span>
-<span id="cb13-28"><a href="#cb13-28"></a>    </span>
-<span id="cb13-29"><a href="#cb13-29"></a>    <span class="co"># Process files ----------------------------------</span></span>
-<span id="cb13-30"><a href="#cb13-30"></a>    </span>
-<span id="cb13-31"><a href="#cb13-31"></a>    file_collection &lt;-<span class="st"> </span><span class="kw">.jnew</span>(</span>
-<span id="cb13-32"><a href="#cb13-32"></a>      <span class="st">&quot;edu/stanford/nlp/io/FileSequentialCollection&quot;</span>,</span>
-<span id="cb13-33"><a href="#cb13-33"></a>      <span class="kw">.jnew</span>(<span class="st">&quot;java/io/File&quot;</span>, <span class="kw">file.path</span>(tagdir, i)),</span>
-<span id="cb13-34"><a href="#cb13-34"></a>      <span class="kw">.jnew</span>(<span class="st">&quot;java/lang/String&quot;</span>, <span class="st">&quot;txt&quot;</span>),</span>
-<span id="cb13-35"><a href="#cb13-35"></a>      <span class="ot">FALSE</span></span>
-<span id="cb13-36"><a href="#cb13-36"></a>    )</span>
-<span id="cb13-37"><a href="#cb13-37"></a>    </span>
-<span id="cb13-38"><a href="#cb13-38"></a>    props<span class="op">$</span><span class="kw">put</span>(<span class="st">&quot;outputDirectory&quot;</span>, <span class="kw">file.path</span>(tagdir, i))</span>
-<span id="cb13-39"><a href="#cb13-39"></a>    tagger<span class="op">$</span><span class="kw">processFiles</span>(</span>
-<span id="cb13-40"><a href="#cb13-40"></a>      <span class="kw">.jnew</span>(<span class="st">&quot;java/lang/String&quot;</span>, <span class="kw">file.path</span>(tagdir, i)),</span>
-<span id="cb13-41"><a href="#cb13-41"></a>      file_collection,</span>
-<span id="cb13-42"><a href="#cb13-42"></a>      1L,</span>
-<span id="cb13-43"><a href="#cb13-43"></a>      <span class="ot">FALSE</span>,</span>
-<span id="cb13-44"><a href="#cb13-44"></a>      <span class="kw">J</span>(<span class="st">&quot;java/util/Optional&quot;</span>)<span class="op">$</span><span class="kw">empty</span>()</span>
-<span id="cb13-45"><a href="#cb13-45"></a>    )</span>
-<span id="cb13-46"><a href="#cb13-46"></a>    </span>
-<span id="cb13-47"><a href="#cb13-47"></a>    <span class="kw">rbindlist</span>(</span>
-<span id="cb13-48"><a href="#cb13-48"></a>      <span class="kw">lapply</span>(</span>
-<span id="cb13-49"><a href="#cb13-49"></a>        <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(dt_chunks[[i]]),</span>
-<span id="cb13-50"><a href="#cb13-50"></a>        <span class="cf">function</span>(j){</span>
-<span id="cb13-51"><a href="#cb13-51"></a>          <span class="kw">corenlp_parse_json</span>(<span class="dt">input =</span> <span class="kw">file.path</span>(tagdir, i, <span class="kw">sprintf</span>(<span class="st">&quot;%d.txt.json&quot;</span>, dt_chunks[[i]][[<span class="st">&quot;id&quot;</span>]][[j]])))</span>
-<span id="cb13-52"><a href="#cb13-52"></a>        }</span>
-<span id="cb13-53"><a href="#cb13-53"></a>      )</span>
-<span id="cb13-54"><a href="#cb13-54"></a>    )</span>
-<span id="cb13-55"><a href="#cb13-55"></a>  }  </span>
-<span id="cb13-56"><a href="#cb13-56"></a>)</span></code></pre></div>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/1&#39; existiert bereits</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>tagger &lt;-<span class="st"> </span>rJava<span class="op">::</span><span class="kw">.jnew</span>(<span class="st">&quot;edu.stanford.nlp.pipeline.StanfordCoreNLP&quot;</span>, props)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">library</span>(polmineR)</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">library</span>(data.table)</span>
+<span id="cb7-3"><a href="#cb7-3"></a></span>
+<span id="cb7-4"><a href="#cb7-4"></a>subcorpora &lt;-<span class="st"> </span><span class="kw">corpus</span>(<span class="st">&quot;GERMAPARLMINI&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="st">  </span><span class="kw">subset</span>(interjection <span class="op">==</span><span class="st"> &quot;speech&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="st">  </span><span class="kw">split</span>(<span class="dt">s_attribute =</span> <span class="st">&quot;speaker&quot;</span>)</span>
+<span id="cb7-7"><a href="#cb7-7"></a></span>
+<span id="cb7-8"><a href="#cb7-8"></a>speakers &lt;-<span class="st"> </span><span class="kw">get_token_stream</span>(subcorpora, <span class="dt">collapse =</span> <span class="st">&quot; &quot;</span>, <span class="dt">beautify =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb7-9"><a href="#cb7-9"></a></span>
+<span id="cb7-10"><a href="#cb7-10"></a>dt &lt;-<span class="st"> </span><span class="kw">data.table</span>(</span>
+<span id="cb7-11"><a href="#cb7-11"></a>  <span class="dt">id =</span> 1L<span class="op">:</span><span class="kw">length</span>(speakers),</span>
+<span id="cb7-12"><a href="#cb7-12"></a>  <span class="dt">text =</span> <span class="kw">unlist</span>(speakers),</span>
+<span id="cb7-13"><a href="#cb7-13"></a>  <span class="dt">speaker =</span> <span class="kw">unname</span>(<span class="kw">unlist</span>(<span class="kw">s_attributes</span>(subcorpora, <span class="dt">s_attribute =</span> <span class="st">&quot;speaker&quot;</span>)))</span>
+<span id="cb7-14"><a href="#cb7-14"></a>)</span>
+<span id="cb7-15"><a href="#cb7-15"></a></span>
+<span id="cb7-16"><a href="#cb7-16"></a>chunk_factor &lt;-<span class="st"> </span><span class="kw">cut</span>(</span>
+<span id="cb7-17"><a href="#cb7-17"></a>  <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(dt),</span>
+<span id="cb7-18"><a href="#cb7-18"></a>  <span class="dt">breaks =</span> <span class="kw">c</span>(1L, <span class="kw">cumsum</span>(<span class="kw">rep</span>(chunksize, <span class="kw">floor</span>(<span class="kw">nrow</span>(dt) <span class="op">/</span><span class="st"> </span>chunksize))), <span class="kw">nrow</span>(dt)),</span>
+<span id="cb7-19"><a href="#cb7-19"></a>  <span class="dt">include.lowest =</span> <span class="ot">TRUE</span>, <span class="dt">right =</span> <span class="ot">FALSE</span></span>
+<span id="cb7-20"><a href="#cb7-20"></a>)</span>
+<span id="cb7-21"><a href="#cb7-21"></a></span>
+<span id="cb7-22"><a href="#cb7-22"></a>dt_chunks &lt;-<span class="st"> </span><span class="kw">split</span>(dt, <span class="dt">f =</span> chunk_factor)</span>
+<span id="cb7-23"><a href="#cb7-23"></a></span>
+<span id="cb7-24"><a href="#cb7-24"></a>dts &lt;-<span class="st"> </span><span class="kw">pblapply</span>(</span>
+<span id="cb7-25"><a href="#cb7-25"></a>  1L<span class="op">:</span><span class="kw">length</span>(dt_chunks),</span>
+<span id="cb7-26"><a href="#cb7-26"></a>  <span class="cf">function</span>(i){</span>
+<span id="cb7-27"><a href="#cb7-27"></a>    <span class="kw">dir.create</span>(<span class="kw">file.path</span>(tagdir, i))</span>
+<span id="cb7-28"><a href="#cb7-28"></a>    </span>
+<span id="cb7-29"><a href="#cb7-29"></a>    <span class="co"># Write chunks to disk ---------------------</span></span>
+<span id="cb7-30"><a href="#cb7-30"></a>    </span>
+<span id="cb7-31"><a href="#cb7-31"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(dt_chunks[[i]])){</span>
+<span id="cb7-32"><a href="#cb7-32"></a>      <span class="kw">cat</span>(</span>
+<span id="cb7-33"><a href="#cb7-33"></a>        dt_chunks[[i]][[<span class="st">&quot;text&quot;</span>]][j],</span>
+<span id="cb7-34"><a href="#cb7-34"></a>        <span class="dt">file =</span> <span class="kw">file.path</span>(<span class="kw">file.path</span>(tagdir, i, <span class="kw">sprintf</span>(<span class="st">&quot;%d.txt&quot;</span>, dt_chunks[[i]][[<span class="st">&quot;id&quot;</span>]][j])))</span>
+<span id="cb7-35"><a href="#cb7-35"></a>      )</span>
+<span id="cb7-36"><a href="#cb7-36"></a>    }</span>
+<span id="cb7-37"><a href="#cb7-37"></a>    </span>
+<span id="cb7-38"><a href="#cb7-38"></a>    <span class="co"># Process files ----------------------------------</span></span>
+<span id="cb7-39"><a href="#cb7-39"></a>    </span>
+<span id="cb7-40"><a href="#cb7-40"></a>    file_collection &lt;-<span class="st"> </span><span class="kw">.jnew</span>(</span>
+<span id="cb7-41"><a href="#cb7-41"></a>      <span class="st">&quot;edu/stanford/nlp/io/FileSequentialCollection&quot;</span>,</span>
+<span id="cb7-42"><a href="#cb7-42"></a>      <span class="kw">.jnew</span>(<span class="st">&quot;java/io/File&quot;</span>, <span class="kw">file.path</span>(tagdir, i)),</span>
+<span id="cb7-43"><a href="#cb7-43"></a>      <span class="kw">.jnew</span>(<span class="st">&quot;java/lang/String&quot;</span>, <span class="st">&quot;txt&quot;</span>),</span>
+<span id="cb7-44"><a href="#cb7-44"></a>      <span class="ot">FALSE</span></span>
+<span id="cb7-45"><a href="#cb7-45"></a>    )</span>
+<span id="cb7-46"><a href="#cb7-46"></a>    </span>
+<span id="cb7-47"><a href="#cb7-47"></a>    props<span class="op">$</span><span class="kw">put</span>(<span class="st">&quot;outputDirectory&quot;</span>, <span class="kw">file.path</span>(tagdir, i))</span>
+<span id="cb7-48"><a href="#cb7-48"></a>    tagger<span class="op">$</span><span class="kw">processFiles</span>(</span>
+<span id="cb7-49"><a href="#cb7-49"></a>      <span class="kw">.jnew</span>(<span class="st">&quot;java/lang/String&quot;</span>, <span class="kw">file.path</span>(tagdir, i)),</span>
+<span id="cb7-50"><a href="#cb7-50"></a>      file_collection,</span>
+<span id="cb7-51"><a href="#cb7-51"></a>      1L,</span>
+<span id="cb7-52"><a href="#cb7-52"></a>      <span class="ot">FALSE</span>,</span>
+<span id="cb7-53"><a href="#cb7-53"></a>      <span class="kw">J</span>(<span class="st">&quot;java/util/Optional&quot;</span>)<span class="op">$</span><span class="kw">empty</span>()</span>
+<span id="cb7-54"><a href="#cb7-54"></a>    )</span>
+<span id="cb7-55"><a href="#cb7-55"></a>    </span>
+<span id="cb7-56"><a href="#cb7-56"></a>    <span class="kw">rbindlist</span>(</span>
+<span id="cb7-57"><a href="#cb7-57"></a>      <span class="kw">lapply</span>(</span>
+<span id="cb7-58"><a href="#cb7-58"></a>        <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(dt_chunks[[i]]),</span>
+<span id="cb7-59"><a href="#cb7-59"></a>        <span class="cf">function</span>(j){</span>
+<span id="cb7-60"><a href="#cb7-60"></a>          <span class="kw">corenlp_parse_json</span>(<span class="dt">input =</span> <span class="kw">file.path</span>(tagdir, i, <span class="kw">sprintf</span>(<span class="st">&quot;%d.txt.json&quot;</span>, dt_chunks[[i]][[<span class="st">&quot;id&quot;</span>]][[j]])))</span>
+<span id="cb7-61"><a href="#cb7-61"></a>        }</span>
+<span id="cb7-62"><a href="#cb7-62"></a>      )</span>
+<span id="cb7-63"><a href="#cb7-63"></a>    )</span>
+<span id="cb7-64"><a href="#cb7-64"></a>  }  </span>
+<span id="cb7-65"><a href="#cb7-65"></a>)</span></code></pre></div>
 <pre><code>## Error : lexical error: invalid char in json text.
 ##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
@@ -545,10 +538,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/1/5.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/2&#39; existiert bereits</code></pre>
-<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
-##                                        
+<pre><code>## Error : lexical error: invalid char in json text.
+##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
@@ -559,8 +550,6 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/2/12.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/3&#39; existiert bereits</code></pre>
 <pre><code>## Error : lexical error: invalid char in json text.
 ##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
@@ -573,42 +562,54 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/3/28.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/4&#39; existiert bereits</code></pre>
 <pre><code>## Error : lexical error: invalid char in json text.
 ##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/4/30.txt.json</code></pre>
-<pre><code>## Error : lexical error: invalid char in json text.
-##                                       /Users/andreasblaette/Lab/tmp/co
+<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
+##                                        
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/4/31.txt.json</code></pre>
-<pre><code>## Error : lexical error: invalid char in json text.
-##                                       /Users/andreasblaette/Lab/tmp/co
+<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
+##                                        
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/4/32.txt.json</code></pre>
-<pre><code>## Error : lexical error: invalid char in json text.
-##                                       /Users/andreasblaette/Lab/tmp/co
+<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
+##                                        
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/4/33.txt.json</code></pre>
-<pre><code>## Error : lexical error: invalid char in json text.
-##                                       /Users/andreasblaette/Lab/tmp/co
+<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
+##                                        
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/4/34.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/5&#39; existiert bereits</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/6&#39; existiert bereits</code></pre>
+<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
+##                                        
+##                      (right here) ------^</code></pre>
+<pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
+## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
+## Lab/tmp/corenlp/5/40.txt.json</code></pre>
+<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
+##                                        
+##                      (right here) ------^</code></pre>
+<pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
+## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
+## Lab/tmp/corenlp/5/41.txt.json</code></pre>
+<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
+##                                        
+##                      (right here) ------^</code></pre>
+<pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
+## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
+## Lab/tmp/corenlp/5/42.txt.json</code></pre>
 <pre><code>## Error : lexical error: invalid char in json text.
 ##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
@@ -639,16 +640,6 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/6/54.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/7&#39; existiert bereits</code></pre>
-<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
-##                                        
-##                      (right here) ------^</code></pre>
-<pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
-## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
-## Lab/tmp/corenlp/7/61.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/8&#39; existiert bereits</code></pre>
 <pre><code>## Error : lexical error: invalid char in json text.
 ##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
@@ -667,8 +658,6 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/8/72.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/9&#39; existiert bereits</code></pre>
 <pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
 ##                                        
 ##                      (right here) ------^</code></pre>
@@ -681,16 +670,14 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/9/85.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/10&#39; existiert bereits</code></pre>
 <pre><code>## Error : lexical error: invalid char in json text.
 ##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/10/90.txt.json</code></pre>
-<pre><code>## Error : lexical error: invalid char in json text.
-##                                       /Users/andreasblaette/Lab/tmp/co
+<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
+##                                        
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
@@ -712,14 +699,6 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
-## Lab/tmp/corenlp/10/94.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/11&#39; existiert bereits</code></pre>
-<pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
-##                                        
-##                      (right here) ------^</code></pre>
-<pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
-## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/11/100.txt.json</code></pre>
 <pre><code>## Error in parse_con(txt, bigint_as_char) : parse error: premature EOF
 ##                                        
@@ -727,16 +706,12 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/11/101.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/12&#39; existiert bereits</code></pre>
 <pre><code>## Error : lexical error: invalid char in json text.
 ##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/12/110.txt.json</code></pre>
-<pre><code>## Warning in dir.create(file.path(tagdir, i)): &#39;/Users/andreasblaette/Lab/tmp/
-## corenlp/13&#39; existiert bereits</code></pre>
 <pre><code>## Error : lexical error: invalid char in json text.
 ##                                       /Users/andreasblaette/Lab/tmp/co
 ##                      (right here) ------^</code></pre>
@@ -767,7 +742,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## Warning in corenlp_parse_json(input = file.path(tagdir, i,
 ## sprintf(&quot;%d.txt.json&quot;, : Cannot parse character vector: /Users/andreasblaette/
 ## Lab/tmp/corenlp/13/124.txt.json</code></pre>
-<div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb103-1"><a href="#cb103-1"></a>y &lt;-<span class="st"> </span><span class="kw">rbindlist</span>(dts)</span></code></pre></div>
+<div class="sourceCode" id="cb86"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1"></a>y &lt;-<span class="st"> </span><span class="kw">rbindlist</span>(dts)</span></code></pre></div>
 </div>
 
 

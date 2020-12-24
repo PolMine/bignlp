@@ -1,10 +1,10 @@
 ---
-title: "A new take on multithreading"
+title: "Multithreading Reloaded"
 author: "Andreas Blaette (andreas.blaette@uni-due.de)"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{multithreading2}
+  %\VignetteIndexEntry{Multithreading Reloaded}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -59,7 +59,7 @@ tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
 
 
 
-```{r}
+```{r, message = FALSE}
 library(polmineR)
 library(data.table)
 
