@@ -33,11 +33,8 @@ jvm_status <- rJava::.jinit(force.init = TRUE) # does it harm when called again?
 stanford_path <- Sys.glob("/opt/stanford-corenlp/stanford-corenlp-4.2.0/*.jar")
 rJava::.jaddClassPath(stanford_path)
 
-redwood_config <- .jnew("edu/stanford/nlp/util/logging/RedwoodConfiguration")
-redwood_config$errorLevel()$apply()
-
 properties <- list(
-  "threads" = "6",
+  "threads" = "7", # THIS is the game changer
   "annotators" = "tokenize, ssplit, pos, lemma, ner",
   "tokenize.language" = "de",
   "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
@@ -46,7 +43,6 @@ properties <- list(
   "ner.applyNumericClassifiers" = "false",
   "ner.applyFineGrained" = "false",
   "ner.useSUTime" = "false",
-  "ner.nthreads" = "6",
   "outputFormat" = "json",
   "outputDirectory" = "/Users/andreasblaette/Lab/tmp/corenlp/json"
 )
@@ -82,11 +78,18 @@ chunk_factor <- cut(
 )
 
 dt_chunks <- split(dt, f = chunk_factor)
+```
+
+
+```{r}
+redwood_config <- .jnew("edu/stanford/nlp/util/logging/RedwoodConfiguration")
+redwood_config$errorLevel()$apply()
 
 dts <- pblapply(
   1L:length(dt_chunks),
   function(i){
-    dir.create(file.path(tagdir, i))
+    outdir <- file.path(tagdir, i)
+    if (!dir.exists(outdir)) dir.create(outdir)
     
     # Write chunks to disk ---------------------
     
@@ -108,22 +111,20 @@ dts <- pblapply(
     
     props$put("outputDirectory", file.path(tagdir, i))
     tagger$processFiles(
-      .jnew("java/lang/String", file.path(tagdir, i)),
+#      .jnew("java/lang/String", file.path(tagdir, i)),
       file_collection,
-      1L,
+      6L,
       FALSE,
       J("java/util/Optional")$empty()
     )
-    
-    rbindlist(
-      lapply(
-        1:nrow(dt_chunks[[i]]),
-        function(j){
-          corenlp_parse_json(input = file.path(tagdir, i, sprintf("%d.txt.json", dt_chunks[[i]][["id"]][[j]])))
-        }
-      )
-    )
   }  
 )
-y <- rbindlist(dts)
+```
+
+```{r}
+y <- pblapply(
+  grep(".*\\.json", list.files(tagdir, recursive = TRUE, full.names = TRUE), value = TRUE),
+  corenlp_parse_json,
+  cl = 7L
+)
 ```
