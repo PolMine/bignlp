@@ -21,7 +21,6 @@ options(java.parameters = "-Xmx4g")
 
 ```{r}
 library(bignlp)
-library(rJava)
 ```
 
 ```{r}
@@ -31,22 +30,23 @@ library(data.table)
 ```
 
 
-## Further preparations
-  
-```{r}
-chunksize <- 10
-tagdir <- "/Users/andreasblaette/Lab/tmp/corenlp"
-if (length(list.files(tagdir)) > 0L)
-  file.remove(list.files(tagdir, full.names = TRUE, recursive = TRUE, include.dirs = FALSE))
-```
+## Some data to process
 
 ```{r}
-jvm_status <- rJava::.jinit(force.init = TRUE) # does it harm when called again?
-stanford_path <- Sys.glob("/opt/stanford-corenlp/stanford-corenlp-4.2.0/*.jar")
-rJava::.jaddClassPath(stanford_path)
+subcorpora <- corpus("GERMAPARLMINI") %>%
+  subset(interjection == "speech") %>%
+  split(s_attribute = "speaker")
+
+speakers <- get_token_stream(subcorpora, collapse = " ", beautify = TRUE, verbose = FALSE)
+
+dt <- data.table(id = 1L:length(speakers), text = unlist(speakers))
 ```
 
-## Properties
+
+
+## Initialize StanfordCoreNLP
+
+### Properties
 
 ```{r}
 propsfile <- system.file(package = "bignlp", "extdata", "properties_files", "corenlp-german-fast.properties")
@@ -54,96 +54,52 @@ props <- properties(x = propsfile)
 ```
 
 ```{r}
-properties_set_output_directory(props, "/Users/andreasblaette/Lab/tmp/corenlp/json")
 properties_set_output_format(props, "json")
 properties_set_threads(props, 7)
 ```
 
+
+### Starting the engine
+
 ```{r}
-properties_get_output_directory(props)
-properties_get_output_format(props)
-properties_get_threads(props)
+SCNLP <- AnnotatorCoreNLP$new(properties_file = props)
+```
+
+```{r}
+SCNLP$verbose(FALSE)
 ```
 
 
-## Initialize engine
+
+
+## Parsing the text
+
+### Step 1: Create chunkdirs
 
 ```{r}
-tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
+nlpdir <- tempdir()
+dirs <- mince(x = dt, dir = nlpdir, chunksize = 10L)
 ```
 
 
-
-```{r, message = FALSE}
-subcorpora <- corpus("GERMAPARLMINI") %>%
-  subset(interjection == "speech") %>%
-  split(s_attribute = "speaker")
-
-speakers <- get_token_stream(subcorpora, collapse = " ", beautify = TRUE)
-
-dt <- data.table(
-  id = 1L:length(speakers),
-  text = unlist(speakers),
-  speaker = unname(unlist(s_attributes(subcorpora, s_attribute = "speaker")))
-)
-
-chunk_factor <- cut(
-  1:nrow(dt),
-  breaks = c(1L, cumsum(rep(chunksize, floor(nrow(dt) / chunksize))), nrow(dt)),
-  include.lowest = TRUE, right = FALSE
-)
-
-dt_chunks <- split(dt, f = chunk_factor)
-```
-
+### Process files
 
 ```{r}
-redwood_config <- .jnew("edu/stanford/nlp/util/logging/RedwoodConfiguration")
-redwood_config$errorLevel()$apply()
-
-dts <- pblapply(
-  1L:length(dt_chunks),
-  function(i){
-    outdir <- file.path(tagdir, i)
-    if (!dir.exists(outdir)) dir.create(outdir)
-    
-    # Write chunks to disk ---------------------
-    
-    for (j in 1:nrow(dt_chunks[[i]])){
-      cat(
-        dt_chunks[[i]][["text"]][j],
-        file = file.path(file.path(tagdir, i, sprintf("%d.txt", dt_chunks[[i]][["id"]][j])))
-      )
-    }
-    
-    # Process files ----------------------------------
-    
-    file_collection <- .jnew(
-      "edu/stanford/nlp/io/FileSequentialCollection",
-      .jnew("java/io/File", file.path(tagdir, i)),
-      .jnew("java/lang/String", "txt"),
-      FALSE
-    )
-    
-    props$put("outputDirectory", file.path(tagdir, i))
-    tagger$processFiles(
-#      .jnew("java/lang/String", file.path(tagdir, i)),
-      file_collection,
-      6L,
-      FALSE,
-      J("java/util/Optional")$empty()
-    )
-  }  
-)
+files <- pblapply(dirs, SCNLP$process_files)
 ```
 
 
 ### Parse JSON output
 
 ```{r}
-y <- pblapply(
-  grep(".*\\.json", list.files(tagdir, recursive = TRUE, full.names = TRUE), value = TRUE),
-  corenlp_parse_json,
-  cl = 7L
-)
+json_files <- grep(".*\\.json", list.files(nlpdir, recursive = TRUE, full.names = TRUE), value = TRUE)
+y <- pblapply(json_files, corenlp_parse_json, cl = 7L)
+df <- do.call(rbind, y)
+```
+
+
+## Inspect result
+
+```{r}
+DT::datatable(df[1:1000,])
 ```

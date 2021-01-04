@@ -9,6 +9,7 @@
 \alias{properties_get_output_directory}
 \alias{properties_set_output_format}
 \alias{properties_get_output_format}
+\alias{is_properties}
 \title{Instantiate and manage properties.}
 \usage{
 properties(x)
@@ -25,7 +26,9 @@ properties_get_output_directory(p)
 
 properties_set_output_format(p, fmt)
 
-properties_get_output_format(x)
+properties_get_output_format(p)
+
+is_properties(p)
 }
 \arguments{
 \item{x}{Path of a propeties file or named list of properties.}

@@ -18,6 +18,7 @@ NULL
 #' @importFrom stringi stri_match
 #' @importFrom coreNLP getToken
 #' @importFrom data.table as.data.table
+#' @importFrom rJava .jnew J
 #' @examples 
 #' Sys.setenv("_JAVA_OPTIONS" = "")
 #' options(java.parameters = "-Xmx4g")
@@ -83,10 +84,11 @@ AnnotatorCoreNLP <- R6Class(
     gc_interval = NULL,
 
 
+    #' @param method Either "txt", "json" or "xml", defaults to NULL.
     initialize = function(
       corenlp_dir = getOption("bignlp.corenlp_dir"),
       properties_file, 
-      method = c("txt", "json", "xml"),
+      method = NULL,
       cols_to_keep = c("sentence", "id", "token", "pos", "ner"),
       destfile = NULL,
       logfile = NULL,
@@ -120,12 +122,18 @@ AnnotatorCoreNLP <- R6Class(
         self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", properties_file)
       }
 
+      # Instantiate output method -------------------------------------------
+      
       self$method <- method
-      if (self$method == "xml") self$xmlifier <- rJava::.jnew("edu.stanford.nlp.pipeline.XMLOutputter")
-      if (self$method == "json") self$jsonifier <- rJava::.jnew("edu.stanford.nlp.pipeline.JSONOutputter")
-      if (self$method == "txt") {
-        self$writer <- new(J("java.io.PrintWriter"), rJava::.jnew("java.io.FileOutputStream", rJava::.jnew("java.io.File", destfile), TRUE))
+      if (!is.null(self$method)){
+        if (self$method == "xml") self$xmlifier <- rJava::.jnew("edu.stanford.nlp.pipeline.XMLOutputter")
+        if (self$method == "json") self$jsonifier <- rJava::.jnew("edu.stanford.nlp.pipeline.JSONOutputter")
+        if (self$method == "txt") {
+          self$writer <- new(J("java.io.PrintWriter"), rJava::.jnew("java.io.FileOutputStream", rJava::.jnew("java.io.File", destfile), TRUE))
+        }
       }
+      
+      # Fill fields ------------------------------------------------------
 
       self$append <- if (is.null(destfile)) FALSE else TRUE
       if (!is.null(destfile)) self$destfile <- destfile
@@ -198,6 +206,40 @@ AnnotatorCoreNLP <- R6Class(
         json = self$annotation_to_json(anno, id = id),
         txt = self$annotation_to_txt(anno)
       )
+    },
+    
+    #' @description 
+    #' Process all files in the stated directory (argument `dir`) in parallel.
+    process_files = function(dir){
+      
+      file_collection <- .jnew(
+        "edu/stanford/nlp/io/FileSequentialCollection",
+        .jnew("java/io/File", file.path(dir)),
+        .jnew("java/lang/String", "txt"),
+        FALSE
+      )
+      
+      self$tagger$getProperties()$put("outputDirectory", file.path(dir))
+      
+      self$tagger$processFiles(
+        file_collection,
+        6L, # no effect
+        FALSE,
+        J("java/util/Optional")$empty()
+      )
+      invisible(paste(Sys.glob(paste0(dir, "/*.txt")), "json", sep = "."))
+    },
+    
+    #' @param x A `logical` value. 
+    verbose = function(x){
+      stopifnot(length(x) == 1L, is.logical(x))
+      if (x){
+        redwood_config <- .jnew("edu/stanford/nlp/util/logging/RedwoodConfiguration")
+        redwood_config$standard()$apply()
+      } else {
+        redwood_config <- .jnew("edu/stanford/nlp/util/logging/RedwoodConfiguration")
+        redwood_config$errorLevel()$apply()
+      }
     }
   )
 )

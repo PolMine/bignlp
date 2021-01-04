@@ -3,6 +3,11 @@
 * New function to instantiate a Java `Properties` object, including `properties()`, `parse_properties_file()`.
 * Removed package 'jobstatus' from the suggested packages. The status of the package remains to be experimental
 and it is not sufficiently mature to rely on it in the long run (see [jobstatus pkg at GitHub](https://github.com/ropenscilabs/jobstatus))
+* New function `mince()` for new workflow for parallel processing.
+* New method `$process_files()` of `AnnotatorCoreNLP` class.
+* New method `$verbose()` of `AnnotatorCoreNLP` class.
+* Upon loading the bignlp package, a JVM is initialized using `rJava::.jpackage()`.
+* A startup message on the memory allocated to the JVM is issued to give the user a hint whether that is enough.
 
 # bignlp v0.0.9
 

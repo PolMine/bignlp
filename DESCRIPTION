@@ -1,8 +1,8 @@
 Package: bignlp
 Type: Package
 Title: NLP for Big Corpora
-Version: 0.0.8
-Date: 2019-10-28
+Version: 0.0.10
+Date: 2021-01-04
 Authors@R: person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de")
 Description: Parallel line-by-line NLP processing for big corpora using Stanford CoreNLP.
 Imports:
@@ -36,6 +36,7 @@ Collate:
     'chunk_table.R'
     'corenlp.R'
     'json.R'
+    'mince.R'
     'pretty_print.R'
     'properties.R'
     'purge.R'

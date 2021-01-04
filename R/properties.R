@@ -117,6 +117,7 @@ properties_get_output_format <- function(p) p$get("outputFormat")
 
 #' @export is_properties
 #' @rdname properties
+#' @importFrom rJava %instanceof%
 is_properties <- function(p){
   if (class(p)[1] != "jobjRef") return(FALSE)
   p %instanceof% rJava::.jnew("java.util.Properties")

@@ -82,6 +82,8 @@ system.time(foo <- CNLP$annotate(merkel))
 \item \href{#method-annotation_to_json}{\code{AnnotatorCoreNLP$annotation_to_json()}}
 \item \href{#method-annotation_to_txt}{\code{AnnotatorCoreNLP$annotation_to_txt()}}
 \item \href{#method-annotate}{\code{AnnotatorCoreNLP$annotate()}}
+\item \href{#method-process_files}{\code{AnnotatorCoreNLP$process_files()}}
+\item \href{#method-verbose}{\code{AnnotatorCoreNLP$verbose()}}
 \item \href{#method-clone}{\code{AnnotatorCoreNLP$clone()}}
 }
 }
@@ -93,7 +95,7 @@ system.time(foo <- CNLP$annotate(merkel))
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$new(
   corenlp_dir = getOption("bignlp.corenlp_dir"),
   properties_file,
-  method = c("txt", "json", "xml"),
+  method = NULL,
   cols_to_keep = c("sentence", "id", "token", "pos", "ner"),
   destfile = NULL,
   logfile = NULL,
@@ -103,6 +105,13 @@ system.time(foo <- CNLP$annotate(merkel))
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{method}}{Either "txt", "json" or "xml", defaults to NULL.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-annotation_to_xml"></a>}}
@@ -139,6 +148,32 @@ system.time(foo <- CNLP$annotate(merkel))
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$annotate(txt, id = NULL, current = -1L, purge = TRUE)}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-process_files"></a>}}
+\if{latex}{\out{\hypertarget{method-process_files}{}}}
+\subsection{Method \code{process_files()}}{
+Process all files in the stated directory (argument \code{dir}) in parallel.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$process_files(dir)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-verbose"></a>}}
+\if{latex}{\out{\hypertarget{method-verbose}{}}}
+\subsection{Method \code{verbose()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$verbose(x)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{x}}{A \code{logical} value.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

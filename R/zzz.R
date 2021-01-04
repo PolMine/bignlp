@@ -1,3 +1,8 @@
+.onLoad <- function(libname, pkgname) {
+  rJava::.jpackage(name = pkgname, lib.loc = libname)
+}
+
+
 .onAttach <- function (libname, pkgname) {
   options(
     "bignlp.corenlp_dir" = corenlp_get_jar_dir(),
@@ -14,5 +19,10 @@
       )
   )
   
+  jvm_mem <- rJava::J("java/lang/Runtime")$getRuntime()$maxMemory()
+  class(jvm_mem) <- "object_size"
+  packageStartupMessage(
+    sprintf("JVM memory allocated: %s", format(jvm_mem, units = "MB"))
+  )
 }
 
