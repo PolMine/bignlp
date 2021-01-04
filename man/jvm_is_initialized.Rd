@@ -11,7 +11,7 @@ A logical value, \code{TRUE} if JVM has been initialized, \code{FALSE} if
 not.
 }
 \description{
-The \code{jvm_is_initialized} utility function checks whether a JVM has been 
-initialized already. Parallelisation is likely to fail if this is the case. The 
+The \code{jvm_is_initialized} utility function checks whether a JVM has been
+initialized already. Parallelisation is likely to fail if this is the case. The
 function issues a warning, if a JVM is already running.
 }

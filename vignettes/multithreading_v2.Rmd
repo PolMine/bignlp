@@ -11,13 +11,28 @@ editor_options:
   chunk_output_type: console
 ---
 
+## Loading packages
+
+First thing in the morning and before we load the bignlp package, sufficient memory needs to be allocated for the JVM.
+
+```{r}
+options(java.parameters = "-Xmx4g")
+```
+
+```{r}
+library(bignlp)
+library(rJava)
+```
+
 ```{r}
 library(pbapply)
-library(bignlp)
+library(polmineR)
+library(data.table)
 ```
-  
-## The rationale of the bignlp-package
 
+
+## Further preparations
+  
 ```{r}
 chunksize <- 10
 tagdir <- "/Users/andreasblaette/Lab/tmp/corenlp"
@@ -26,39 +41,40 @@ if (length(list.files(tagdir)) > 0L)
 ```
 
 ```{r}
-options(java.parameters = "-Xmx4g")
-library(rJava)
-
 jvm_status <- rJava::.jinit(force.init = TRUE) # does it harm when called again?
 stanford_path <- Sys.glob("/opt/stanford-corenlp/stanford-corenlp-4.2.0/*.jar")
 rJava::.jaddClassPath(stanford_path)
+```
 
-properties <- list(
-  "threads" = "7", # THIS is the game changer
-  "annotators" = "tokenize, ssplit, pos, lemma, ner",
-  "tokenize.language" = "de",
-  "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
-  "pos.model" = "edu/stanford/nlp/models/pos-tagger/german-ud.tagger",
-  "ner.model" = "edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz",
-  "ner.applyNumericClassifiers" = "false",
-  "ner.applyFineGrained" = "false",
-  "ner.useSUTime" = "false",
-  "outputFormat" = "json",
-  "outputDirectory" = "/Users/andreasblaette/Lab/tmp/corenlp/json"
-)
+## Properties
 
-props <- rJava::.jnew("java.util.Properties")
-lapply(names(properties), function(property) props$put(property, properties[[property]]))
+```{r}
+propsfile <- system.file(package = "bignlp", "extdata", "properties_files", "corenlp-german-fast.properties")
+props <- properties(x = propsfile)
+```
 
+```{r}
+properties_set_output_directory(props, "/Users/andreasblaette/Lab/tmp/corenlp/json")
+properties_set_output_format(props, "json")
+properties_set_threads(props, 7)
+```
+
+```{r}
+properties_get_output_directory(props)
+properties_get_output_format(props)
+properties_get_threads(props)
+```
+
+
+## Initialize engine
+
+```{r}
 tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
 ```
 
 
 
 ```{r, message = FALSE}
-library(polmineR)
-library(data.table)
-
 subcorpora <- corpus("GERMAPARLMINI") %>%
   subset(interjection == "speech") %>%
   split(s_attribute = "speaker")
@@ -120,6 +136,9 @@ dts <- pblapply(
   }  
 )
 ```
+
+
+### Parse JSON output
 
 ```{r}
 y <- pblapply(

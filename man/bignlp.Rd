@@ -3,7 +3,6 @@
 \docType{package}
 \name{bignlp}
 \alias{bignlp}
-\alias{bignlp-package}
 \title{R-Package 'bignlp'.}
 \description{
 R corpus annotation pipeline for large corpora.

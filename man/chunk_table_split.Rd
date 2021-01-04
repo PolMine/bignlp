@@ -4,8 +4,7 @@
 \alias{chunk_table_split}
 \title{Split up file into subsets.}
 \usage{
-chunk_table_split(input, output = NULL, n, byline = TRUE,
-  verbose = TRUE)
+chunk_table_split(input, output = NULL, n, byline = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{input}{A length-one \code{character} vector, path name (full path) of a
@@ -30,7 +29,7 @@ The file specified by \code{input} needs to be a single existing file. It
 will be splitted into \code{n} roughly equally sized files. If \code{output} is
 \code{NULL}, the files will be generated in the session temporary directory.
 
-If \code{byline} is \code{TRUE} (default), the input file is processed in a 
+If \code{byline} is \code{TRUE} (default), the input file is processed in a
 line-by-line mode, to keep memory consumption minimal. (Note that only byline
 mode is implemented for this function at this stage.)
 

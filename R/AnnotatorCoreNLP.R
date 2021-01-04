@@ -98,8 +98,9 @@ AnnotatorCoreNLP <- R6Class(
       self$cols_to_keep <- cols_to_keep
       
       jvm_status <- rJava::.jinit(force.init = TRUE) # does it harm when called again?
-      java_version <- rJava::.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
       message("Status of the Java Virtual Machine: ", jvm_status)
+      
+      java_version <- rJava::.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
       message("Java version: ", java_version)
       
       if (as.numeric(gsub("^(\\d+\\.\\d+)\\..*?$", "\\1", java_version)) != 1.8)
@@ -115,6 +116,8 @@ AnnotatorCoreNLP <- R6Class(
         props <- rJava::.jnew("java.util.Properties")
         lapply(names(properties_file), function(property) props$put(property, properties_file[[property]]))
         self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
+      } else if (is_properties(properties_file)){
+        self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", properties_file)
       }
 
       self$method <- method
@@ -172,7 +175,7 @@ AnnotatorCoreNLP <- R6Class(
       if (share - trunc(share) == 0){
         jvm_runtime <- rJava::J("java/lang/Runtime")$getRuntime()
         log_msg <- sprintf(
-          "Time: %s | Chunks processed: %d/%d (%.1f %%)| Memory used: %d | Memory free: %d",
+          "Time: %s | Chunks processed: %d/%d (%.1f %%)| Memory used: %f | Memory free: %f",
           format(Sys.time()), current, self$target, current / self$target * 100, jvm_runtime$totalMemory(), jvm_runtime$getRuntime()$freeMemory()
         )
         if (!is.null(self$logfile)){
@@ -196,7 +199,5 @@ AnnotatorCoreNLP <- R6Class(
         txt = self$annotation_to_txt(anno)
       )
     }
-    
-
   )
 )

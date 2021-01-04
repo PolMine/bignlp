@@ -23,7 +23,6 @@ Suggests:
     knitr,
     cwbtools,
     magrittr,
-    jobstatus,
     future
 Additional_repositories: https://polmine.github.io/drat/
 BugReports: https://github.com/PolMine/bignlp/issues
@@ -38,7 +37,9 @@ Collate:
     'corenlp.R'
     'json.R'
     'pretty_print.R'
+    'properties.R'
     'purge.R'
     'utils.R'
     'zzz.R'
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
+Roxygen: list(markdown = TRUE)

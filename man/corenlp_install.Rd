@@ -14,5 +14,5 @@ placed in the bignlp package.}
 }
 \description{
 The function provides an installation mechanism to download and
-  install Stanford CoreNLP within the bignlp package or externally.
+install Stanford CoreNLP within the bignlp package or externally.
 }

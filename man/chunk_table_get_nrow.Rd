@@ -12,8 +12,7 @@ chunk_table_get_nrow(filename)
 \description{
 Auxiliary function to get the number of rows of a file as fast as possible.
 The implementation of \code{chunk_table_get_nrow} follows closely the fastest
-pure R solution suggested in a [discussion at Stack
-Overflow](https://stackoverflow.com/questions/23456170/get-the-number-of-lines-in-a-text-file-using-r).
+pure R solution suggested in a \href{https://stackoverflow.com/questions/23456170/get-the-number-of-lines-in-a-text-file-using-r}{discussion at Stack Overflow}.
 }
 \examples{
 library(data.table)

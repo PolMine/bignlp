@@ -1,4 +1,10 @@
-# bignlp v0.0.XXX
+# bignlp v0.0.10
+
+* New function to instantiate a Java `Properties` object, including `properties()`, `parse_properties_file()`.
+* Removed package 'jobstatus' from the suggested packages. The status of the package remains to be experimental
+and it is not sufficiently mature to rely on it in the long run (see [jobstatus pkg at GitHub](https://github.com/ropenscilabs/jobstatus))
+
+# bignlp v0.0.9
 
 * New slots logfile, target (total number of annotation tasks) and current (annotation task) have been added to the AnnotatorCoreNLP class.
 

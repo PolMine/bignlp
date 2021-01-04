@@ -6,7 +6,11 @@
 \alias{corenlp_postprocessing_replacements}
 \alias{corenlp_preprocessing_replacements}
 \title{Purge character vector from villain characters.}
-\format{An object of class \code{list} of length 14.}
+\format{
+An object of class \code{list} of length 14.
+
+An object of class \code{list} of length 3.
+}
 \usage{
 purge(x, replacements, progress = TRUE)
 

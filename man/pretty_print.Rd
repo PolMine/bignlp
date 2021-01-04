@@ -12,7 +12,7 @@ corenlp_parse_pretty_print(x, mc = 1)
 \item{mc}{Number of cores to use.}
 }
 \description{
-The pretty print output of Stanford CoreNLP may be an alternative to the 
-NDJSON output. The \code{corenlp_parse_pretty_print} is a residual, kept 
+The pretty print output of Stanford CoreNLP may be an alternative to the
+NDJSON output. The \code{corenlp_parse_pretty_print} is a residual, kept
 in the package for future use.
 }

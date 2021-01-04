@@ -5,12 +5,24 @@
 \alias{corenlp_parse_json}
 \title{Parse NDJSON output.}
 \usage{
-corenlp_parse_ndjson(input, cols_to_keep = c("sentence", "index", "word",
-  "pos", "lemma"), output = tempfile(), logfile = NULL,
-  byline = FALSE, threads = 1L, progress = TRUE, verbose = TRUE)
+corenlp_parse_ndjson(
+  input,
+  cols_to_keep = c("sentence", "index", "word", "pos", "lemma"),
+  output = tempfile(),
+  logfile = NULL,
+  byline = FALSE,
+  threads = 1L,
+  progress = TRUE,
+  verbose = TRUE
+)
 
-corenlp_parse_json(input, cols_to_keep = c("sentence", "index", "word",
-  "pos", "ner"), output = NULL, logfile = NULL, progress = TRUE)
+corenlp_parse_json(
+  input,
+  cols_to_keep = c("sentence", "index", "word", "pos", "ner"),
+  output = NULL,
+  logfile = NULL,
+  progress = TRUE
+)
 }
 \arguments{
 \item{input}{For \code{corenlp_parse_json} a \code{character} vector with one
@@ -43,7 +55,7 @@ A \code{character} vector with the target files.
 \description{
 Turn Stanford CoreNLP json or ndjson output into tabular format.
 
-Parse the json output from CoreNLP, either text files, or 
+Parse the json output from CoreNLP, either text files, or
 NDJSON written to one or multiple files.
 }
 \details{
@@ -57,14 +69,14 @@ multiple threads, and displaying progress bars.
 See \url{https://stackoverflow.com/questions/51032141/reading-in-very-very-large-ndjson}.
 
 The JSON results of applying the Stanford CoreNLP annotators can be
-  written to a streaming JSON file (ndjson format). \code{corenlp_parse_json}
-  will parse a json string to a data.frame. If output is specified, the
-  output will be appended to the file provided. If \code{output} is \code{NULL}, a
-  data.frame is returned. Strings that cannot be parsed are written to the
-  logfile, if it is defined. If \code{filename} is present, the function will
-  process one or more files with the output of Stanford CoreNLP in a NDJSON
-  format. If the argument \code{output} has been defined during initialization, results are
-  written/appended to that file. Otherwise, a \code{data.frame} is returned.
+written to a streaming JSON file (ndjson format). \code{corenlp_parse_json}
+will parse a json string to a data.frame. If output is specified, the
+output will be appended to the file provided. If \code{output} is \code{NULL}, a
+data.frame is returned. Strings that cannot be parsed are written to the
+logfile, if it is defined. If \code{filename} is present, the function will
+process one or more files with the output of Stanford CoreNLP in a NDJSON
+format. If the argument \code{output} has been defined during initialization, results are
+written/appended to that file. Otherwise, a \code{data.frame} is returned.
 }
 \examples{
 # parse an ndjson string
