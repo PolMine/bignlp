@@ -11,6 +11,11 @@ NULL
 #' @field method whith output format to use
 #' @field cols_to_keep columns from output to keep
 #' @field destfile filename
+#' @field logfile Where to write logs.
+#' @field target Number of steps to take…
+#' @field current Where the process stands now.
+#' @field report_interval Frequency of messages on memory consumption.
+#' @field gc_interval Frequency of garbage collection.
 #' 
 #' @export AnnotatorCoreNLP
 #' @rdname AnnotatorCoreNLP
@@ -84,7 +89,16 @@ AnnotatorCoreNLP <- R6Class(
     gc_interval = NULL,
 
 
+    #' @param corenlp_dir Directory of StanfordCoreNLP.
+    #' @param properties_file Either the filename of a properties file or a Java
+    #'   properties object.
     #' @param method Either "txt", "json" or "xml", defaults to NULL.
+    #' @param cols_to_keep Columns of the parsed NLP output to keep.
+    #' @param destfile Where to write parser output.
+    #' @param logfile Where to write logs.
+    #' @param target ????
+    #' @param report_interval Frequency of report on memory consumption.
+    #' @param gc_interval Frequency of garbage collection.
     initialize = function(
       corenlp_dir = getOption("bignlp.corenlp_dir"),
       properties_file, 
@@ -146,6 +160,8 @@ AnnotatorCoreNLP <- R6Class(
       invisible( self )
     },
     
+    
+    #' @param anno Annotation to process.
     annotation_to_xml = function(anno){
       doc <- rJava::.jcall(self$xmlifier, "Lnu/xom/Document;", "annotationToDoc", anno, self$tagger)
       xml <- rJava::.jcall(doc, "Ljava/lang/String;", "toXML")
@@ -154,6 +170,8 @@ AnnotatorCoreNLP <- R6Class(
       as.data.table(df[, self$cols_to_keep])
     },
     
+    #' @param id The ID to prepend.
+    #' @param anno Annotation to process.
     annotation_to_json = function(anno, id = NULL){
       json_string <- rJava::.jcall(self$jsonifier, "Ljava/lang/String;", "print", anno)
       json_string <- gsub("\\s+", " ", json_string)
@@ -165,6 +183,7 @@ AnnotatorCoreNLP <- R6Class(
       if (self$append == FALSE) json_string else NULL # return value
     },
     
+    #' @param anno Annotation to process.
     annotation_to_txt = function(anno){
       if (self$append == FALSE){
         self$writer <- rJava::.jnew("java.io.PrintWriter", filename <- tempfile())
@@ -172,7 +191,11 @@ AnnotatorCoreNLP <- R6Class(
       rJava::.jcall(self$tagger, "V", "prettyPrint", anno, self$writer)
       if (self$append == FALSE) parse_pretty_print(filename) else NULL
     },
-
+    
+    #' @param txt A string to process.
+    #' @param id An ID to prepend.
+    #' @param current Where process stands.
+    #' @param purge Whether to postprocess output.
     annotate = function(txt, id = NULL, current = -1L, purge = TRUE){
       if (purge) txt <- purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
       
@@ -210,6 +233,7 @@ AnnotatorCoreNLP <- R6Class(
     
     #' @description 
     #' Process all files in the stated directory (argument `dir`) in parallel.
+    #' @param dir Directory with files to process (in parallel).
     process_files = function(dir){
       
       file_collection <- .jnew(

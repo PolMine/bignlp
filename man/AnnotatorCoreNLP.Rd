@@ -71,6 +71,16 @@ system.time(foo <- CNLP$annotate(merkel))
 \item{\code{cols_to_keep}}{columns from output to keep}
 
 \item{\code{destfile}}{filename}
+
+\item{\code{logfile}}{Where to write logs.}
+
+\item{\code{target}}{Number of steps to take…}
+
+\item{\code{current}}{Where the process stands now.}
+
+\item{\code{report_interval}}{Frequency of messages on memory consumption.}
+
+\item{\code{gc_interval}}{Frequency of garbage collection.}
 }
 \if{html}{\out{</div>}}
 }
@@ -108,7 +118,24 @@ system.time(foo <- CNLP$annotate(merkel))
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{corenlp_dir}}{Directory of StanfordCoreNLP.}
+
+\item{\code{properties_file}}{Either the filename of a properties file or a Java
+properties object.}
+
 \item{\code{method}}{Either "txt", "json" or "xml", defaults to NULL.}
+
+\item{\code{cols_to_keep}}{Columns of the parsed NLP output to keep.}
+
+\item{\code{destfile}}{Where to write parser output.}
+
+\item{\code{logfile}}{Where to write logs.}
+
+\item{\code{target}}{????}
+
+\item{\code{report_interval}}{Frequency of report on memory consumption.}
+
+\item{\code{gc_interval}}{Frequency of garbage collection.}
 }
 \if{html}{\out{</div>}}
 }
@@ -121,6 +148,13 @@ system.time(foo <- CNLP$annotate(merkel))
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$annotation_to_xml(anno)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{anno}}{Annotation to process.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-annotation_to_json"></a>}}
@@ -130,6 +164,15 @@ system.time(foo <- CNLP$annotate(merkel))
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$annotation_to_json(anno, id = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{anno}}{Annotation to process.}
+
+\item{\code{id}}{The ID to prepend.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-annotation_to_txt"></a>}}
@@ -139,6 +182,13 @@ system.time(foo <- CNLP$annotate(merkel))
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$annotation_to_txt(anno)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{anno}}{Annotation to process.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-annotate"></a>}}
@@ -148,6 +198,19 @@ system.time(foo <- CNLP$annotate(merkel))
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$annotate(txt, id = NULL, current = -1L, purge = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{txt}}{A string to process.}
+
+\item{\code{id}}{An ID to prepend.}
+
+\item{\code{current}}{Where process stands.}
+
+\item{\code{purge}}{Whether to postprocess output.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-process_files"></a>}}
@@ -158,6 +221,13 @@ Process all files in the stated directory (argument \code{dir}) in parallel.
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$process_files(dir)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dir}}{Directory with files to process (in parallel).}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-verbose"></a>}}

@@ -104,13 +104,11 @@ destfiles <- corenlp_parse_ndjson(
   )
 dt <- data.table::rbindlist(lapply(destfiles, data.table::fread))
 
-if (requireNamespace("jobstatus") && requireNamespace("future")){
 destfiles <- corenlp_parse_ndjson(
   input = list.files(ndjson_dir, full.names = TRUE),
   output = sprintf("\%s/reuters_annotated_\%d.tsv", tempdir(), 1L:4L),
   threads = 4L,
   byline = TRUE,
-  progress = TRUE
+  progress = FALSE
 )
-}
 }

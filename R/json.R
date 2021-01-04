@@ -56,15 +56,13 @@
 #'   )
 #' dt <- data.table::rbindlist(lapply(destfiles, data.table::fread))
 #' 
-#' if (requireNamespace("jobstatus") && requireNamespace("future")){
 #' destfiles <- corenlp_parse_ndjson(
 #'   input = list.files(ndjson_dir, full.names = TRUE),
 #'   output = sprintf("%s/reuters_annotated_%d.tsv", tempdir(), 1L:4L),
 #'   threads = 4L,
 #'   byline = TRUE,
-#'   progress = TRUE
+#'   progress = FALSE
 #' )
-#' }
 corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "word", "pos", "lemma"), output = tempfile(), logfile = NULL, byline = FALSE, threads = 1L, progress = TRUE, verbose = TRUE){
   if (file.info(input[1])[["isdir"]]){
     ndjson_files <- Sys.glob(sprintf("%s/*.ndjson", input))
@@ -125,7 +123,7 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
         while (length(chunk <- readBin(f, "raw", 65536)) > 0) nlines <- nlines + sum(chunk == as.raw(10L))
         close(f)
       }
-      if (multicore) status <- jobstatus::jobstatus$new(nlines)
+      # if (multicore) status <- jobstatus::jobstatus$new(nlines)
       con <- file(infile, "r")
       while (length(line <- readLines(con, n = 1L)) > 0L){
         corenlp_parse_json(
@@ -134,9 +132,9 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
           output = outfile,
           logfile = logfile
         )
-        if (multicore) status$tick()
+        # if (multicore) status$tick()
       }
-      if (multicore) status$finish()
+      # if (multicore) status$finish()
       close(con)
     }
     
@@ -194,76 +192,78 @@ corenlp_parse_ndjson = function(input, cols_to_keep = c("sentence", "index", "wo
           )
         }
       } else {
-        if (!requireNamespace("jobstatus", quietly = TRUE))
-          stop("Package 'jobstatus' required but not available. Install it from ",
-               'GitHub:\ndevtools::install_github("ropenscilabs/jobstatus")')
+        stop("This is deprecated.")
         
-        if (!requireNamespace("future", quietly = TRUE)) stop("Package 'future' required but not available.")
-        
-        do.call("library", list("future")) # how to omit this?
-        # attach(what = getNamespace("future"))
-        # on.exit(detach(getNamespace("future")))
-        do.call("library", list("jobstatus")) # how to omit this?
-        # attach(what = getNamespace("jobstatus"))
-        # on.exit(detach(getNamespace("jobstatus")))
-        
-
-        future::plan(strategy = "multiprocess") # in package 'future'
-
-        if (byline){
-          
-          .fn <- function(infile, outfile){
-            f <- file(infile, open = "rb")
-            nlines <- 0L
-            while (length(chunk <- readBin(f, "raw", 65536)) > 0) nlines <- nlines + sum(chunk == as.raw(10L))
-            close(f)
-            
-            status <- jobstatus::jobstatus$new(nlines)
-            con <- file(infile, "r")
-            while (length(line <- readLines(con, n = 1L)) > 0L){
-              Sys.sleep(1)
-              corenlp_parse_json(input = line, cols_to_keep = cols_to_keep, output = outfile, logfile = logfile)
-              status$tick()
-            }
-            status$finish()
-            close(con)
-          }
-
-        } else {
-          
-          .fn <- function(infile, outfile){
-            con <- file(infile, "r")
-            lines <- readLines(con)
-            close(con)
-            status <- jobstatus::jobstatus$new(length(lines))
-            lapply(
-              lines,
-              function(line){
-                corenlp_parse_json(
-                  input = line,
-                  cols_to_keep = cols_to_keep,
-                  output = outfile,
-                  logfile = logfile,
-                  progress = progress
-                )
-                Sys.sleep(1)
-                status$tick()
-              }
-            )
-            status$finish()
-          }
-        }
-        
-        y <- jobstatus::with_jobstatus({
-          fns <- sprintf(
-            "fn%d <- jobstatus::subjob_future(expr = .fn(infile = '%s', outfile = '%s'))",
-            1L:length(input), input, output
-          )
-          eval(parse(text = paste(fns, collapse = ";")))
-          
-        }, display = jobstatus::percentage
-        )
-        
+        # if (!requireNamespace("jobstatus", quietly = TRUE))
+        #   stop("Package 'jobstatus' required but not available. Install it from ",
+        #        'GitHub:\ndevtools::install_github("ropenscilabs/jobstatus")')
+        # 
+        # if (!requireNamespace("future", quietly = TRUE)) stop("Package 'future' required but not available.")
+        # 
+        # do.call("library", list("future")) # how to omit this?
+        # # attach(what = getNamespace("future"))
+        # # on.exit(detach(getNamespace("future")))
+        # do.call("library", list("jobstatus")) # how to omit this?
+        # # attach(what = getNamespace("jobstatus"))
+        # # on.exit(detach(getNamespace("jobstatus")))
+        # 
+        # 
+        # future::plan(strategy = "multiprocess") # in package 'future'
+        # 
+        # if (byline){
+        #   
+        #   .fn <- function(infile, outfile){
+        #     f <- file(infile, open = "rb")
+        #     nlines <- 0L
+        #     while (length(chunk <- readBin(f, "raw", 65536)) > 0) nlines <- nlines + sum(chunk == as.raw(10L))
+        #     close(f)
+        #     
+        #     status <- jobstatus::jobstatus$new(nlines)
+        #     con <- file(infile, "r")
+        #     while (length(line <- readLines(con, n = 1L)) > 0L){
+        #       Sys.sleep(1)
+        #       corenlp_parse_json(input = line, cols_to_keep = cols_to_keep, output = outfile, logfile = logfile)
+        #       status$tick()
+        #     }
+        #     status$finish()
+        #     close(con)
+        #   }
+        # 
+        # } else {
+        #   
+        #   .fn <- function(infile, outfile){
+        #     con <- file(infile, "r")
+        #     lines <- readLines(con)
+        #     close(con)
+        #     status <- jobstatus::jobstatus$new(length(lines))
+        #     lapply(
+        #       lines,
+        #       function(line){
+        #         corenlp_parse_json(
+        #           input = line,
+        #           cols_to_keep = cols_to_keep,
+        #           output = outfile,
+        #           logfile = logfile,
+        #           progress = progress
+        #         )
+        #         Sys.sleep(1)
+        #         status$tick()
+        #       }
+        #     )
+        #     status$finish()
+        #   }
+        # }
+        # 
+        # y <- jobstatus::with_jobstatus({
+        #   fns <- sprintf(
+        #     "fn%d <- jobstatus::subjob_future(expr = .fn(infile = '%s', outfile = '%s'))",
+        #     1L:length(input), input, output
+        #   )
+        #   eval(parse(text = paste(fns, collapse = ";")))
+        #   
+        # }, display = jobstatus::percentage
+        # )
+        # 
       }
       return(output)
     }

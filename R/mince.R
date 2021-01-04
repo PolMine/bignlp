@@ -16,6 +16,9 @@
 #'   contain files with text segments.
 #' @export mince
 #' @examples 
+#' library(polmineR)
+#' library(data.table)
+#' 
 #' subcorpora <- corpus("GERMAPARLMINI") %>%
 #'   subset(interjection == "speech") %>%
 #'   split(s_attribute = "speaker")

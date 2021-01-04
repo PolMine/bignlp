@@ -29,6 +29,9 @@ processed in parallel. The \code{mince()} function performs this split operation
 i.e. it creates directories with chunks within a superdirectory.
 }
 \examples{
+library(polmineR)
+library(data.table)
+
 subcorpora <- corpus("GERMAPARLMINI") \%>\%
   subset(interjection == "speech") \%>\%
   split(s_attribute = "speaker")

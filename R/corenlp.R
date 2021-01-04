@@ -13,6 +13,7 @@
 #' @param output An output file, if threads > 1, a directory where ndjson files will be stored.
 #' @param properties_file A properties file to configure annotator.
 #' @param logfile A logfile for progress information.
+#' @param gc_interval Frequency of garbage collection.
 #' @param report_interval When to report progress report to logfile.
 #' @param threads An integer.
 #' @param corenlp_dir The directory where corenlp resides.
@@ -119,56 +120,57 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
       }
       output <- unlist(parallel::mclapply(1L:length(chunks), fn_no_progress, mc.cores = threads))
     } else {
-      if (!requireNamespace("jobstatus", quietly = TRUE)){
-        stop("Package 'jobstatus' required but not available. Install it from ",
-                'GitHub:\ndevtools::install_github("ropenscilabs/jobstatus")')
-      }
-      
-      if (!requireNamespace("future", quietly = TRUE)){
-        stop("Package 'future' required but not available.")
-      }
-      
-      do.call("library", list("future")) # how to omit this?
-      # attach(what = getNamespace("future"))
-      # on.exit(detach(getNamespace("future")))
-      do.call("library", list("jobstatus")) # how to omit this?
-      # attach(what = getNamespace("jobstatus"))
-      # on.exit(detach(getNamespace("jobstatus")))
-
-      future::plan(strategy = "multiprocess") # in package 'future'
-      
-      fn_with_progress <- function(i){
-        options(java.parameters = "-Xmx4g")
-        Annotator <- AnnotatorCoreNLP$new(
-          method = method, destfile = outfiles[i],
-          corenlp_dir = corenlp_dir,
-          properties_file = properties_file
-        )
-        status <- jobstatus::jobstatus$new(length(chunks[[i]]))
-        for (j in chunks[[i]]){
-          Annotator$annotate(input[["text"]][j], id = input[j][["id"]])
-          status$tick()
-        }
-        status$finish()
-        return( outfiles[i] )
-      }
-      
-      jobstatus::with_jobstatus({
-        
-        # create futures
-        fns <- sprintf(
-          "fn%d <- jobstatus::subjob_future(expr = fn_with_progress(%d))",
-          1L:threads, 1L:threads
-        )
-        eval(parse(text = paste(fns, collapse = ";")))
-        
-
-        # get their values
-        val <- sprintf("v%d <- future::value(fn%d)", 1L:threads, 1L:threads)
-        eval(parse(text = paste(val, collapse = ";")))
-        
-        }, display = jobstatus::percentage
-      )
+      stop("This is deprecated.")
+      #   if (!requireNamespace("jobstatus", quietly = TRUE)){
+      #     stop("Package 'jobstatus' required but not available. Install it from ",
+      #             'GitHub:\ndevtools::install_github("ropenscilabs/jobstatus")')
+      #   }
+      #   
+      #   if (!requireNamespace("future", quietly = TRUE)){
+      #     stop("Package 'future' required but not available.")
+      #   }
+      #   
+      #   do.call("library", list("future")) # how to omit this?
+      #   # attach(what = getNamespace("future"))
+      #   # on.exit(detach(getNamespace("future")))
+      #   do.call("library", list("jobstatus")) # how to omit this?
+      #   # attach(what = getNamespace("jobstatus"))
+      #   # on.exit(detach(getNamespace("jobstatus")))
+      # 
+      #   future::plan(strategy = "multiprocess") # in package 'future'
+      #   
+      #   fn_with_progress <- function(i){
+      #     options(java.parameters = "-Xmx4g")
+      #     Annotator <- AnnotatorCoreNLP$new(
+      #       method = method, destfile = outfiles[i],
+      #       corenlp_dir = corenlp_dir,
+      #       properties_file = properties_file
+      #     )
+      #     status <- jobstatus::jobstatus$new(length(chunks[[i]]))
+      #     for (j in chunks[[i]]){
+      #       Annotator$annotate(input[["text"]][j], id = input[j][["id"]])
+      #       status$tick()
+      #     }
+      #     status$finish()
+      #     return( outfiles[i] )
+      #   }
+      #   
+      #   jobstatus::with_jobstatus({
+      #     
+      #     # create futures
+      #     fns <- sprintf(
+      #       "fn%d <- jobstatus::subjob_future(expr = fn_with_progress(%d))",
+      #       1L:threads, 1L:threads
+      #     )
+      #     eval(parse(text = paste(fns, collapse = ";")))
+      #     
+      # 
+      #     # get their values
+      #     val <- sprintf("v%d <- future::value(fn%d)", 1L:threads, 1L:threads)
+      #     eval(parse(text = paste(val, collapse = ";")))
+      #     
+      #     }, display = jobstatus::percentage
+      #   )
     }
     output <- unname(unlist(mget(x = paste("v", 1L:threads, sep = ""))))
     return( output )
@@ -284,52 +286,53 @@ setMethod("corenlp_annotate", "character", function(input, output = NULL, corenl
           corenlp_dir = corenlp_dir,
           properties_file = properties_file
         )
-        if (progress){
-          chunks_total <- chunk_table_get_nrow(input[[i]]) - 1L # leave header out of calculation
-          status <- jobstatus::jobstatus$new(chunks_total)
-        }
+        # if (progress){
+        #   chunks_total <- chunk_table_get_nrow(input[[i]]) - 1L # leave header out of calculation
+        #   # status <- jobstatus::jobstatus$new(chunks_total)
+        # }
         f <- file(input[[i]], open = "r")
         readLines(f, n = 1L) # skip header
         while(length(line_to_process <- readLines(f, n = 1L)) > 0){
           chunk_data <- setNames(strsplit(x = line_to_process, split = "\\t")[[1]], c("id", "text"))
           Annotator$annotate(txt = chunk_data[["text"]], id = as.integer(chunk_data[["id"]]))
-          if (progress) status$tick()
+          # if (progress) status$tick()
         }
         close(f)
-        if (progress) status$finish()
+        # if (progress) status$finish()
         return( output[[i]] )
       }
       
       if (progress){
-
-        if (!requireNamespace("jobstatus", quietly = TRUE))
-          stop('Package "jobstatus" required but not available. You can install it from GitHub as follows:\ndevtools::install_github("ropenscilabs/jobstatus")')
+        stop("This is deprecated.")
         
-        if (!requireNamespace("future", quietly = TRUE)) stop("Package 'future' required but not available.")
-        
-        do.call("library", list("future")) # how to omit this?
-        # attach(what = getNamespace("future"))
-        # on.exit(detach(getNamespace("future")))
-        do.call("library", list("jobstatus")) # how to omit this?
-        # attach(what = getNamespace("jobstatus"))
-        # on.exit(detach(getNamespace("jobstatus")))
-        
-
-        future::plan(strategy = "multiprocess")
-        
-        jobstatus::with_jobstatus({
-          
-          # create futures
-          fns <- sprintf("fn%d <- jobstatus::subjob_future(expr = fn(%d))", 1L:threads, 1L:threads)
-          eval(parse(text = paste(fns, collapse = ";")))
-          
-          # get their values
-          val <- sprintf("v%d <- future::value(fn%d)", 1L:threads, 1L:threads)
-          eval(parse(text = paste(val, collapse = ";")))
-          
-        }, display = jobstatus::percentage)
-        retval <- unname(unlist(mget(x = paste("v", 1L:threads, sep = ""))))
-        return( retval )
+        # if (!requireNamespace("jobstatus", quietly = TRUE))
+        #   stop('Package "jobstatus" required but not available. You can install it from GitHub as follows:\ndevtools::install_github("ropenscilabs/jobstatus")')
+        # 
+        # if (!requireNamespace("future", quietly = TRUE)) stop("Package 'future' required but not available.")
+        # 
+        # do.call("library", list("future")) # how to omit this?
+        # # attach(what = getNamespace("future"))
+        # # on.exit(detach(getNamespace("future")))
+        # do.call("library", list("jobstatus")) # how to omit this?
+        # # attach(what = getNamespace("jobstatus"))
+        # # on.exit(detach(getNamespace("jobstatus")))
+        # 
+        # 
+        # future::plan(strategy = "multiprocess")
+        # 
+        # jobstatus::with_jobstatus({
+        #   
+        #   # create futures
+        #   fns <- sprintf("fn%d <- jobstatus::subjob_future(expr = fn(%d))", 1L:threads, 1L:threads)
+        #   eval(parse(text = paste(fns, collapse = ";")))
+        #   
+        #   # get their values
+        #   val <- sprintf("v%d <- future::value(fn%d)", 1L:threads, 1L:threads)
+        #   eval(parse(text = paste(val, collapse = ";")))
+        #   
+        # }, display = jobstatus::percentage)
+        # retval <- unname(unlist(mget(x = paste("v", 1L:threads, sep = ""))))
+        # return( retval )
         
       } else {
         retval <- mclapply(1L:threads, fn, mc.cores = threads)

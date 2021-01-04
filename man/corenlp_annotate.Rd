@@ -54,6 +54,8 @@ are assumed to be tsv files with two columns ('id' and 'text').}
 
 \item{report_interval}{When to report progress report to logfile.}
 
+\item{gc_interval}{Frequency of garbage collection.}
+
 \item{method}{The output generated, either "json" (default), "txt", or "xml".}
 
 \item{threads}{An integer.}
