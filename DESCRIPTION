@@ -40,7 +40,7 @@ Collate:
     'pretty_print.R'
     'properties.R'
     'purge.R'
-    'utils.R'
+    'jvm.R'
     'zzz.R'
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)

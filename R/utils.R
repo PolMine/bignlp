@@ -16,3 +16,17 @@ jvm_is_initialized <- function(){
     return(FALSE)
   }
 }
+
+.jvm_heap_space <- function(){
+  jvm_mem <- J("java/lang/Runtime")$getRuntime()$maxMemory()
+  class(jvm_mem) <- "object_size"
+  format(jvm_mem, units = "MB")
+}
+
+.jvm_version <- function(){
+  .jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
+}
+
+.jvm_name <- function(){
+  .jcall("java/lang/System", "S", "getProperty", "java.runtime.name")
+}

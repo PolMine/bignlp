@@ -76,37 +76,41 @@ StanfordCoreNLP <- R6Class(
 
   public = list(
     
-    pipeline = NULL,
+    pipeline = NULL, # Instance of StanfordCoreNLP will be here
     outputter = NULL,
-    writer = NULL,
     output_format = NULL,
     logfile = NULL,
 
 
-    #' @param corenlp_dir Directory of StanfordCoreNLP.
+    #' @param corenlp_dir Directory where StanfordCoreNLP resides.
     #' @param properties Either the filename of a properties file or a Java
     #'   properties object.
-    #' @param output_format Either "txt", "json" or "xml", defaults to NULL.
+    #' @param output_format Either "json", "xml", "conll" or "txt", defaults to NULL.
     #' @param logfile Where to write logs.
     initialize = function(
       corenlp_dir = getOption("bignlp.corenlp_dir"),
       properties, 
-      method = NULL,
-      cols_to_keep = c("sentence", "id", "token", "pos", "ner"),
-      destfile = NULL,
+      output_format = NULL,
       logfile = NULL
     ){
       
-      self$cols_to_keep <- cols_to_keep
+      if (startsWith(.jvm_name(), "OpenJDK")){
+        cli_alert(sprintf("JVM runtime name: %s", .jvm_name()))
+        cli_alert(sprintf("JVM version: %s", .jvm_version()))
+        cli_alert_warning("Recommended: Oracle Java 8")
+      } else {
+        cli_alert_success(sprintf("JVM runtime name: %s", .jvm_name()))
+        if (as.numeric(gsub("^(\\d+\\.\\d+)\\..*?$", "\\1", .jvm_version())) != 1.8)
+          cli_alert_warning("Java version is %s - recommended: 1.8", .jvm_version())
+      }
+      cli_alert(sprintf("JVM runtime name: ", .jvm_name()))
+      message(
+        ,
+        ,
+         "(recommended: Oracle Java)" else ""
+      )
       
-      jvm_status <- rJava::.jinit(force.init = TRUE) # does it harm when called again?
-      message("Status of the Java Virtual Machine: ", jvm_status)
-      
-      java_version <- rJava::.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
-      message("Java version: ", java_version)
-      
-      if (as.numeric(gsub("^(\\d+\\.\\d+)\\..*?$", "\\1", java_version)) != 1.8)
-        warning("java version is not 1.8, but ", java_version, ". This may violate CoreNLP requirements.")
+      cli_alert("JVM maximum heap space: %s", .jvm_heap_space())
 
       stanford_path <- Sys.glob(paste0(corenlp_dir,"/*.jar"))
       rJava::.jaddClassPath(stanford_path)

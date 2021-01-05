@@ -20,10 +20,6 @@
       )
   )
   
-  jvm_mem <- rJava::J("java/lang/Runtime")$getRuntime()$maxMemory()
-  class(jvm_mem) <- "object_size"
-  packageStartupMessage(
-    sprintf("JVM memory allocated: %s", format(jvm_mem, units = "MB"))
-  )
+  packageStartupMessage(sprintf("JVM memory allocated: %s", .jvm_heap_space()))
 }
 
