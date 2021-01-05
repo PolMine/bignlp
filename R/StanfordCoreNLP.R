@@ -3,21 +3,25 @@ NULL
 
 #' StanfordCoreNLP Annotator Class.
 #' 
+#' The StanfordCoreNLP class is main pipeline of StanfordCoreNLP for processing
+#' text. Its main functionality is exposed to R by way of an R6 class. The
+#' special focus of this implementation is to use the multithreading capacities of 
+#' StanfordCoreNLP from R.
 #' 
 #' See https://stackoverflow.com/questions/51636158/what-is-the-default-number-of-threads-in-stanford-corenlp
+#' XML output could be parsed using `coreNLP:::parseAnnoXML(xml) %>% coreNLP::getToken()`.
 #' 
-#' @field pipeline Class from Stanford CoreNLP to annotate text
-#' @field xmlifier Class from Stanford CoreNLP to generate XML output
-#' @field jsonifier Class from Stanford CoreNLP to generate JSON output
+#' @field pipeline Instance of the StanfordCoreNLP class.
+#' @field outputter An outputter (JSON, CoNLL, XML) to generate string output
+#'   from annotations.
 #' @field writer Class from Stanford CoreNLP to generate TXT output
-#' @field method which output format to use
+#' @field output_format Which output format to use ("json", "xml", "conll").
 #' @field logfile Where to write logs.
 #' 
 #' @export StanfordCoreNLP
 #' @rdname StanfordCoreNLP
 #' @importFrom jsonlite fromJSON
 #' @importFrom stringi stri_match
-#' @importFrom coreNLP getToken
 #' @importFrom data.table as.data.table
 #' @importFrom rJava .jnew J .jcall
 #' @examples 
@@ -30,14 +34,14 @@ NULL
 #' CNLP <- StanfordCoreNLP$new(
 #'   method = "json",
 #'   corenlp_dir = getOption("bignlp.corenlp_dir"),
-#'   properties_file = corenlp_get_properties_file(lang = "de")
+#'   properties = corenlp_get_properties_file(lang = "de")
 #'   )
 #' CNLP$annotate(txt = txt)
 #' CNLP$annotate(txt = txt, id = 15L)
 #' 
 #' CNLP <- StanfordCoreNLP$new(
 #'   method = "xml",
-#'   properties_file = corenlp_get_properties_file(lang = "de")
+#'   properties = corenlp_get_properties_file(lang = "de")
 #' )
 #' CNLP$annotate(txt = txt)
 #' 
@@ -73,33 +77,20 @@ StanfordCoreNLP <- R6Class(
   public = list(
     
     pipeline = NULL,
-    xmlifier = NULL,
-    jsonifier = NULL,
+    outputter = NULL,
     writer = NULL,
-    append = NULL,
-    method = NULL,
-    cols_to_keep = NULL,
-    destfile = NULL,
+    output_format = NULL,
     logfile = NULL,
-    target = NULL, # The total number of annotation tasks to perform
-    current = NULL, # The current annotation task
-    report_interval = NULL,
-    gc_interval = NULL,
 
 
     #' @param corenlp_dir Directory of StanfordCoreNLP.
-    #' @param properties_file Either the filename of a properties file or a Java
+    #' @param properties Either the filename of a properties file or a Java
     #'   properties object.
-    #' @param method Either "txt", "json" or "xml", defaults to NULL.
-    #' @param cols_to_keep Columns of the parsed NLP output to keep.
-    #' @param destfile Where to write parser output.
+    #' @param output_format Either "txt", "json" or "xml", defaults to NULL.
     #' @param logfile Where to write logs.
-    #' @param target ????
-    #' @param report_interval Frequency of report on memory consumption.
-    #' @param gc_interval Frequency of garbage collection.
     initialize = function(
       corenlp_dir = getOption("bignlp.corenlp_dir"),
-      properties_file, 
+      properties, 
       method = NULL,
       cols_to_keep = c("sentence", "id", "token", "pos", "ner"),
       destfile = NULL,
@@ -119,16 +110,16 @@ StanfordCoreNLP <- R6Class(
 
       stanford_path <- Sys.glob(paste0(corenlp_dir,"/*.jar"))
       rJava::.jaddClassPath(stanford_path)
-      if (is.character(properties_file)){
-        if (!file.exists(properties_file)) stop("Argument 'properties_file' does not refer to existing file.")
-        rJava::.jaddClassPath(dirname(properties_file))
-        self$pipeline <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", basename(properties_file))
-      } else if (is.list(properties_file)){
+      if (is.character(properties)){
+        if (!file.exists(properties)) stop("Argument 'properties' does not refer to existing file.")
+        rJava::.jaddClassPath(dirname(properties))
+        self$pipeline <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", basename(properties))
+      } else if (is.list(properties)){
         props <- rJava::.jnew("java.util.Properties")
-        lapply(names(properties_file), function(property) props$put(property, properties_file[[property]]))
+        lapply(names(properties), function(property) props$put(property, properties[[property]]))
         self$pipeline <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
-      } else if (is_properties(properties_file)){
-        self$pipeline <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", properties_file)
+      } else if (is_properties(properties)){
+        self$pipeline <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", properties)
       }
 
       # Instantiate output method -------------------------------------------

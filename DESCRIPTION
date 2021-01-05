@@ -16,7 +16,6 @@ Imports:
     stringi,
     rJava,
     cleanNLP,
-    coreNLP,
     progress,
     stats
 Suggests:
