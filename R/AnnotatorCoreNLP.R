@@ -1,29 +1,25 @@
 #' @include bignlp.R
 NULL
 
-#' Stanford CoreNLP Annotator Class.
+#' StanfordCoreNLP Annotator Class.
 #' 
-#' @field tagger Class from Stanford CoreNLP to annotate text
+#' 
+#' See https://stackoverflow.com/questions/51636158/what-is-the-default-number-of-threads-in-stanford-corenlp
+#' 
+#' @field pipeline Class from Stanford CoreNLP to annotate text
 #' @field xmlifier Class from Stanford CoreNLP to generate XML output
 #' @field jsonifier Class from Stanford CoreNLP to generate JSON output
 #' @field writer Class from Stanford CoreNLP to generate TXT output
-#' @field append logical, whether to append output to destfile
-#' @field method whith output format to use
-#' @field cols_to_keep columns from output to keep
-#' @field destfile filename
+#' @field method which output format to use
 #' @field logfile Where to write logs.
-#' @field target Number of steps to take…
-#' @field current Where the process stands now.
-#' @field report_interval Frequency of messages on memory consumption.
-#' @field gc_interval Frequency of garbage collection.
 #' 
-#' @export AnnotatorCoreNLP
-#' @rdname AnnotatorCoreNLP
+#' @export StanfordCoreNLP
+#' @rdname StanfordCoreNLP
 #' @importFrom jsonlite fromJSON
 #' @importFrom stringi stri_match
 #' @importFrom coreNLP getToken
 #' @importFrom data.table as.data.table
-#' @importFrom rJava .jnew J
+#' @importFrom rJava .jnew J .jcall
 #' @examples 
 #' Sys.setenv("_JAVA_OPTIONS" = "")
 #' options(java.parameters = "-Xmx4g")
@@ -31,7 +27,7 @@ NULL
 #' 
 #' txt <- "Das ist ein Satz. Und das ist ein zweiter Satz."
 #' 
-#' CNLP <- AnnotatorCoreNLP$new(
+#' CNLP <- StanfordCoreNLP$new(
 #'   method = "json",
 #'   corenlp_dir = getOption("bignlp.corenlp_dir"),
 #'   properties_file = corenlp_get_properties_file(lang = "de")
@@ -39,7 +35,7 @@ NULL
 #' CNLP$annotate(txt = txt)
 #' CNLP$annotate(txt = txt, id = 15L)
 #' 
-#' CNLP <- AnnotatorCoreNLP$new(
+#' CNLP <- StanfordCoreNLP$new(
 #'   method = "xml",
 #'   properties_file = corenlp_get_properties_file(lang = "de")
 #' )
@@ -51,30 +47,32 @@ NULL
 #' library(polmineR)
 #' library(bignlp)
 #' properties <- list(
-#'   "threads" = "6",
 #'   "annotators" = "tokenize, ssplit, pos, lemma, ner",
 #'   "tokenize.language" = "de",
 #'   "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
 #'   "pos.model" = "edu/stanford/nlp/models/pos-tagger/german-ud.tagger",
+#'   "pos.nthreads" = "7",
 #'   "ner.model" = "edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz",
 #'   "ner.applyNumericClassifiers" = "false",
 #'   "ner.applyFineGrained" = "false",
 #'   "ner.useSUTime" = "false",
-#'   "ner.nthreads" = "6"
+#'   "ner.nthreads" = "7"
 #' )
-#' CNLP <- AnnotatorCoreNLP$new(method = "json", properties_file = properties)
+#' CNLP <- StanfordCoreNLP$new(method = "json", properties_file = properties)
+#' 
 #' merkel <- corpus("GERMAPARL") %>%
 #'   subset(speaker == "Angela Merkel" & interjection == "FALSE") %>%
 #'   get_token_stream(beautify = TRUE, collapse = " ")
+#'   
 #' system.time(foo <- CNLP$annotate(merkel))
 #' }
-AnnotatorCoreNLP <- R6Class(
+StanfordCoreNLP <- R6Class(
   
-  classname = "CoreNLP",
+  classname = "StanfordCoreNLP",
 
   public = list(
     
-    tagger = NULL,
+    pipeline = NULL,
     xmlifier = NULL,
     jsonifier = NULL,
     writer = NULL,
@@ -105,10 +103,7 @@ AnnotatorCoreNLP <- R6Class(
       method = NULL,
       cols_to_keep = c("sentence", "id", "token", "pos", "ner"),
       destfile = NULL,
-      logfile = NULL,
-      target = NULL,
-      report_interval = 1L,
-      gc_interval = 100L
+      logfile = NULL
     ){
       
       self$cols_to_keep <- cols_to_keep
@@ -127,23 +122,23 @@ AnnotatorCoreNLP <- R6Class(
       if (is.character(properties_file)){
         if (!file.exists(properties_file)) stop("Argument 'properties_file' does not refer to existing file.")
         rJava::.jaddClassPath(dirname(properties_file))
-        self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", basename(properties_file))
+        self$pipeline <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", basename(properties_file))
       } else if (is.list(properties_file)){
         props <- rJava::.jnew("java.util.Properties")
         lapply(names(properties_file), function(property) props$put(property, properties_file[[property]]))
-        self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
+        self$pipeline <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", props)
       } else if (is_properties(properties_file)){
-        self$tagger <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", properties_file)
+        self$pipeline <- rJava::.jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", properties_file)
       }
 
       # Instantiate output method -------------------------------------------
       
       self$method <- method
       if (!is.null(self$method)){
-        if (self$method == "xml") self$xmlifier <- rJava::.jnew("edu.stanford.nlp.pipeline.XMLOutputter")
-        if (self$method == "json") self$jsonifier <- rJava::.jnew("edu.stanford.nlp.pipeline.JSONOutputter")
+        if (self$method == "xml") self$xmlifier <- .jnew("edu.stanford.nlp.pipeline.XMLOutputter")
+        if (self$method == "json") self$jsonifier <- .jnew("edu.stanford.nlp.pipeline.JSONOutputter")
         if (self$method == "txt") {
-          self$writer <- new(J("java.io.PrintWriter"), rJava::.jnew("java.io.FileOutputStream", rJava::.jnew("java.io.File", destfile), TRUE))
+          self$writer <- new(J("java.io.PrintWriter"), .jnew("java.io.FileOutputStream", .jnew("java.io.File", destfile), TRUE))
         }
       }
       
@@ -159,80 +154,67 @@ AnnotatorCoreNLP <- R6Class(
 
       invisible( self )
     },
+
     
-    
-    #' @param anno Annotation to process.
-    annotation_to_xml = function(anno){
-      doc <- rJava::.jcall(self$xmlifier, "Lnu/xom/Document;", "annotationToDoc", anno, self$tagger)
-      xml <- rJava::.jcall(doc, "Ljava/lang/String;", "toXML")
-      df <- coreNLP::getToken(coreNLP:::parseAnnoXML(xml))
-      colnames(df) <- tolower(colnames(df))
-      as.data.table(df[, self$cols_to_keep])
-    },
-    
-    #' @param id The ID to prepend.
-    #' @param anno Annotation to process.
-    annotation_to_json = function(anno, id = NULL){
-      json_string <- rJava::.jcall(self$jsonifier, "Ljava/lang/String;", "print", anno)
-      json_string <- gsub("\\s+", " ", json_string)
-      if (!is.null(id)){
-        stopifnot(is.integer(id))
-        json_string <- sprintf('{"id": %d, %s', id, substr(json_string, 2, nchar(json_string)))
+    #' @description Get information on memory usage within the JVM and 
+    #'   show it as a message or append it to logfile.
+    #' @param logfile Name of a logfile.
+    show_memory_usage = function(logfile = NULL){
+      runtime <- rJava::J("java/lang/Runtime")$getRuntime()
+      msg <- sprintf(
+        "Time: %s | Memory used: %f | Memory free: %f",
+        format(Sys.time()), runtime$totalMemory(), runtime$getRuntime()$freeMemory()
+      )
+      if (is.null(self$logfile)){
+        message(log_msg)
+      } else {
+        cat(msg, file = self$logfile, sep = "\n", append = TRUE)
       }
-      if (!is.null(self$destfile)) cat(json_string, "\n", file = self$destfile, append = self$append)
-      if (self$append == FALSE) json_string else NULL # return value
     },
     
-    #' @param anno Annotation to process.
-    annotation_to_txt = function(anno){
-      if (self$append == FALSE){
-        self$writer <- rJava::.jnew("java.io.PrintWriter", filename <- tempfile())
-      }
-      rJava::.jcall(self$tagger, "V", "prettyPrint", anno, self$writer)
-      if (self$append == FALSE) parse_pretty_print(filename) else NULL
+    #' @description Trigger garbage collection in JVM.
+    collect_garbage = function(){
+      rJava::J("java/lang/Runtime")$getRuntime()$gc()
     },
     
-    #' @param txt A string to process.
+    #' @description Annotate a string.
+    #' @param txt A (length-one) `character` vector to process.
     #' @param id An ID to prepend.
     #' @param current Where process stands.
     #' @param purge Whether to postprocess output.
-    annotate = function(txt, id = NULL, current = -1L, purge = TRUE){
-      if (purge) txt <- purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
-      
-      anno <- rJava::.jcall(self$tagger, "Ledu/stanford/nlp/pipeline/Annotation;", "process", txt)
-      
-      # output message upon every nth chunk processed
-      share <- current / self$report_interval
-      if (share - trunc(share) == 0){
-        jvm_runtime <- rJava::J("java/lang/Runtime")$getRuntime()
-        log_msg <- sprintf(
-          "Time: %s | Chunks processed: %d/%d (%.1f %%)| Memory used: %f | Memory free: %f",
-          format(Sys.time()), current, self$target, current / self$target * 100, jvm_runtime$totalMemory(), jvm_runtime$getRuntime()$freeMemory()
-        )
-        if (!is.null(self$logfile)){
-          cat(log_msg, file = self$logfile, sep = "\n", append = TRUE)
-        } else {
-          message(log_msg)
-        }
+    annotate = function(txt, id = NULL, purge = TRUE){
+      if (purge){
+        txt <- purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
       }
       
-      # garbage collection upon every nth chunk processed
-      gc_div <- current / self$gc_interval
-      if (gc_div - trunc(gc_div) == 0){
-        message("... triggering JVM garbagee collection")
-        rJava::J("java/lang/Runtime")$getRuntime()$gc()
+      anno <- .jcall(self$pipeline, "Ledu/stanford/nlp/pipeline/Annotation;", "process", txt)
+      
+      if (self$method == "json"){
+        return(.jcall(self$jsonifier, "Ljava/lang/String;", "print", anno))
+      } else if (self$method == "xml"){
+        doc <- .jcall(self$xmlifier, "Lnu/xom/Document;", "annotationToDoc", anno, self$pipeline)
+        return(.jcall(doc, "Ljava/lang/String;", "toXML"))
+        # This result can be parsed to a data.frame using:
+        # coreNLP:::parseAnnoXML(xml) %>% coreNLP::getToken()
+      } else if (self$method == "txt"){
+        writer <- rJava::.jnew("java.io.PrintWriter", filename <- tempfile())
+        .jcall(self$pipeline, "V", "prettyPrint", anno, writer)
+        return(readLines(filename))
+      } else if (self$method == "conll"){
+        outputter <- .jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
+        y <- outputter$print(anno)
+        a <- strsplit(x = y, split = "\n", fixed = TRUE)[[1L]]
+        b <- strsplit(a, split = "\t", fixed = TRUE)
+        d <- data.frame(do.call(rbind, b))
+        d[[1]] <- as.integer(d[[1]])
       }
-
-      switch(
-        self$method,
-        xml = self$annotation_to_xml(anno),
-        json = self$annotation_to_json(anno, id = id),
-        txt = self$annotation_to_txt(anno)
-      )
     },
     
-    #' @description 
-    #' Process all files in the stated directory (argument `dir`) in parallel.
+    #' @description Process all files in the stated directory (argument `dir`).
+    #'   Parallel processing is possible if a 'threads' key the properties
+    #'   object is defined and sets a number of cores to use.
+    #' @return The method returns (invisibly) the files expected to result from
+    #'   the tagging exercise.
     #' @param dir Directory with files to process (in parallel).
     process_files = function(dir){
       
@@ -243,9 +225,9 @@ AnnotatorCoreNLP <- R6Class(
         FALSE
       )
       
-      self$tagger$getProperties()$put("outputDirectory", file.path(dir))
+      self$pipeline$getProperties()$put("outputDirectory", file.path(dir))
       
-      self$tagger$processFiles(
+      self$pipeline$processFiles(
         file_collection,
         6L, # no effect
         FALSE,
@@ -254,7 +236,10 @@ AnnotatorCoreNLP <- R6Class(
       invisible(paste(Sys.glob(paste0(dir, "/*.txt")), "json", sep = "."))
     },
     
-    #' @param x A `logical` value. 
+    #' @description Set whether calls of the class shall be verbose.
+    #' @param x A `logical` value. If `TRUE`, all status messages are shown, if
+    #'   `FALSE`, only error messages are displayed.
+    #' @return The class is returned invisibly
     verbose = function(x){
       stopifnot(length(x) == 1L, is.logical(x))
       if (x){
@@ -264,6 +249,7 @@ AnnotatorCoreNLP <- R6Class(
         redwood_config <- .jnew("edu/stanford/nlp/util/logging/RedwoodConfiguration")
         redwood_config$errorLevel()$apply()
       }
+      invisible(self)
     }
   )
 )

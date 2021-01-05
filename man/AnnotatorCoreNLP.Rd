@@ -91,6 +91,8 @@ system.time(foo <- CNLP$annotate(merkel))
 \item \href{#method-annotation_to_xml}{\code{AnnotatorCoreNLP$annotation_to_xml()}}
 \item \href{#method-annotation_to_json}{\code{AnnotatorCoreNLP$annotation_to_json()}}
 \item \href{#method-annotation_to_txt}{\code{AnnotatorCoreNLP$annotation_to_txt()}}
+\item \href{#method-show_memory_usage}{\code{AnnotatorCoreNLP$show_memory_usage()}}
+\item \href{#method-collect_garbage}{\code{AnnotatorCoreNLP$collect_garbage()}}
 \item \href{#method-annotate}{\code{AnnotatorCoreNLP$annotate()}}
 \item \href{#method-process_files}{\code{AnnotatorCoreNLP$process_files()}}
 \item \href{#method-verbose}{\code{AnnotatorCoreNLP$verbose()}}
@@ -191,23 +193,52 @@ properties object.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-annotate"></a>}}
-\if{latex}{\out{\hypertarget{method-annotate}{}}}
-\subsection{Method \code{annotate()}}{
+\if{html}{\out{<a id="method-show_memory_usage"></a>}}
+\if{latex}{\out{\hypertarget{method-show_memory_usage}{}}}
+\subsection{Method \code{show_memory_usage()}}{
+Get information on memory usage within the JVM and
+show it as a message or append it to logfile.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$annotate(txt, id = NULL, current = -1L, purge = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$show_memory_usage(logfile = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{txt}}{A string to process.}
+\item{\code{logfile}}{Name of a logfile.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-collect_garbage"></a>}}
+\if{latex}{\out{\hypertarget{method-collect_garbage}{}}}
+\subsection{Method \code{collect_garbage()}}{
+Trigger garbage collection in JVM.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$collect_garbage()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-annotate"></a>}}
+\if{latex}{\out{\hypertarget{method-annotate}{}}}
+\subsection{Method \code{annotate()}}{
+Annotate a string.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$annotate(txt, id = NULL, purge = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{txt}}{A (length-one) \code{character} vector to process.}
 
 \item{\code{id}}{An ID to prepend.}
 
-\item{\code{current}}{Where process stands.}
-
 \item{\code{purge}}{Whether to postprocess output.}
+
+\item{\code{current}}{Where process stands.}
 }
 \if{html}{\out{</div>}}
 }
@@ -216,7 +247,9 @@ properties object.}
 \if{html}{\out{<a id="method-process_files"></a>}}
 \if{latex}{\out{\hypertarget{method-process_files}{}}}
 \subsection{Method \code{process_files()}}{
-Process all files in the stated directory (argument \code{dir}) in parallel.
+Process all files in the stated directory (argument \code{dir}).
+Parallel processing is possible if a 'threads' key the properties
+object is defined and sets a number of cores to use.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$process_files(dir)}\if{html}{\out{</div>}}
 }
@@ -228,11 +261,16 @@ Process all files in the stated directory (argument \code{dir}) in parallel.
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+The method returns (invisibly) the files expected to result from
+the tagging exercise.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-verbose"></a>}}
 \if{latex}{\out{\hypertarget{method-verbose}{}}}
 \subsection{Method \code{verbose()}}{
+Set whether calls of the class shall be verbose.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AnnotatorCoreNLP$verbose(x)}\if{html}{\out{</div>}}
 }
@@ -240,9 +278,13 @@ Process all files in the stated directory (argument \code{dir}) in parallel.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{x}}{A \code{logical} value.}
+\item{\code{x}}{A \code{logical} value. If \code{TRUE}, all status messages are shown, if
+\code{FALSE}, only error messages are displayed.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The class is returned invisibly
 }
 }
 \if{html}{\out{<hr>}}

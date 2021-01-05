@@ -8,6 +8,7 @@ and it is not sufficiently mature to rely on it in the long run (see [jobstatus 
 * New method `$verbose()` of `AnnotatorCoreNLP` class.
 * Upon loading the bignlp package, a JVM is initialized using `rJava::.jpackage()`.
 * A startup message on the memory allocated to the JVM is issued to give the user a hint whether that is enough.
+* Any parallelization using the packages futures or jobstatus, or that relied on creating various parallel JVMs are removed.
 
 # bignlp v0.0.9
 

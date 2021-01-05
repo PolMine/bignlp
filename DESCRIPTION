@@ -33,7 +33,7 @@ License: GPL-3
 Encoding: UTF-8
 Collate:
     'bignlp.R'
-    'AnnotatorCoreNLP.R'
+    'StanfordCoreNLP.R'
     'chunk_table.R'
     'corenlp.R'
     'json.R'

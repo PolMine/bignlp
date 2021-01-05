@@ -28,7 +28,7 @@ corenlp_annotate(input, ...)
   output = NULL,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
   properties_file = getOption("bignlp.properties_file"),
-  byline = FALSE,
+  byline = NULL,
   method = "json",
   threads = 1L,
   progress = TRUE,

@@ -78,7 +78,7 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
   if (threads == 1L){
     return_string <- if (is.null(output)) {output <- tempfile(); TRUE} else FALSE
     if (file.exists(output)) file.remove(output)
-    Annotator <- AnnotatorCoreNLP$new(
+    Annotator <- StanfordCoreNLP$new(
       method = method,
       destfile = output,
       corenlp_dir = corenlp_dir,
@@ -93,87 +93,7 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
     if (return_string) return( readLines(output) ) else return( output )
     
   } else if (threads > 1L){
-    
-    if (is.null(output)) output <- tempdir()
-    outfiles <- sprintf(file.path(output, "corenlp_%d.ndjson"), 1L:threads)
-    if (any(file.exists(outfiles))) for (x in outfiles[file.exists(outfiles)]) file.remove(x) 
-    
-    jvm_is_initialized()
-    if (Sys.getenv("RSTUDIO") == "1")
-      warning("for some unknown reason, parallelization does not work when RStudio is running")
-    
-    chunks <- text2vec::split_into(1L:nrow(input), n = threads)
-    
-    if (progress == FALSE){
-      fn_no_progress <- function(i, progress = FALSE){
-        options(java.parameters = "-Xmx4g")
-        Annotator <- AnnotatorCoreNLP$new(
-          method = method, destfile = outfiles[i],
-          corenlp_dir = corenlp_dir,
-          properties_file = properties_file
-        )
-        lapply(
-          chunks[[i]],
-          function(j) Annotator$annotate(input[["text"]][j], id = input[j][["id"]])
-        )
-        return( outfiles[i] )
-      }
-      output <- unlist(parallel::mclapply(1L:length(chunks), fn_no_progress, mc.cores = threads))
-    } else {
-      stop("This is deprecated.")
-      #   if (!requireNamespace("jobstatus", quietly = TRUE)){
-      #     stop("Package 'jobstatus' required but not available. Install it from ",
-      #             'GitHub:\ndevtools::install_github("ropenscilabs/jobstatus")')
-      #   }
-      #   
-      #   if (!requireNamespace("future", quietly = TRUE)){
-      #     stop("Package 'future' required but not available.")
-      #   }
-      #   
-      #   do.call("library", list("future")) # how to omit this?
-      #   # attach(what = getNamespace("future"))
-      #   # on.exit(detach(getNamespace("future")))
-      #   do.call("library", list("jobstatus")) # how to omit this?
-      #   # attach(what = getNamespace("jobstatus"))
-      #   # on.exit(detach(getNamespace("jobstatus")))
-      # 
-      #   future::plan(strategy = "multiprocess") # in package 'future'
-      #   
-      #   fn_with_progress <- function(i){
-      #     options(java.parameters = "-Xmx4g")
-      #     Annotator <- AnnotatorCoreNLP$new(
-      #       method = method, destfile = outfiles[i],
-      #       corenlp_dir = corenlp_dir,
-      #       properties_file = properties_file
-      #     )
-      #     status <- jobstatus::jobstatus$new(length(chunks[[i]]))
-      #     for (j in chunks[[i]]){
-      #       Annotator$annotate(input[["text"]][j], id = input[j][["id"]])
-      #       status$tick()
-      #     }
-      #     status$finish()
-      #     return( outfiles[i] )
-      #   }
-      #   
-      #   jobstatus::with_jobstatus({
-      #     
-      #     # create futures
-      #     fns <- sprintf(
-      #       "fn%d <- jobstatus::subjob_future(expr = fn_with_progress(%d))",
-      #       1L:threads, 1L:threads
-      #     )
-      #     eval(parse(text = paste(fns, collapse = ";")))
-      #     
-      # 
-      #     # get their values
-      #     val <- sprintf("v%d <- future::value(fn%d)", 1L:threads, 1L:threads)
-      #     eval(parse(text = paste(val, collapse = ";")))
-      #     
-      #     }, display = jobstatus::percentage
-      #   )
-    }
-    output <- unname(unlist(mget(x = paste("v", 1L:threads, sep = ""))))
-    return( output )
+    stop("Processing a data.table using multiple threads is not implemented.")
   }
 })
 
@@ -208,136 +128,86 @@ setMethod("corenlp_annotate", "data.table", function(input, output = NULL, coren
 #' }
 #' @importFrom progress progress_bar
 #' @rdname corenlp_annotate
-setMethod("corenlp_annotate", "character", function(input, output = NULL, corenlp_dir = getOption("bignlp.corenlp_dir"), properties_file = getOption("bignlp.properties_file"), byline = FALSE, method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
+setMethod("corenlp_annotate", "character", function(input, output = NULL, corenlp_dir = getOption("bignlp.corenlp_dir"), properties_file = getOption("bignlp.properties_file"), byline = NULL, method = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
   if (!all(file.exists(input))) stop("Stopping - all input files need to exist!")
-  if (byline == FALSE){
-    if (length(input) == 1L){
-      if (file.info(input)$isdir == FALSE){
-        input <- data.table::fread(input, showProgress = progress)
-      } else {
-        input <- list.files(input, full.names = TRUE)
-      }
-    } else {
-      input <- rbindlist(lapply(input, fread))
+  if (!is.null(byline)){
+    stop("The argument 'byline' is deprecated.")
+  }
+  
+  if (threads == 1L){
+    if (file.info(input)$isdir == TRUE) stop("The input is a directory, a single file is expected.")
+    if (is.null(output)){
+      output <- file.path(
+        tempdir(),
+        paste(
+          gsub("^(.*)\\..*?$", "\\1", basename(input)),
+          method,
+          sep = "."
+        )
+      )
+      if (file.exists(output)) file.remove(output)
+    }
+    if (progress) chunks_total <- chunk_table_get_nrow(input) - 1L # leave header out of calculation
+    Annotator <- StanfordCoreNLP$new(
+      method = method, destfile = output,
+      corenlp_dir = corenlp_dir,
+      properties_file = properties_file
+    )
+    if (progress) pb <- progress_bar$new(total = chunks_total)
+    f <- file(input, open = "r")
+    readLines(f, n = 1L) # skip header
+    while(length(line_to_process <- readLines(f, n = 1L)) > 0){
+      chunk_data <- setNames(strsplit(x = line_to_process, split = "\\t")[[1]], c("id", "text"))
+      # If chunk data has been saved using data.table::fwrite(), argument 'quote = "auto"' may
+      # have as a consequence that the chunk data text is wrapped into quotes - remove quotes if 
+      # necessary
+      if (grepl('^".*"$', chunk_data[["text"]])) chunk_data[["text"]] <- gsub('^"(.*)"$', "\\1", chunk_data[["text"]])
+      Annotator$annotate(txt = chunk_data[["text"]], id = as.integer(chunk_data[["id"]]))
+      if (progress) pb$tick()
+    }
+    close(f)
+    if (progress) pb$terminate()
+    return(output)
+  } else if (threads >= 2L){
+    
+    jvm_is_initialized()
+    if (Sys.getenv("RSTUDIO") == "1") warning("Parallel byline processing with progress very likely to file in RStudio, try running it from command line.")
+    
+    if (is.null(output)){
+      output <- file.path(
+        tempdir(),
+        paste(gsub("^(.*)\\..*?$", "\\1", basename(input)), method, sep = ".")
+      )
+      if (any(file.exists(output))) file.remove(output)
     }
     
-    # There is a recursive logic at work here. If input is a list of files
-    # now, because input has been a dir hiere, corenlp_annotete,character-method
-    # will be invoked again.
-    corenlp_annotate(
-      input = input, output = output,
-      corenlp_dir = corenlp_dir, properties_file = properties_file,
-      preclean = TRUE, method = "json", threads = 1L,
-      progress = TRUE, verbose = TRUE
-    )
-  } else if (byline){
-    if (length(input) != threads) stop("In byline mode, corenlp_annotate requires the number of input files to be identical with the number of threads.")
-    if (threads == 1L){
-      if (file.info(input)$isdir == TRUE) stop("The input is a directory, a single file is expected.")
-      if (is.null(output)){
-        output <- file.path(
-          tempdir(),
-          paste(
-            gsub("^(.*)\\..*?$", "\\1", basename(input)),
-            method,
-            sep = "."
-          )
-        )
-        if (file.exists(output)) file.remove(output)
-      }
-      if (progress) chunks_total <- chunk_table_get_nrow(input) - 1L # leave header out of calculation
-      Annotator <- AnnotatorCoreNLP$new(
-        method = method, destfile = output,
+    fn <- function(i){
+      options(java.parameters = "-Xmx4g")
+      Annotator <- StanfordCoreNLP$new(
+        method = method, destfile = output[[i]],
         corenlp_dir = corenlp_dir,
         properties_file = properties_file
       )
-      if (progress) pb <- progress_bar$new(total = chunks_total)
-      f <- file(input, open = "r")
+      # if (progress){
+      #   chunks_total <- chunk_table_get_nrow(input[[i]]) - 1L # leave header out of calculation
+      #   # status <- jobstatus::jobstatus$new(chunks_total)
+      # }
+      f <- file(input[[i]], open = "r")
       readLines(f, n = 1L) # skip header
       while(length(line_to_process <- readLines(f, n = 1L)) > 0){
         chunk_data <- setNames(strsplit(x = line_to_process, split = "\\t")[[1]], c("id", "text"))
-        # If chunk data has been saved using data.table::fwrite(), argument 'quote = "auto"' may
-        # have as a consequence that the chunk data text is wrapped into quotes - remove quotes if 
-        # necessary
-        if (grepl('^".*"$', chunk_data[["text"]])) chunk_data[["text"]] <- gsub('^"(.*)"$', "\\1", chunk_data[["text"]])
         Annotator$annotate(txt = chunk_data[["text"]], id = as.integer(chunk_data[["id"]]))
-        if (progress) pb$tick()
+        # if (progress) status$tick()
       }
       close(f)
-      if (progress) pb$terminate()
-      return(output)
-    } else if (threads >= 2L){
-      
-      jvm_is_initialized()
-      if (Sys.getenv("RSTUDIO") == "1") warning("Parallel byline processing with progress very likely to file in RStudio, try running it from command line.")
-      
-      if (is.null(output)){
-        output <- file.path(
-          tempdir(),
-          paste(gsub("^(.*)\\..*?$", "\\1", basename(input)), method, sep = ".")
-        )
-        if (any(file.exists(output))) file.remove(output)
-      }
-      
-      fn <- function(i){
-        options(java.parameters = "-Xmx4g")
-        Annotator <- AnnotatorCoreNLP$new(
-          method = method, destfile = output[[i]],
-          corenlp_dir = corenlp_dir,
-          properties_file = properties_file
-        )
-        # if (progress){
-        #   chunks_total <- chunk_table_get_nrow(input[[i]]) - 1L # leave header out of calculation
-        #   # status <- jobstatus::jobstatus$new(chunks_total)
-        # }
-        f <- file(input[[i]], open = "r")
-        readLines(f, n = 1L) # skip header
-        while(length(line_to_process <- readLines(f, n = 1L)) > 0){
-          chunk_data <- setNames(strsplit(x = line_to_process, split = "\\t")[[1]], c("id", "text"))
-          Annotator$annotate(txt = chunk_data[["text"]], id = as.integer(chunk_data[["id"]]))
-          # if (progress) status$tick()
-        }
-        close(f)
-        # if (progress) status$finish()
-        return( output[[i]] )
-      }
-      
-      if (progress){
-        stop("This is deprecated.")
-        
-        # if (!requireNamespace("jobstatus", quietly = TRUE))
-        #   stop('Package "jobstatus" required but not available. You can install it from GitHub as follows:\ndevtools::install_github("ropenscilabs/jobstatus")')
-        # 
-        # if (!requireNamespace("future", quietly = TRUE)) stop("Package 'future' required but not available.")
-        # 
-        # do.call("library", list("future")) # how to omit this?
-        # # attach(what = getNamespace("future"))
-        # # on.exit(detach(getNamespace("future")))
-        # do.call("library", list("jobstatus")) # how to omit this?
-        # # attach(what = getNamespace("jobstatus"))
-        # # on.exit(detach(getNamespace("jobstatus")))
-        # 
-        # 
-        # future::plan(strategy = "multiprocess")
-        # 
-        # jobstatus::with_jobstatus({
-        #   
-        #   # create futures
-        #   fns <- sprintf("fn%d <- jobstatus::subjob_future(expr = fn(%d))", 1L:threads, 1L:threads)
-        #   eval(parse(text = paste(fns, collapse = ";")))
-        #   
-        #   # get their values
-        #   val <- sprintf("v%d <- future::value(fn%d)", 1L:threads, 1L:threads)
-        #   eval(parse(text = paste(val, collapse = ";")))
-        #   
-        # }, display = jobstatus::percentage)
-        # retval <- unname(unlist(mget(x = paste("v", 1L:threads, sep = ""))))
-        # return( retval )
-        
-      } else {
-        retval <- mclapply(1L:threads, fn, mc.cores = threads)
-        return(unlist(retval))
-      }
+      # if (progress) status$finish()
+      return( output[[i]] )
+    }
+    
+    if (progress){
+    } else {
+      retval <- mclapply(1L:threads, fn, mc.cores = threads)
+      return(unlist(retval))
     }
   }
 })
