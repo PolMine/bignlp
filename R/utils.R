@@ -25,3 +25,36 @@ chunk_table_get_nrow <- function(filename){
   close(f)
   nlines
 }
+
+
+#' Get directory with CoreNLP jar files.
+#' 
+#' @export corenlp_get_jar_dir
+corenlp_get_jar_dir <- function(){
+  if (nchar(Sys.getenv("CORENLP_DIR")) > 0L){
+    Sys.getenv("CORENLP_DIR")
+  } else if (file.exists(system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-4.2.0"))){
+    system.file(package = "bignlp", "extdata", "corenlp", "stanford-corenlp-4.2.0")
+  } else if (file.exists(system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31"))){
+    system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31")
+  } else {
+    ""
+  }
+}
+
+
+#' Get path to properties file.
+#' 
+#' @param lang the language
+#' @param fast fast property file?
+#' @export corenlp_get_properties_file
+corenlp_get_properties_file <- function(lang = c("en", "de"), fast = TRUE){
+  
+  if (lang == "en" && fast == TRUE)
+    return(system.file(package = "bignlp", "extdata", "properties_files", "StanfordCoreNLP-english-fast.properties"))
+  
+  if (lang == "de" && fast == TRUE)
+    return(system.file(package = "bignlp", "extdata", "properties_files", "corenlp-german-fast.properties"))
+  
+}
+

@@ -6,30 +6,23 @@
 \alias{corenlp_annotate,character-method}
 \title{Annotate a string.}
 \usage{
-corenlp_annotate(input, ...)
+corenlp_annotate(x, ...)
 
 \S4method{corenlp_annotate}{data.table}(
-  input,
-  output = NULL,
+  x,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
-  properties_file = getOption("bignlp.properties_file"),
-  logfile = NULL,
-  report_interval = 1L,
-  gc_interval = 100L,
-  method = "json",
+  properties = getOption("bignlp.properties_file"),
   threads = 1L,
   progress = TRUE,
-  preclean = TRUE,
   verbose = TRUE
 )
 
 \S4method{corenlp_annotate}{character}(
-  input,
-  output = NULL,
+  x,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
-  properties_file = getOption("bignlp.properties_file"),
+  properties = getOption("bignlp.properties_file"),
   byline = NULL,
-  method = "json",
+  output_format = "json",
   threads = 1L,
   progress = TRUE,
   preclean = TRUE,
@@ -37,36 +30,28 @@ corenlp_annotate(input, ...)
 )
 }
 \arguments{
-\item{input}{Either a \code{data.table} (required to have the columns 'id' and
+\item{x}{Either a \code{data.table} (required to have the columns 'id' and
 'text'), or a character vector with input file(s), or a directory. If
 \code{input} is a directory, all files in the directory are processed. Files
 are assumed to be tsv files with two columns ('id' and 'text').}
 
 \item{...}{Further arguments.}
 
-\item{output}{An output file, if threads > 1, a directory where ndjson files will be stored.}
-
 \item{corenlp_dir}{The directory where corenlp resides.}
 
-\item{properties_file}{A properties file to configure annotator.}
+\item{properties}{A properties file to configure annotator.}
 
-\item{logfile}{A logfile for progress information.}
-
-\item{report_interval}{When to report progress report to logfile.}
-
-\item{gc_interval}{Frequency of garbage collection.}
-
-\item{method}{The output generated, either "json" (default), "txt", or "xml".}
-
-\item{threads}{An integer.}
+\item{threads}{An integer value.}
 
 \item{progress}{Logical, whether to show progress bar.}
-
-\item{preclean}{Logical, whether to preprocess string.}
 
 \item{verbose}{Logical, whether to output messages.}
 
 \item{byline}{Logical, whether to process files in a line-by-line manner.}
+
+\item{output_format}{The output generated, either "json" (default), "txt", or "xml".}
+
+\item{preclean}{Logical, whether to preprocess string.}
 }
 \value{
 The target files will be returned, so that they can serve as input to
@@ -79,66 +64,17 @@ Use CoreNLP to annotate strings.
 If argument \code{threads} is 1, the tagging result is returned, if output is NULL.
 If \code{threads} is higher than 1, \code{output} should be a directory where tagging
 results will be stored as NDJSON files.
-
-The \code{corenlp_annotate}-method can be used with in two different
-ways. If \code{byline} is \code{FALSE}, the method will read in the chunk
-table specified by argument \code{input}, of the files in a directory
-specified by \code{input} and hand over to the
-\code{corenlp_annotate}-method for \code{data.table} objects. If
-\code{byline} is \code{TRUE}, the input is processed in a line-by-line
-manner. If \code{output} is specified, it is required that the number of
-output files is identical with the number of input files. If \code{output}
-is \code{NULL}, as many temporary files will be generated, as there are
-number of threads.
 }
 \examples{
 library(data.table)
 reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
 reuters_dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
 
-options(java.parameters = "-Xmx4g")
-
+props <- corenlp_get_properties_file(lang = "en", fast = "TRUE")
 y <- corenlp_annotate(
-  input = reuters_dt,
-  output = NULL,
-  properties_file = corenlp_get_properties_file(lang = "en", fast = "TRUE"),
+  x = reuters_dt,
+  properties = props,
   corenlp_dir = corenlp_get_jar_dir(),
-  threads = 1L,
   progress = FALSE
-  )
-
-\dontrun{
-reuters_dt <- rbindlist(lapply(1:100, function(i) reuters_dt))
-reuters_dt[["id"]] <- 1L:nrow(reuters_dt)
-
-if (requireNamespace("jobstatus", quietly = TRUE)){
-  y <- corenlp_annotate(
-    input = reuters_dt,
-    output = NULL,
-    properties_file = corenlp_get_properties_file(lang = "en", fast = "TRUE"),
-    corenlp_dir = corenlp_get_jar_dir(),
-    threads = 2L,
-    progress = TRUE
-  )
-}
-
-}
-# Illustration of byline-mode, with and without progress bar.
-# Single-threaded
-
-chunk_table <- system.file(package = "bignlp", "extdata", "tsv", "unga.tsv")
-options("bignlp.properties_file" = corenlp_get_properties_file(lang = "en", fast = "TRUE"))
-tmp_outfile <- corenlp_annotate(input = chunk_table, byline = TRUE, progress = FALSE)
-tmp_ndjsonoutfile <- corenlp_annotate(input = chunk_table, byline = TRUE, progress = TRUE)
-
-# Multi-threading
-\dontrun{
-unga_subsets <- chunk_table_split(chunk_table, output = NULL, n = 2L, verbose = TRUE)
-unga_ndjson_files <- corenlp_annotate(
-  input = unga_subsets, threads = 2L, byline = TRUE, progress = FALSE
 )
-unga_ndjson_files <- corenlp_annotate(
-  input = unga_subsets, threads = 2L, byline = TRUE, progress = TRUE
-)
-}
 }

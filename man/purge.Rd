@@ -32,12 +32,11 @@ Both preprocessing and postprocessing required!
 library(data.table)
 options(java.parameters = "-Xmx4g")
 txt <- "Karadžiš!"
-corenlp_dir <- system.file(package = "cleanNLP", "extdata", "stanford-corenlp-full-2016-10-31")
-corenlp_dir <- "/opt/stanford-corenlp/stanford-corenlp-full-2018-10-05"
 properties_german_fast <- corenlp_get_properties_file(lang = "de")
 y <- corenlp_annotate(
-  input = data.table(id = 1L:length(txt), text = txt),
-  properties_file = properties_german_fast, corenlp_dir = corenlp_dir,
-  )
+  data.table(id = 1L:length(txt), text = txt),
+  properties = properties_german_fast,
+  corenlp_dir = corenlp_get_jar_dir(),
+)
 }
 \keyword{datasets}

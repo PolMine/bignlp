@@ -11,13 +11,9 @@ Imports:
     parallel,
     pbapply,
     jsonlite,
-    text2vec,
     R6,
-    stringi,
     rJava,
-    cleanNLP,
-    progress,
-    stats
+    cli
 Suggests:
     knitr,
     cwbtools,
@@ -33,14 +29,13 @@ Encoding: UTF-8
 Collate:
     'bignlp.R'
     'StanfordCoreNLP.R'
-    'chunk_table.R'
     'corenlp.R'
     'json.R'
+    'jvm.R'
     'mince.R'
-    'pretty_print.R'
     'properties.R'
     'purge.R'
-    'jvm.R'
+    'utils.R'
     'zzz.R'
 RoxygenNote: 7.1.1
 Roxygen: list(markdown = TRUE)

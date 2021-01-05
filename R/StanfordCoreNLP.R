@@ -26,12 +26,12 @@ NULL
 #'   from annotations.
 #' @field output_format Which output format to use ("json", "xml", "conll").
 #' @field properties A Properties Java object to control multithreading.
-#' @field logfile Where to write logs.
 #' 
 #' @export StanfordCoreNLP
 #' @rdname StanfordCoreNLP
 #' @importFrom R6 R6Class
 #' @importFrom rJava .jnew J .jcall .jaddClassPath
+#' @importFrom cli cli_alert cli_alert_success cli_alert_warning
 #' @examples 
 #' Sys.setenv("_JAVA_OPTIONS" = "")
 #' options(java.parameters = "-Xmx4g")
@@ -85,19 +85,16 @@ StanfordCoreNLP <- R6Class(
     outputter = NULL,
     output_format = NULL,
     properties = NULL,
-    logfile = NULL,
 
 
     #' @param corenlp_dir Directory where StanfordCoreNLP resides.
     #' @param properties Either the filename of a properties file or a Java
     #'   properties object.
     #' @param output_format Either "json", "xml", "conll".
-    #' @param logfile Where to write logs.
     initialize = function(
       corenlp_dir = getOption("bignlp.corenlp_dir"),
       properties, 
-      output_format = c("xml", "json", "conll", "txt"),
-      logfile = NULL
+      output_format = c("xml", "json", "conll")
     ){
       
       # Check that Java runtime meets requirements ------------------------------
@@ -155,9 +152,6 @@ StanfordCoreNLP <- R6Class(
         "conll" = .jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
       )
 
-      # Logging ------------------------------------------------------
-
-      if (!is.null(logfile)) self$logfile <- logfile
       invisible( self )
     },
 
@@ -207,7 +201,7 @@ StanfordCoreNLP <- R6Class(
         FALSE
       )
       
-      self$properties()$put("outputDirectory", file.path(dir))
+      self$properties$put("outputDirectory", file.path(dir))
       
       self$pipeline$processFiles(
         file_collection,

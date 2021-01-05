@@ -62,7 +62,7 @@ properties_set_threads(props, 7)
 ### Starting the engine
 
 ```{r}
-SCNLP <- StanfordCoreNLP$new(properties_file = props)
+SCNLP <- StanfordCoreNLP$new(properties = props, output_format = "json")
 ```
 
 ```{r}

@@ -70,15 +70,6 @@ options(java.parameters = "-Xmx4g") # needs to be set before a JVM is initialize
 noCores <- parallel::detectCores() - 2L
 ```
 
-With bignlp, the logic is to write intermediate results to disk, so we do not have to keep everything in memory at a time. So we create the appropriate directory structure before anything else.
-
-```{r create_dir}
-outdir <- tempdir()
-tsv_file <- file.path(outdir, "unga.tsv")
-ndjson_file <- file.path(outdir, "unga.ndjson")
-tsv_file_tagged <- file.path(outdir, "unga_tagged.tsv")
-```
-
 Finally, we load bignlp.
 
 ```{r pkg_version_bignlp}
@@ -104,40 +95,8 @@ unga_xml_files <- list.files(
   )
 CD <- CorpusData$new()
 CD$import_xml(filenames = unga_xml_files)
-fwrite(x = CD$chunktable, file = tsv_file)
 ```
 
-Second, we call the tagger, producing NDJSON output.
-
-```{r tsv2ndjson}
-filenames_ndjson <- corenlp_annotate(input = tsv_file, output = ndjson_file)
-```
-
-The NDJSON output is parsed into a table ... 
-
-```{r ndjson2tsv}
-filenames_tsv_tagged <- corenlp_parse_ndjson(input = ndjson_file, output = tsv_file_tagged)
-```
-
-Finally, let us have a look at the table that is on disk.
-
-```{r read_result}
-y <- data.table::fread(tsv_file_tagged)
-```
-
-This is exactly what we need to fill the `tokenstream`-slot of our CorpusData object.
-
-The functions are designed to work in a pipe, so we can achieve the same result as follows:
-
-```{r pipe}
-library(magrittr)
-library(data.table)
-
-dt <- corenlp_annotate(input = tsv_file, output = ndjson_file) %>% 
-  corenlp_parse_ndjson(output = tsv_file_tagged) %>%
-  lapply(fread) %>%
-  rbindlist()
-```
 
 
 
