@@ -17,10 +17,10 @@ jvm_is_initialized <- function(){
   }
 }
 
-.jvm_heap_space <- function(){
+.jvm_heap_space <- function(units = "MB"){
   jvm_mem <- J("java/lang/Runtime")$getRuntime()$maxMemory()
   class(jvm_mem) <- "object_size"
-  format(jvm_mem, units = "MB")
+  format(jvm_mem, units = units)
 }
 
 .jvm_version <- function(){
@@ -30,3 +30,14 @@ jvm_is_initialized <- function(){
 .jvm_name <- function(){
   .jcall("java/lang/System", "S", "getProperty", "java.runtime.name")
 }
+
+.jvm_memory_usage = function(){
+  runtime <- rJava::J("java/lang/Runtime")$getRuntime()
+  list(totalMemory = runtime$totalMemory(), freeMemory = runtime$getRuntime()$freeMemory())
+}
+
+
+.jvm_garbage_collection = function(){
+  rJava::J("java/lang/Runtime")$getRuntime()$gc()
+}
+
