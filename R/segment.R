@@ -16,16 +16,9 @@
 #'   contain files with text segments.
 #' @export segment
 #' @examples 
-#' library(polmineR)
 #' library(data.table)
-#' 
-#' subcorpora <- corpus("GERMAPARLMINI") %>%
-#'   subset(interjection == "speech") %>%
-#'   split(s_attribute = "speaker")
-#' 
-#' speakers <- get_token_stream(subcorpora, collapse = " ", beautify = TRUE, verbose = FALSE)
-#' dt <- data.table(id = 1L:length(speakers), text = unlist(speakers))
-#' 
+#' reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
+#' dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
 #' segdir <- tempdir()
 #' dirs <- segment(x = dt, dir = segdir, chunksize = 10L)
 segment <- function(x, dir, chunksize = 10L, progress = interactive()){

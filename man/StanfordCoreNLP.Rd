@@ -47,29 +47,21 @@ c <- CNLP$annotate(txt = txt)
 
 # Java parallellization - processing sentences in parallel
 
+library(data.table)
+reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
+dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+
 options(java.parameters = "-Xmx4g")
-library(polmineR)
 
 n_cores <- as.character(parallel::detectCores() - 1L)
-properties <- list(
-  "annotators" = "tokenize, ssplit, pos, lemma, ner",
-  "tokenize.language" = "de",
-  "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
-  "pos.model" = "edu/stanford/nlp/models/pos-tagger/german-ud.tagger",
-  "pos.nthreads" = n_cores, # THIS 
-  "ner.model" = "edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz",
-  "ner.applyNumericClassifiers" = "false",
-  "ner.applyFineGrained" = "false",
-  "ner.useSUTime" = "false",
-  "ner.nthreads" = n_cores
-)
-CNLP <- StanfordCoreNLP$new(output_format = "conll", properties = properties)
+properties_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
+props <- properties(properties_file)
+props$put("pos.nthreads", as.character(parallel::detectCores() - 1L))
+props$put("ner.nthreads", as.character(parallel::detectCores() - 1L))
 
-merkel <- corpus("GERMAPARL") \%>\%
-  subset(speaker == "Angela Merkel" & interjection == "FALSE") \%>\%
-  get_token_stream(beautify = TRUE, collapse = " ")
-  
-y <- CNLP$annotate(merkel)
+CNLP <- StanfordCoreNLP$new(output_format = "conll", properties = props)
+
+y <- CNLP$annotate(dt[1][["text"]])
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

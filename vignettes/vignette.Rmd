@@ -227,10 +227,25 @@ DT::datatable(reuters_annotated[1:1000,])
 
 ## Digging deeper 
 
-### Understanding properties file
+### Understanding properties
 
 ```{r}
 props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
+```
+
+```{r}
+properties <- list(
+  "annotators" = "tokenize, ssplit, pos, lemma, ner",
+  "tokenize.language" = "de",
+  "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
+  "pos.model" = "edu/stanford/nlp/models/pos-tagger/german-ud.tagger",
+  "pos.nthreads" = as.character(parallel::detectCores() - 1L), # THIS
+  "ner.model" = "edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz",
+  "ner.applyNumericClassifiers" = "false",
+  "ner.applyFineGrained" = "false",
+  "ner.useSUTime" = "false",
+  "ner.nthreads" = as.character(parallel::detectCores() - 1L)
+)
 ```
 
 ### Output formats

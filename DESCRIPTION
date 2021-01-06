@@ -18,7 +18,6 @@ Suggests:
     knitr,
     magrittr,
     DT,
-    polmineR,
     coreNLP
 Additional_repositories: https://polmine.github.io/drat/
 BugReports: https://github.com/PolMine/bignlp/issues
@@ -32,9 +31,9 @@ Collate:
     'corenlp.R'
     'json.R'
     'jvm.R'
-    'mince.R'
     'properties.R'
     'purge.R'
+    'segment.R'
     'utils.R'
     'zzz.R'
 RoxygenNote: 7.1.1
