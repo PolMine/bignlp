@@ -1,6 +1,5 @@
-#' @title Parse CoreNLP json string output.
-#' @description Parse the json output from CoreNLP, either text files, or 
-#' NDJSON written to one or multiple files.
+#' @title Parse CoreNLP output formats.
+#' @description Parse output from CoreNLP.
 #' @param x character vector, the JSON string(s) to be parsed
 #' @param cols_to_keep columns to keep
 #' @param output a destfile
@@ -21,7 +20,7 @@
 #' @importFrom jsonlite fromJSON
 #' @importFrom utils write.table
 #' @export corenlp_parse_json
-#' @rdname corenlp_json
+#' @rdname parse
 corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "pos", "ner"), output = NULL, logfile = NULL, progress = TRUE){
   if (length(x) == 1L){
     # run the parsing within try - coding issues may cause problems
@@ -68,5 +67,24 @@ corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "
     .parse <- function(line) corenlp_parse_json(line, cols_to_keep = cols_to_keep, output = output, logfile = logfile, progress = FALSE)
     dfs <- if (progress) pblapply(x, .parse) else lapply(x, .parse)
     if (is.null(output)) return( do.call(rbind, dfs) ) else return( invisible( NULL ) )
+  }
+}
+
+
+#' @details `corenlp_parse_conll` is based on `data.table::fread()`
+#' and supplies settings that prevent undesired behaviour.
+#' @param x A filename, or filenames.
+#' @param progress logical 
+#' @importFrom data.table fread rbindlist
+#' @importFrom jsonlite fromJSON
+#' @export corenlp_parse_conll
+#' @rdname #' @rdname parse
+corenlp_parse_conll = function(x, progress = TRUE){
+  if (length(x) == 1L){
+    return(fread(x, na.strings = NULL, blank.lines.skip = TRUE, quote = ""))
+  } else if (length(x) > 1L){
+    .parse <- function(f) corenlp_parse_conll(f, progress = FALSE)
+    dts <- if (progress) pblapply(x, .parse) else lapply(x, .parse)
+    return(rbindlist(dts))
   }
 }

@@ -29,7 +29,7 @@ Collate:
     'bignlp.R'
     'StanfordCoreNLP.R'
     'corenlp.R'
-    'json.R'
+    'output.R'
     'jvm.R'
     'properties.R'
     'purge.R'

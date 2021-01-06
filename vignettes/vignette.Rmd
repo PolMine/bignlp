@@ -171,14 +171,14 @@ conll_files <- lapply(segdirs, SCNLP$process_files)
 
 ```{r}
 Sys.sleep(0.5) # Java may still be working while R is moving on - then files are missing
-df <- rbindlist(lapply(unlist(conll_files), fread, blank.lines.skip = TRUE, quote = ""))
+dt <- corenlp_parse_conll(conll_files, progress = FALSE)
 ```
 
 
 ### Inspecting the result
 
 ```{r}
-DT::datatable(df[1:1000,])
+DT::datatable(dt[1:1000,])
 ```
 
 
