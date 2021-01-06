@@ -263,7 +263,7 @@ df <- corenlp_parse_json(reuters_json)
 ```{r}
 X <- StanfordCoreNLP$new(properties = props_file, output_format = "xml")
 reuters_xml <- X$annotate(reuters_dt[1][["text"]])
-y <- coreNLP::getToken(coreNLP:::parseAnnoXML(reuters_xml))
+y <- corenlp_parse_xml(reuters_xml)
 ```
 
 #### CoNLL

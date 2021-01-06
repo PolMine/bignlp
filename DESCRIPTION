@@ -12,13 +12,13 @@ Imports:
     data.table,
     pbapply,
     jsonlite,
-    cli
+    cli,
+    coreNLP
 Suggests:
     parallel,
     knitr,
     magrittr,
-    DT,
-    coreNLP
+    DT
 Additional_repositories: https://polmine.github.io/drat/
 BugReports: https://github.com/PolMine/bignlp/issues
 VignetteBuilder: knitr
@@ -29,8 +29,8 @@ Collate:
     'bignlp.R'
     'StanfordCoreNLP.R'
     'corenlp.R'
-    'output.R'
     'jvm.R'
+    'output.R'
     'properties.R'
     'purge.R'
     'segment.R'

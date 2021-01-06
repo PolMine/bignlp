@@ -78,7 +78,7 @@ corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "
 #' @importFrom data.table fread rbindlist
 #' @importFrom jsonlite fromJSON
 #' @export corenlp_parse_conll
-#' @rdname #' @rdname parse
+#' @rdname parse
 corenlp_parse_conll = function(x, progress = TRUE){
   if (length(x) == 1L){
     return(fread(x, na.strings = NULL, blank.lines.skip = TRUE, quote = ""))
@@ -87,4 +87,14 @@ corenlp_parse_conll = function(x, progress = TRUE){
     dts <- if (progress) pblapply(x, .parse) else lapply(x, .parse)
     return(rbindlist(dts))
   }
+}
+
+#' @rdname parse
+#' @export corenlp_parse_xml
+#' @importFrom coreNLP loadXMLAnnotation getToken
+corenlp_parse_xml <- function(x){
+  cat(x, file = (xmlfile <- tempfile()))
+  a <- loadXMLAnnotation(xmlfile)
+  unlink(xmlfile)
+  getToken(a)
 }
