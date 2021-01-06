@@ -99,28 +99,28 @@ StanfordCoreNLP <- R6Class(
       
       # Check that Java runtime meets requirements ------------------------------
       
-      if (startsWith(.jvm_name(), "OpenJDK")){
-        cli_alert(sprintf("JVM runtime name: %s", .jvm_name()))
-        cli_alert(sprintf("JVM version: %s", .jvm_version()))
+      if (startsWith(jvm_name(), "OpenJDK")){
+        cli_alert(sprintf("JVM runtime name: %s", jvm_name()))
+        cli_alert(sprintf("JVM version: %s", jvm_version()))
         cli_alert_warning("Recommended: Oracle Java 8")
       } else {
-        cli_alert_success(sprintf("JVM runtime name: %s", .jvm_name()))
-        if (as.numeric(gsub("^(\\d+\\.\\d+)\\..*?$", "\\1", .jvm_version())) != 1.8){
-          cli_alert_warning("Java version: %s - recommended: 1.8", .jvm_version())
+        cli_alert_success(sprintf("JVM runtime name: %s", jvm_name()))
+        if (as.numeric(gsub("^(\\d+\\.\\d+)\\..*?$", "\\1", jvm_version())) != 1.8){
+          cli_alert_warning("Java version: %s - recommended: 1.8", jvm_version())
         } else {
-          cli_alert_success("Java version: %s", .jvm_version())
+          cli_alert_success("Java version: %s", jvm_version())
         }
       }
       
-      if (as.numeric(gsub("^(\\d+)\\s.*$", "\\1", .jvm_heap_space(units = "Gb"))) < 4){
+      if (as.numeric(gsub("^(\\d+)\\s.*$", "\\1", jvm_heap_space(units = "Gb"))) < 4){
         cli_alert_warning(
           sprintf(
             "JVM maximum heap space: %s - recommended: 4 GB",
-            .jvm_heap_space()
+            jvm_heap_space()
           )
         )
       } else {
-        cli_alert_success(sprintf("JVM maximum heap space: %s", .jvm_heap_space()))
+        cli_alert_success(sprintf("JVM maximum heap space: %s", jvm_heap_space()))
       }
       
       # Initialize StanfordCoreNLP class ----------------------------------------------

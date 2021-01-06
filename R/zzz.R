@@ -20,6 +20,6 @@
       )
   )
   
-  packageStartupMessage(sprintf("JVM memory allocated: %s", .jvm_heap_space()))
+  packageStartupMessage(sprintf("JVM memory allocated: %s", jvm_heap_space()))
 }
 

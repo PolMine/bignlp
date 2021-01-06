@@ -1,6 +1,6 @@
 ---
 title: "bignlp"
-subtitle: "Pipeline to annotate big corpora"
+subtitle: "Fast and memory-efficient annotation of big corpora"
 author: "Andreas Blaette (andreas.blaette@uni-due.de)"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -12,41 +12,81 @@ editor_options:
   chunk_output_type: console
 ---
   
-## The rationale of the bignlp-package
+## Rationale of the bignlp-package
 
-There are already a few packages for Natural Language Processing (NLP). These packages are not "pure R" NLP-tools. OpenNLP, coreNLP, or spaCy offer interfaces to standard NLP tools implemented in other programming languages. The cleanNLP R package manages to combine these external tools in one coherent framework. So why yet another NLP R package?
+As Natural Language Processing (NLP) has evolved, various software tools for standard tasks such as tokenization, sentence segmentation, part-of-speech annotation, named entity recognition or dependency parsing have been developed. Well-established and powerful tools are typically implemented in Java or Python, yet several R wrapper packages such as [OpenNLP](https://CRAN.R-project.org/package=openNLP), [cleanNLP](https://CRAN.R-project.org/package=cleanNLP), [coreNLP](https://CRAN.R-project.org/package=coreNLP), 
+[spacyr](https://CRAN.R-project.org/package=spacyr) or [udpipe](https://CRAN.R-project.org/package=udpipe) expose this functionality to the R community.
 
-The existing packages are not good at dealing with large volumes of text. The thrust of the bignlp-package is to use a standard tool (Stanford CoreNLP) in parallel mode. To be parsimonious with the memory available, it implements  line-by-line processing, so that annotated data is not be kept in memory.
+So why yet another NLP R package? As more data is available and the text to process is getting bigger, one limitation of the state of affairs in the R domain is that the existing packages are not good at dealing with large volumes of text. The thrust of the bignlp-package is to offer a fast and memory-efficient workflow based on [CoreNLP](https://stanfordnlp.github.io/CoreNLP/), an established high-quality standard tool. 
 
-More technically speaking, there are three steps envisaged by in a bignlp workflow:
+The default workflow envisaged by the bignlp package pursues a split-apply-combine strategy that entails
 
-  1. Input data (XML, for instance) needs to be dissected into a two-column `data.table` with chunks of text (column "text") and a chunk id (column "id"). The purpose of the id is to serve as a link to relate chunks with metadata that is stored in another table (and that also has an id column).
-  
-  2. The input `data.table` is processed in single- or multi-threaded mode, using Stanford CoreNLP. The output of the `corenlp_annotate()`-function is written to one or several NDJSON files (NDJSON stands for newline-delimited JSON). Each line of the NDJSON files is a valid JSON string with the annotation data, and including the id.
-  
-  3. The NDJSON files are processed a line-by-line manner, resulting in a `data.table` with the chunk ids, and the tokenized and annotated text, of course.
+(a) splitting up a corpus into segments of text that are saved to disk,
+(b) the (parallel) processing of these segments using CoreNLP and 
+(c) parsing and combining the results into an R output format, such as a `data.table`. 
 
-Before we introduce code for realistic workflows using this approach, we explain the installation requirements.
+Input and output data (which can be considerably larger than the input as annotation layers are added) need not be kept in memory at the same time, making this approach memory efficient. And as this approach makes full use of the ability of to CoreNLP to process documents in parallel, it is fast and capable to process big data efficiently.
 
 
-## Basic Installation
+## Prerequisites
 
-At this stage, the bignlp package uses [Stanford CoreNLP](https://stanfordnlp.github.io/CoreNLP/). The CoreNLP code jar and models for specific languages can be downloaded from the project website without restrictions. It is important to have the correct version of Java installed. See the the Stanford CoreNLP project website for further details. To check which Java version is used by R, run the follwing code:
+## Hardware Requirements
 
-```{r check_java_version, eval = FALSE}
-library(rJava)
-.jinit()
-.jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
+The machine should at least have 8 GB of RAM as we recommend to allocate 4 GB of memory to the Java Virtual Machine (JVM).
+
+```{r java_heap_space}
+options(java.parameters = "-Xmx4g")
 ```
 
-The easiest way to download Stanford CoreNLP is to (ab)use the installation mechanism included in the cleanNLP package. In the following example, we will annotate a few documents from the UN General Assembly corpus, so we need the English annotation tools.
+There needs to be sufficient free disk space. Depending on the output format you opt for, the space required for temporary files can be extensive. If you save these files to a temporary directory, make sure that the volume or partition of the R temporary directory is sufficiently sized.
 
-Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary.
+The pipeline will work on a single core, but multithreading is actively supported. Using more cores speeds up things, more cores are better than few cores. If you run the pipeline within a virtual machine (VM), check the number of cores available for the VM. A common approach is to use all cores but one for multithreaded operations.
+
+```{r}
+no_cores <- parallel::detectCores() - 1L
+no_cores
+```
+
+## System Requirements
+
+### Operating System
+
+CoreNLP runs within a JVM which ensures portability. There is no known limitation to using the pipeline on Linux, macOS and Windows machines.
+
+
+### Java and rJava
+
+CoreNLP is implemented in Java, so Java needs to be installed as CoreNLP is run in a Java Virtual Machine (JVM). More specifically, Java 8 (Oracle Java) is flagged as a prerequisite of the CoreNLP version used(v4.2.0), see the information on the [CoreNLP Download page](https://stanfordnlp.github.io/CoreNLP/download.html). Download Java from one of these locations:
+
+- [Java 8 (recommended)](https://www.java.com/de/download/)
+- [OpenJDK](https://openjdk.java.net/install/index.html)
+
+The [rJava](https://CRAN.R-project.org/package=rJava) package is the interface to using Java code from R. Configuring rJava can be painful. Very often, running `R CMD javareconf` in the terminal solves issues. Once Java is installed and working, you can load the bignlp package.
+
+```{r}
+library(bignlp)
+```
+
+Upon loading the bignlp package, a JVM is initialized. The package includes auxiliary functionality to check which implementation of Java is available and used to run the JVM and to check the Java version.
+
+```{r}
+jvm_name()
+jvm_version()
+```
+
+As CoreNLP is based on Oracle Java 8, you would ideally see "Java(TM) SE Runtime Environment". If you see "OpenJDK Runtime Environment", this indicates that you are using OpenJDK, not Oracle Java as recommended by CoreNLP. However, our experience is that CoreNLP works nicely with OpenJDK too. If you have issues with the licensing conditions of Oracle Java, using OpenJDK does not seem to be a limitation.
+
+
+### CoreNLP
+
+The CoreNLP code jar and models for specific languages can be downloaded from the [CoreNLP website](https://stanfordnlp.github.io/CoreNLP/) without restrictions. Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary.
 
 ```{r load_bignlp, eval = TRUE}
 library(bignlp)
 if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "en")
 ```
+
+Another way to download Stanford CoreNLP is to (ab)use the installation mechanism included in the [cleanNLP](https://CRAN.R-project.org/package=cleanNLP) package. 
 
 Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the `system.file()`-function to find out where that is.
 
@@ -57,108 +97,208 @@ options(bignlp.properties_file = bignlp::corenlp_get_properties_file(lang = "en"
 Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. CoreNLP and properties files can be stored anywhere on your system, and functions of the bignlp package take the paths as input.
 
 
-## Preparations for text annotation
+## The split-apply-combine default workflow
 
-To be able to parallelize the annotation, *rJava may not be loaded* before initializing the CoreNLP annotator. This is a known [rJava issue](https://github.com/s-u/rJava/issues/25). It is important to consider that other packages may have instantiated a JVM already. The result may be that you cannot assign sufficient memory to the newly instantiated JVMs, the model cannot be loaded, and the process will fail.
+### Preparations 
 
-There is an unexported function `rJava:::.check.JVM()` in the rJava package that you may use in an interactive session to check whether the JVM has been initialized already.
+#### Sample data
 
-The JVMs initialized for tagging in parallel need a lot of memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else. 
-
-```{r set_java_options, eval = TRUE}
-options(java.parameters = "-Xmx4g") # needs to be set before a JVM is initialized.
-noCores <- parallel::detectCores() - 2L
-```
-
-Finally, we load bignlp.
-
-```{r pkg_version_bignlp}
-packageVersion("bignlp")
-```
-
-The packages we will also need is the `data.table` package, mostly for its impressively `fread` and `fwrite` functions.
+In our example, we will use an excerpt from the Reuters corpus. The articles of the corpus are included as sample data in the package. We geneerate a `data.table` with the columns "id" and "text" that will serve as input for the subsequent steps.
 
 ```{r load_other_libraries}
 library(data.table)
-library(cwbtools)
+reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
+reuters_dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
 ```
 
 
-## Example: Tagging the UNGA corpus
+#### Allocate sufficient memory
 
-As a first step, we generate a tsv file with the text chunks that shall be processed.
+Running CoreNLP may require substanial memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else. 
+
+```{r set_java_options, eval = TRUE}
+options(java.parameters = "-Xmx4g") # needs to be set before a JVM is initialized!
+```
+
+Please note: Other packages (such as [openNLP](https://CRAN.R-project.org/package=openNLP)) interfacing to Java may have instantiated a JVM already, with less memory than necessary for running coreNLP. If a JVM has already been initialized with insufficient memory, the memory allocated cannot be increased afterwards.
+
+
+#### Configure properties
+
+The default approach of CoreNLP is to read the configuration of annotators from a properties file. To convey how a properties file looks like, we include the content of one here.
+
+```{r}
+props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
+readLines(props_file)
+```
+
+There is much more flexibility if we generate a Java Properties object which we can manipulate from R. This is what the `properties()` function. does.
+
+```{r}
+props <- properties(x = props_file)
+```
+
+As we want to use parallelization, we set the number of threads in the properties object, and we define the output format we want to use.
+
+```{r}
+properties_set_output_format(props, "json")
+properties_set_threads(props, no_cores)
+```
+
+
+### Instantiate pipeline
+
+```{r}
+SCNLP <- StanfordCoreNLP$new(properties = props, output_format = "json")
+```
+
+```{r}
+SCNLP$verbose(FALSE)
+```
+
+
+### Split: Create chunkdirs
+
+```{r}
+nlpdir <- tempdir()
+dirs <- mince(x = dt, dir = nlpdir, chunksize = 10L)
+```
+
+
+### Apply: Process files
+
+```{r}
+files <- pblapply(dirs, SCNLP$process_files)
+```
+
+
+### Combine: Parse JSON output
+
+```{r}
+json_files <- grep(".*\\.json", list.files(nlpdir, recursive = TRUE, full.names = TRUE), value = TRUE)
+y <- pblapply(json_files, corenlp_parse_json, cl = 7L)
+df <- do.call(rbind, y)
+```
+
+
+### Inspecting the result
+
+```{r}
+DT::datatable(df[1:1000,])
+```
+
+
+## Multithreading without temporary files
+
+A second workflow envisaged by CoreNLP for the multithreaded annotation works without saving files to disk. After splitting a segment of text into tokens and sentences, sentences are processed in parallel. So it is only a part of the annotators such as POS annotation, named entity recognition etc. that is parallelized. This in-memory operation is less parsimonous concerning memory usage - the corpus and the result are kept in memory throughout - but may have its merits because saving and reloading and parsing data is not necessary.
+
+To exemplify this workflow, we load sample data with debates in the UN General Assembly. The XML data is included in the package and is an excerpt from the much larger UNGA corpus.
 
 ```{r create_unga_tsv}
-unga_xml_files <- list.files(
-  system.file(package = "bignlp", "extdata", "xml"),
-  full.names = TRUE
-  )
+library(cwbtools)
+unga_dir <- system.file(package = "bignlp", "extdata", "xml")
+unga_xml_files <- list.files(unga_dir, full.names = TRUE)
 CD <- CorpusData$new()
 CD$import_xml(filenames = unga_xml_files)
 ```
 
+The field `chunktable` will now contain a `data.table` with the columns "id" and "text".
+
+We now instantiate a Properties object to be used for instantiating with a basic (and fast) NLP annotation for English text.
+
+```{r}
+props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
+props <- properties(props_file)
+```
+
+To inform the annotator that steps subsequent to sentence segmentation shall be parallelized, we add respective settings for the POS annotation and lemmatization steps.
+
+```{r}
+props$put("pos.nthreads", as.character(no_cores))
+props$put("lemma.nthreads", as.character(no_cores))
+```
+
+New we can run the annotation ... 
+
+```{r}
+unga_annotated <- corenlp_annotate(CD$chunktable, properties = props, progress = FALSE)
+```
+
+... and this is the resulting `data.table`.
+
+```{r}
+DT::datatable(unga_annotated[1:1000,])
+```
 
 
+## Digging deeper 
 
-## Conclusions
+### Properties
+
+### Output formats
+
+#### json
+#### XML
+
+#### CoNLL
+
+## Discussion
 
 Enjoy!
 
 ## Appendix: Installing Dependencies
 
-### Installing Stanford CoreNLP
+### Installing CoreNLP
 
-A good and conventional place for installing a tool such as CoreNLP is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file.
+A good and conventional place for installing a tool such as CoreNLP on Linux and macOS is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file.
 
 ```{sh download_corenlp, eval = FALSE}
 mkdir /opt/stanford-corenlp
 cd /opt/stanford-corenlp
-wget http://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip
-unzip stanford-corenlp-full-2018-10-05.zip
-rm stanford-corenlp-full-2018-10-05.zip
+wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip
+unzip stanford-corenlp-4.2.0.zip
+rm stanford-corenlp-4.2.0.zip
+```
+
+### Install language model for English
+
+```{sh download_english_model, eval = FALSE}
+wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0-models-english.jar
+unzip stanford-corenlp-4.2.0-models-english.jar StanfordCoreNLP.properties
+zip -d stanford-corenlp-4.2.0-models-english.jar StanfordCoreNLP.properties
 ```
 
 
-#### Install models for German
+### Install further language models
 
-In the PolMine Project, we very often work with German data. So we illustrate getting models for a specific language for German. We go into the CoreNLP directory and download the model to this place.
+We illustrate getting models for a specific language for German. We go into the CoreNLP directory and download the model to this place.
 
 ```{sh download_german_model, eval = FALSE}
-cd stanford-corenlp-full-2018-10-05
-wget http://nlp.stanford.edu/software/stanford-german-corenlp-2018-10-05-models.jar
+cd stanford-corenlp-4.2.0
+wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0-models-german.jar
 ```
 
 The jar file with the model include a default properties file for processing German data (StanfordCoreNLP-german.properties). You can see this by displaying the content of the jar as follows.
 
 ```{sh inspect_jar, eval = FALSE}
-jar tf stanford-german-corenlp-2018-10-05-models.jar # see content of jar
+jar tf stanford-corenlp-4.2.0-models-german.jar | grep "properties" # see content of jar
 ```
 
-The inclusion of this properties file in the jar may become a problem. If you want to configure the parser yourself, you may encounter the issue that this properties file included in the jar will override any other properties file you may want to use. The solution we found to work is to (a) extract the properties file from the jar, (b) remove it from the jar and (c) edit it by hand to serve your needs.
+The inclusion of this properties file in the jar may become a problem. If you want to configure the parser yourself, you may encounter the issue that this properties file included in the jar will override any other properties you may want to use. 
+
+The solution we found to work is to (a) extract the properties file from the jar and (b) remove it from the jar.
 
 ```{sh modify_model_jar, eval = FALSE}
 # extract StanfordCoreNLP-german.properties from jar
-unzip stanford-german-corenlp-2018-10-05-models.jar StanfordCoreNLP-german.properties
+unzip stanford-corenlp-4.2.0-models-german.jar StanfordCoreNLP-german.properties
 # remove StanfordCoreNLP-german.properties from jar
-zip -d stanford-german-corenlp-2018-10-05-models.jar StanfordCoreNLP-german.properties
-nano StanfordCoreNLP-german.properties 
+zip -d stanford-corenlp-4.2.0-models-german.jar StanfordCoreNLP-german.properties
 ```
 
 Note that the bignlp package already includes a properties file that has been edited for annotating large amounts of data quickly. You will find it as follows:
 
 ```{r pkg_properties_file, eval = FALSE}
 options(bignlp.properties_file = corenlp_get_properties_file(lang = "de", fast = TRUE))
-```
-
-Again, note that the properties file in the German model jar needs to be removed in the manner described before to make using the handcrafted properties file possible.
-
-
-#### Install models for English
-
-```{sh download_english_model, eval = FALSE}
-wget http://nlp.stanford.edu/software/stanford-english-corenlp-2018-10-05-models.jar
-unzip stanford-english-corenlp-2018-10-05-models.jar StanfordCoreNLP.properties
-zip -d stanford-english-corenlp-2018-10-05-models.jar StanfordCoreNLP.properties
 ```
 
 

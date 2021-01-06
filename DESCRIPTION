@@ -6,20 +6,19 @@ Date: 2021-01-04
 Authors@R: person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de")
 Description: Parallel line-by-line NLP processing for big corpora using Stanford CoreNLP.
 Imports:
+    rJava,
     methods,
+    R6,
     data.table,
-    parallel,
     pbapply,
     jsonlite,
-    R6,
-    rJava,
     cli
 Suggests:
+    parallel,
     knitr,
     cwbtools,
     magrittr,
-    DT,
-    polmineR
+    DT
 Additional_repositories: https://polmine.github.io/drat/
 BugReports: https://github.com/PolMine/bignlp/issues
 VignetteBuilder: knitr
