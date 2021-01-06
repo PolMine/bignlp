@@ -209,7 +209,7 @@ StanfordCoreNLP <- R6Class(
         FALSE,
         J("java/util/Optional")$empty()
       )
-      invisible(paste(Sys.glob(paste0(dir, "/*.txt")), "json", sep = "."))
+      invisible(paste(Sys.glob(paste0(dir, "/*.txt")), self$output_format, sep = "."))
     },
     
     #' @description Set whether calls of the class shall be verbose.

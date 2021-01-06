@@ -125,23 +125,17 @@ Please note: Other packages (such as [openNLP](https://CRAN.R-project.org/packag
 
 #### Configure properties
 
-The default approach of CoreNLP is to read the configuration of annotators from a properties file. To convey how a properties file looks like, we include the content of one here.
+The default approach of CoreNLP is to read the configuration of annotators from a properties file.  There is much more flexibility if we generate a Java Properties object which we can manipulate from R. This is what the `properties()` function does.
 
 ```{r}
 props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
-readLines(props_file)
-```
-
-There is much more flexibility if we generate a Java Properties object which we can manipulate from R. This is what the `properties()` function. does.
-
-```{r}
 props <- properties(x = props_file)
 ```
 
 As we want to use parallelization, we set the number of threads in the properties object, and we define the output format we want to use.
 
 ```{r}
-properties_set_output_format(props, "json")
+properties_set_output_format(props, "conll")
 properties_set_threads(props, no_cores)
 ```
 
@@ -149,34 +143,35 @@ properties_set_threads(props, no_cores)
 ### Instantiate pipeline
 
 ```{r}
-SCNLP <- StanfordCoreNLP$new(properties = props, output_format = "json")
+SCNLP <- StanfordCoreNLP$new(properties = props, output_format = "conll")
 ```
+
+While it is good to see the messages issued on the initialization of the different annotators, there will be too many status messages when files are processed. Therefore, we switch the verbosity of the annotator off.
 
 ```{r}
 SCNLP$verbose(FALSE)
 ```
 
 
-### Split: Create chunkdirs
+**Step 1 - Split** Create directories with text segments
 
 ```{r}
-nlpdir <- tempdir()
-dirs <- mince(x = reuters_dt, dir = nlpdir, chunksize = 10L)
+segdirs <- segment(x = reuters_dt, dir = (nlpdir <- tempdir()), chunksize = 10L)
 ```
 
 
-### Apply: Process files
+**Step 2 - Appy** Process files
 
 ```{r}
-files <- pbapply::pblapply(dirs, SCNLP$process_files)
+conll_files <- lapply(segdirs, SCNLP$process_files)
 ```
 
 
-### Combine: Parse JSON output
+**Step 3 - Combine** Parse and CoNLL output
 
 ```{r}
-json_files <- grep(".*\\.json", list.files(nlpdir, recursive = TRUE, full.names = TRUE), value = TRUE)
-df <- corenlp_parse_json(json_files)
+Sys.sleep(0.5) # Java may still be working while R is moving on - then files are missing
+df <- rbindlist(lapply(unlist(conll_files), fread, blank.lines.skip = TRUE, quote = ""))
 ```
 
 
@@ -187,23 +182,23 @@ DT::datatable(df[1:1000,])
 ```
 
 
+### Piping
+
+```{r}
+library(magrittr)
+dt <- segment(x = reuters_dt, dir = tempdir(), chunksize = 10L) %>%
+  lapply(SCNLP$process_files) %>%
+  unlist() %>%
+  lapply(fread, blank.lines.skip = TRUE, quote = "") %>%
+  rbindlist()
+```
+
+
 ## Multithreading without temporary files
 
 A second workflow envisaged by CoreNLP for the multithreaded annotation works without saving files to disk. After splitting a segment of text into tokens and sentences, sentences are processed in parallel. So it is only a part of the annotators such as POS annotation, named entity recognition etc. that is parallelized. This in-memory operation is less parsimonous concerning memory usage - the corpus and the result are kept in memory throughout - but may have its merits because saving and reloading and parsing data is not necessary.
 
-To exemplify this workflow, we load sample data with debates in the UN General Assembly. The XML data is included in the package and is an excerpt from the much larger UNGA corpus.
-
-```{r create_unga_tsv}
-library(cwbtools)
-unga_dir <- system.file(package = "bignlp", "extdata", "xml")
-unga_xml_files <- list.files(unga_dir, full.names = TRUE)
-CD <- CorpusData$new()
-CD$import_xml(filenames = unga_xml_files)
-```
-
-The field `chunktable` will now contain a `data.table` with the columns "id" and "text".
-
-We now instantiate a Properties object to be used for instantiating with a basic (and fast) NLP annotation for English text.
+As before, we start with instantiating a Properties object to be used for instantiating with a basic (and fast) NLP annotation for English text.
 
 ```{r}
 props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
@@ -220,26 +215,49 @@ props$put("lemma.nthreads", as.character(no_cores))
 New we can run the annotation ... 
 
 ```{r}
-unga_annotated <- corenlp_annotate(CD$chunktable, properties = props, progress = FALSE)
+reuters_annotated <- corenlp_annotate(reuters_dt, properties = props, progress = FALSE)
 ```
 
 ... and this is the resulting `data.table`.
 
 ```{r}
-DT::datatable(unga_annotated[1:1000,])
+DT::datatable(reuters_annotated[1:1000,])
 ```
 
 
 ## Digging deeper 
 
-### Properties
+### Understanding properties file
+
+```{r}
+props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
+```
 
 ### Output formats
 
 #### json
+
+```{r}
+J <- StanfordCoreNLP$new(properties = props_file, output_format = "json")
+reuters_json <- J$annotate(reuters_dt[1][["text"]])
+df <- corenlp_parse_json(reuters_json)
+```
+
 #### XML
 
+```{r}
+X <- StanfordCoreNLP$new(properties = props_file, output_format = "xml")
+reuters_xml <- X$annotate(reuters_dt[1][["text"]])
+y <- coreNLP::getToken(coreNLP:::parseAnnoXML(reuters_xml))
+```
+
 #### CoNLL
+
+```{r}
+C <- StanfordCoreNLP$new(properties = props_file, output_format = "conll")
+reuters_conll <- C$annotate(reuters_dt[1][["text"]])
+```
+
 
 ## Discussion
 

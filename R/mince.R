@@ -1,20 +1,20 @@
-#' Mince table into directories with text chunks.
+#' Split table into directories with text segments.
 #' 
 #' Multithreaded processing using the StanfordCoreNLP class requires splitting
 #' up input data into pieces of text ("chunks") available as files that are
-#' processed in parallel. The `mince()` function performs this split operation,
+#' processed in parallel. The `segment()` function performs this split operation,
 #' i.e. it creates directories with chunks within a superdirectory.
 #' 
 #' @param x A `data.table` with columns 'id' and 'text'. Further columns are
 #'   ignored.
-#' @param dir Superdirectory for directories with text segements that will be 
+#' @param dir Superdirectory for directories with segments that will be 
 #'   processed sequentially.
 #' @param chunksize An `integer` value, the number of strings that will reside 
 #'   in the chunk directories.
 #' @param progress A `logical` value, whether to show progress bar.
 #' @return The function returns a `character` vector with the directories that 
 #'   contain files with text segments.
-#' @export mince
+#' @export segment
 #' @examples 
 #' library(polmineR)
 #' library(data.table)
@@ -26,9 +26,9 @@
 #' speakers <- get_token_stream(subcorpora, collapse = " ", beautify = TRUE, verbose = FALSE)
 #' dt <- data.table(id = 1L:length(speakers), text = unlist(speakers))
 #' 
-#' mincedtextdir <- tempdir()
-#' dirs <- mince(x = dt, dir = mincedtextdir, chunksize = 10L)
-mince <- function(x, dir, chunksize = 10L, progress = interactive()){
+#' segdir <- tempdir()
+#' dirs <- segment(x = dt, dir = segdir, chunksize = 10L)
+segment <- function(x, dir, chunksize = 10L, progress = interactive()){
   
   # Check that object x meets requirements ----------------------------
   
