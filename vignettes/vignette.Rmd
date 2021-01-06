@@ -161,14 +161,14 @@ SCNLP$verbose(FALSE)
 
 ```{r}
 nlpdir <- tempdir()
-dirs <- mince(x = dt, dir = nlpdir, chunksize = 10L)
+dirs <- mince(x = reuters_dt, dir = nlpdir, chunksize = 10L)
 ```
 
 
 ### Apply: Process files
 
 ```{r}
-files <- pblapply(dirs, SCNLP$process_files)
+files <- pbapply::pblapply(dirs, SCNLP$process_files)
 ```
 
 
@@ -176,8 +176,7 @@ files <- pblapply(dirs, SCNLP$process_files)
 
 ```{r}
 json_files <- grep(".*\\.json", list.files(nlpdir, recursive = TRUE, full.names = TRUE), value = TRUE)
-y <- pblapply(json_files, corenlp_parse_json, cl = 7L)
-df <- do.call(rbind, y)
+df <- corenlp_parse_json(json_files)
 ```
 
 

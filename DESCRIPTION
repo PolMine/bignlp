@@ -18,7 +18,8 @@ Suggests:
     knitr,
     cwbtools,
     magrittr,
-    DT
+    DT,
+    polmineR
 Additional_repositories: https://polmine.github.io/drat/
 BugReports: https://github.com/PolMine/bignlp/issues
 VignetteBuilder: knitr

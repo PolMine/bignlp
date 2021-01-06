@@ -5,7 +5,7 @@
 \title{Parse CoreNLP json string output.}
 \usage{
 corenlp_parse_json(
-  input,
+  x,
   cols_to_keep = c("sentence", "index", "word", "pos", "ner"),
   output = NULL,
   logfile = NULL,
@@ -13,7 +13,7 @@ corenlp_parse_json(
 )
 }
 \arguments{
-\item{input}{character vector, the JSON string(s) to be parsed}
+\item{x}{character vector, the JSON string(s) to be parsed}
 
 \item{cols_to_keep}{columns to keep}
 

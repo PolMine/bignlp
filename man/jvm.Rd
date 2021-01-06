@@ -18,6 +18,10 @@ jvm_heap_space(units = "MB")
 
 jvm_memory_usage()
 }
+\arguments{
+\item{units}{See documentation of format.object_size, typically either "MB"
+or "GB".}
+}
 \description{
 Upon loading the bignlp package, a Java Virtual Machine (JVM) is initialized.
 Some auxiliary functions provide information on the configuration of the JVM

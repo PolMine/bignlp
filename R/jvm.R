@@ -37,6 +37,8 @@ jvm_version <- function(){
   .jcall("java/lang/System", "S", "getProperty", "java.runtime.version")
 }
 
+#' @param units See documentation of format.object_size, typically either "MB"
+#'   or "GB".
 #' @rdname jvm
 #' @export
 jvm_heap_space <- function(units = "MB"){

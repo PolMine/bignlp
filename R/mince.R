@@ -38,7 +38,7 @@ mince <- function(x, dir, chunksize = 10L, progress = interactive()){
   
   chunk_factor <- cut(
     1:nrow(x),
-    breaks = c(1L, cumsum(rep(chunksize, floor(nrow(x) / chunksize))), nrow(x)),
+    breaks = unique(c(1L, cumsum(rep(chunksize, floor(nrow(x) / chunksize))), nrow(x))),
     include.lowest = TRUE, right = FALSE
   )
   chunks <- split(x, f = chunk_factor)

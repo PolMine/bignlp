@@ -1,7 +1,7 @@
 #' @title Parse CoreNLP json string output.
 #' @description Parse the json output from CoreNLP, either text files, or 
 #' NDJSON written to one or multiple files.
-#' @param input character vector, the JSON string(s) to be parsed
+#' @param x character vector, the JSON string(s) to be parsed
 #' @param cols_to_keep columns to keep
 #' @param output a destfile
 #' @param logfile a character string naming the file to an error log to; if
@@ -22,20 +22,20 @@
 #' @importFrom utils write.table
 #' @export corenlp_parse_json
 #' @rdname corenlp_json
-corenlp_parse_json = function(input, cols_to_keep = c("sentence", "index", "word", "pos", "ner"), output = NULL, logfile = NULL, progress = TRUE){
-  if (length(input) == 1L){
+corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "pos", "ner"), output = NULL, logfile = NULL, progress = TRUE){
+  if (length(x) == 1L){
     # run the parsing within try - coding issues may cause problems
-    json_parsed <- try( jsonlite::fromJSON(input) )
+    json_parsed <- try( jsonlite::fromJSON(x) )
     if (class(json_parsed)[1] == "try-error"){
-      warning("Cannot parse character vector: ", input)
-      if (!is.null(logfile)) cat(input, file = logfile, append = TRUE)
+      warning("Cannot parse character vector: ", x)
+      if (!is.null(logfile)) cat(x, file = logfile, append = TRUE)
       return( NULL )
     }
     
     # to cope with '{"chunk": 2859285,  "sentences": [ ] }'
     if (length(json_parsed$sentences$tokens) == 0L){
-      warning("JSON string without tokens: ", input)
-      if (!is.null(logfile)) cat(input, file = logfile, append = TRUE)
+      warning("JSON string without tokens: ", x)
+      if (!is.null(logfile)) cat(x, file = logfile, append = TRUE)
       return( NULL )
     }
     
@@ -49,16 +49,7 @@ corenlp_parse_json = function(input, cols_to_keep = c("sentence", "index", "word
         }
       }
     )
-    df <- do.call(rbind, dfs)
-    
-    # add chunk number, if present, and 
-    if ("id" %in% names(json_parsed)){
-      df[["id"]] <- json_parsed[["id"]]
-      cols <- c("id", cols_to_keep)
-    } else {
-      cols <- cols_to_keep
-    }
-    y <- df[, cols]
+    y <- do.call(rbind, dfs)
     
     # output
     if (!is.null(output)){
@@ -73,9 +64,9 @@ corenlp_parse_json = function(input, cols_to_keep = c("sentence", "index", "word
     } else {
       return( y )
     }
-  } else if (length(input) > 1L){
+  } else if (length(x) > 1L){
     .parse <- function(line) corenlp_parse_json(line, cols_to_keep = cols_to_keep, output = output, logfile = logfile, progress = FALSE)
-    dfs <- if (progress) pblapply(input, .parse) else lapply(input, .parse)
+    dfs <- if (progress) pblapply(x, .parse) else lapply(x, .parse)
     if (is.null(output)) return( do.call(rbind, dfs) ) else return( invisible( NULL ) )
   }
 }
