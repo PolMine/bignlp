@@ -27,6 +27,7 @@ License: GPL-3
 Encoding: UTF-8
 Collate:
     'bignlp.R'
+    'AnnotationPipeline.R'
     'StanfordCoreNLP.R'
     'corenlp.R'
     'jvm.R'
