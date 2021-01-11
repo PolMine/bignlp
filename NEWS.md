@@ -1,3 +1,11 @@
+# bignlp v0.1.0.9001
+
+- As a safeguard that the order of segments of text is maintained, names of temporary txt files written by the `segment()` function are padded with leading zeros (#18).
+
+# bignlp v0.1.0
+
+
+
 # bignlp v0.0.10
 
 * New function to instantiate a Java `Properties` object, including `properties()`, `parse_properties_file()`.

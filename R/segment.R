@@ -5,8 +5,8 @@
 #' processed in parallel. The `segment()` function performs this split operation,
 #' i.e. it creates directories with chunks within a superdirectory.
 #' 
-#' @param x A `data.table` with columns 'id' and 'text'. Further columns are
-#'   ignored.
+#' @param x A `data.table` with columns 'id' (`integer` values) and 'text'.
+#'   Further columns are ignored.
 #' @param dir Superdirectory for directories with segments that will be 
 #'   processed sequentially.
 #' @param chunksize An `integer` value, the number of strings that will reside 
@@ -27,21 +27,23 @@ segment <- function(x, dir, chunksize = 10L, progress = interactive()){
   
   if (isFALSE(is.data.table(x))) stop("Argument 'x' is required to be a data.table object.")
   if (isFALSE("id" %in% colnames(x))) stop("Column 'id' is required.")
+  if (isFALSE(is.integer(x[["id"]]))) stop("Column 'id' is required to be an integer vector.")
   if (isFALSE("text" %in% colnames(x))) stop("Column 'text' is required.")
   
   chunk_factor <- cut(
-    1:nrow(x),
+    1L:nrow(x),
     breaks = unique(c(1L, cumsum(rep(chunksize, floor(nrow(x) / chunksize))), nrow(x))),
     include.lowest = TRUE, right = FALSE
   )
   chunks <- split(x, f = chunk_factor)
+  max_id <- max(x[["id"]])
   
   .fn <- function(i){
     outdir <- file.path(dir, i)
     if (!dir.exists(outdir)) dir.create(outdir)
     
     for (j in 1:nrow(chunks[[i]])){
-      f <- file.path(file.path(dir, i, sprintf("%d.txt", chunks[[i]][["id"]][j])))
+      f <- file.path(file.path(dir, i, sprintf("%0*d.txt", nchar(max_id),  chunks[[i]][["id"]][j])))
       cat(chunks[[i]][["text"]][j], file = f)
     }
     outdir
