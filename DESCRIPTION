@@ -1,8 +1,8 @@
 Package: bignlp
 Type: Package
 Title: Fast and memory-efficient annotation of big corpora
-Version: 0.0.10
-Date: 2021-01-04
+Version: 0.1.0
+Date: 2021-01-11
 Authors@R: person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de")
 Description: Parallel line-by-line NLP processing for big corpora using Stanford CoreNLP.
 Imports:
