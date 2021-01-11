@@ -4,9 +4,16 @@
 \alias{AnnotationPipeline}
 \title{AnnotationPipeline Class.}
 \description{
-AnnotationPipeline Class.
-
-AnnotationPipeline Class.
+Worker behind the higher-level \code{StanfordCoreNLP} class that allows fine-tuned
+configuration of an annotation pipeline, see the \href{https://stanfordnlp.github.io/CoreNLP/pipelines.html}{documentation of CoreNLP Pipelines}. The
+\verb{$annotate()} method supports processing annotations in parallel. Unlike the
+\code{StanfordCoreNLP$process_files()} method for processing the content of files
+in parallel, it is a very efficient in-memory operation  and the fastest
+option for processsing medium-sized corpora. But as annotations consume a lot
+of memory, there are limitations to allocating sufficient heap space required
+for the parallel in-memory processing of larger corpora. If heap space is
+insufficient, the process may run endless without a telling warning message
+or an error. So use the \verb{$annotate()} method with appropriate care.
 }
 \examples{
 A <- AnnotationPipeline$new()
@@ -15,14 +22,23 @@ a <- list(
   "Yet another sentence."
 )
 A$annotate(a)
-anno <- A$annotations$get(0L)
-conll_outputter <- rJava::.jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
-y <- do.call(rbind, lapply(
-  0L:(A$annotations$size() - 1L),
-  function(i){
-    read.table(text = conll_outputter$print(A$annotations$get(i)))
-  }
-))
+result <- A$as.matrix()
+
+reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
+B <- AnnotationPipeline$new()
+B$annotate(reuters_txt)
+result <- B$as.matrix()
+
+\dontrun{
+library(polmineR)
+gparl_by_date <- corpus("GERMAPARL") \%>\%
+  subset(year \%in\% 1998) \%>\%
+  split(s_attribute = "date") \%>\% 
+  get_token_stream(p_attribute = "word", collapse = " ")
+C <- AnnotationPipeline$new()
+C$annotate(gparl_by_date, 4L)
+result <- C$as.matrix()
+}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -38,6 +54,7 @@ y <- do.call(rbind, lapply(
 \itemize{
 \item \href{#method-new}{\code{AnnotationPipeline$new()}}
 \item \href{#method-annotate}{\code{AnnotationPipeline$annotate()}}
+\item \href{#method-as.matrix}{\code{AnnotationPipeline$as.matrix()}}
 \item \href{#method-clone}{\code{AnnotationPipeline$clone()}}
 }
 }
@@ -64,19 +81,35 @@ Initialize AnnotationPipeline
 \subsection{Method \code{annotate()}}{
 Annotate a list of strings.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AnnotationPipeline$annotate(x)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AnnotationPipeline$annotate(x, threads = NULL, verbose = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{x}}{A list of \code{character} vectors to annotate.}
+
+\item{\code{threads}}{If \code{NULL}, all available threads are used, otherwise an
+\code{integer} value with number of threads to use.}
+
+\item{\code{verbose}}{A \code{logical} value, whether to show progress messages.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 A \code{List} of \code{Annotation} objects.
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-as.matrix"></a>}}
+\if{latex}{\out{\hypertarget{method-as.matrix}{}}}
+\subsection{Method \code{as.matrix()}}{
+Experimental method that will parse annotation output and
+return a \code{matrix}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{AnnotationPipeline$as.matrix()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
