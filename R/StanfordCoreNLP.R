@@ -151,7 +151,7 @@ StanfordCoreNLP <- R6Class(
     #' @description Annotate a string.
     #' @param txt A (length-one) `character` vector to process.
     #' @param id An ID to prepend.
-    #' @param purge Whether to postprocess output.
+    #' @param purge A `logical` value, whether to preprocess input string `txt`.
     #' @return If output_format is "json" or "xml", a string is returned, if output_format is 
     #'   "conll", a `data.frame`.
     annotate = function(txt, purge = TRUE){

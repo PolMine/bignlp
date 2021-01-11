@@ -126,7 +126,7 @@ Annotate a string.
 \describe{
 \item{\code{txt}}{A (length-one) \code{character} vector to process.}
 
-\item{\code{purge}}{Whether to postprocess output.}
+\item{\code{purge}}{A \code{logical} value, whether to preprocess input string \code{txt}.}
 
 \item{\code{id}}{An ID to prepend.}
 }

@@ -14,6 +14,7 @@
 #' @param threads An integer value.
 #' @param corenlp_dir The directory where corenlp resides.
 #' @param preclean Logical, whether to preprocess string.
+#' @param purge A `logical` value, whether to preprocess input.
 #' @param byline Logical, whether to process files in a line-by-line manner.
 #' @param output_format The output generated, either "json" (default), "txt", or "xml".
 #' @param progress Logical, whether to show progress bar.
@@ -45,11 +46,11 @@ setGeneric("corenlp_annotate", function(x, ...) standardGeneric("corenlp_annotat
 
 
 #' @rdname corenlp_annotate
-setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), properties = getOption("bignlp.properties_file"), threads = 1L, progress = TRUE,  verbose = TRUE){
+setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), properties = getOption("bignlp.properties_file"), purge = TRUE, threads = 1L, progress = TRUE,  verbose = TRUE){
   stopifnot(c("id", "text") %in% colnames(x))
   Annotator <- StanfordCoreNLP$new(output_format = "conll", corenlp_dir = corenlp_dir, properties = properties)
   if (progress) pb <- txtProgressBar(min = 0, max = uniqueN(x[["id"]]), style = 3)
-  retval <- x[, {if (progress) setTxtProgressBar(pb, value = .GRP); Annotator$annotate(.SD[["text"]])}, by = "id"]
+  retval <- x[, {if (progress) setTxtProgressBar(pb, value = .GRP); Annotator$annotate(.SD[["text"]], purge = purge)}, by = "id"]
   if (progress) close(pb)
   retval
 })

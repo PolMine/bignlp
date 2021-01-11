@@ -7,8 +7,8 @@
 segment(x, dir, chunksize = 10L, progress = interactive())
 }
 \arguments{
-\item{x}{A \code{data.table} with columns 'id' and 'text'. Further columns are
-ignored.}
+\item{x}{A \code{data.table} with columns 'id' (\code{integer} values) and 'text'.
+Further columns are ignored.}
 
 \item{dir}{Superdirectory for directories with segments that will be
 processed sequentially.}

@@ -12,6 +12,7 @@ corenlp_annotate(x, ...)
   x,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
   properties = getOption("bignlp.properties_file"),
+  purge = TRUE,
   threads = 1L,
   progress = TRUE,
   verbose = TRUE
@@ -40,6 +41,8 @@ are assumed to be tsv files with two columns ('id' and 'text').}
 \item{corenlp_dir}{The directory where corenlp resides.}
 
 \item{properties}{A properties file to configure annotator.}
+
+\item{purge}{A \code{logical} value, whether to preprocess input.}
 
 \item{threads}{An integer value.}
 
