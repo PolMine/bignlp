@@ -1,4 +1,4 @@
-#' @include bignlp.R
+#' @include bignlp.R AnnotationPipeline.R
 NULL
 
 #' StanfordCoreNLP Annotator Class.
@@ -33,8 +33,6 @@ NULL
 #' @importFrom rJava .jnew J .jcall .jaddClassPath
 #' @importFrom cli cli_alert cli_alert_success cli_alert_warning
 #' @examples 
-#' Sys.setenv("_JAVA_OPTIONS" = "")
-#' options(java.parameters = "-Xmx4g")
 #' if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "de")
 #' 
 #' txt <- "Das ist ein Satz. Und das ist ein zweiter Satz."
@@ -70,6 +68,7 @@ NULL
 StanfordCoreNLP <- R6Class(
   
   classname = "StanfordCoreNLP",
+  inherit = AnnotationPipeline,
 
   public = list(
     
@@ -116,7 +115,7 @@ StanfordCoreNLP <- R6Class(
         }
       }
       
-      if (as.numeric(gsub("^(\\d+)\\s.*$", "\\1", jvm_heap_space(units = "Gb"))) < 4){
+      if (as.numeric(gsub("^(\\d+)\\s.*$", "\\1", jvm_heap_space(units = "Mb"))) < 4096){
         cli_alert_warning(
           sprintf(
             "JVM maximum heap space: %s - recommended: 4 GB",

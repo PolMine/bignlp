@@ -28,8 +28,6 @@ Whether this parallelization is used is controlled by setting the properties
 "pos.nthreads", "ner.nthreads" and alike. See examples.
 }
 \examples{
-Sys.setenv("_JAVA_OPTIONS" = "")
-options(java.parameters = "-Xmx4g")
 if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "de")
 
 txt <- "Das ist ein Satz. Und das ist ein zweiter Satz."
@@ -63,6 +61,9 @@ CNLP <- StanfordCoreNLP$new(output_format = "conll", properties = props)
 
 y <- CNLP$process(dt[1][["text"]])
 }
+\section{Super class}{
+\code{\link[bignlp:AnnotationPipeline]{bignlp::AnnotationPipeline}} -> \code{StanfordCoreNLP}
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -86,6 +87,14 @@ from annotations.}
 \item \href{#method-verbose}{\code{StanfordCoreNLP$verbose()}}
 \item \href{#method-clone}{\code{StanfordCoreNLP$clone()}}
 }
+}
+\if{html}{
+\out{<details open ><summary>Inherited methods</summary>}
+\itemize{
+\item \out{<span class="pkg-link" data-pkg="bignlp" data-topic="AnnotationPipeline" data-id="annotate">}\href{../../bignlp/html/AnnotationPipeline.html#method-annotate}{\code{bignlp::AnnotationPipeline$annotate()}}\out{</span>}
+\item \out{<span class="pkg-link" data-pkg="bignlp" data-topic="AnnotationPipeline" data-id="as.matrix">}\href{../../bignlp/html/AnnotationPipeline.html#method-as.matrix}{\code{bignlp::AnnotationPipeline$as.matrix()}}\out{</span>}
+}
+\out{</details>}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}

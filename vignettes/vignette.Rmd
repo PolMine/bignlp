@@ -281,7 +281,7 @@ Enjoy!
 
 ### Installing CoreNLP
 
-A good and conventional place for installing a tool such as CoreNLP on Linux and macOS is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file. Note that
+A good and conventional place for installing a tool such as CoreNLP on Linux and macOS is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file. Note that sudo rights may be necessary to write into the /opt directory.
 
 ```{sh download_corenlp, eval = FALSE}
 mkdir /opt/stanford-corenlp

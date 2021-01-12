@@ -20,13 +20,13 @@ NULL
 #'   "This is a sentences.",
 #'   "Yet another sentence."
 #' )
-#' A$annotate(a)
-#' result <- A$as.matrix()
+#' s <- A$annotate(a)
+#' result <- A$as.matrix(s)
 #' 
 #' reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
 #' B <- AnnotationPipeline$new()
-#' B$annotate(reuters_txt)
-#' result <- B$as.matrix()
+#' r <- B$annotate(reuters_txt)
+#' result <- B$as.matrix(r)
 #' 
 #' \dontrun{
 #' library(polmineR)
@@ -35,8 +35,8 @@ NULL
 #'   split(s_attribute = "date") %>% 
 #'   get_token_stream(p_attribute = "word", collapse = " ")
 #' C <- AnnotationPipeline$new()
-#' C$annotate(gparl_by_date, 4L)
-#' result <- C$as.matrix()
+#' anno <- C$annotate(gparl_by_date, 4L)
+#' result <- C$as.matrix(anno)
 #' }
 #' @export AnnotationPipeline
 #' @importFrom rJava .jarray
@@ -47,10 +47,8 @@ AnnotationPipeline <- R6Class(
   public = list(
     
     #' @field pipeline AnnotationPipeline
-    #' @field annotations A `List` of `Annotation` (Java) objects.
     pipeline = NULL,
-    annotations = NULL,
-    
+
     #' @description Initialize AnnotationPipeline
     #' @param corenlp_dir Directory where StanfordCoreNLP resides.
     initialize = function(corenlp_dir = getOption("bignlp.corenlp_dir")){
@@ -69,7 +67,7 @@ AnnotationPipeline <- R6Class(
     #' @param threads If `NULL`, all available threads are used, otherwise an
     #'   `integer` value with number of threads to use.
     #' @param verbose A `logical` value, whether to show progress messages.
-    #' @return A `List` of `Annotation` objects.
+    #' @return A Java object .
     annotate = function(x, threads = NULL, verbose = TRUE){
       if (!is.null(threads)) stopifnot(is.numeric(threads))
       if (verbose) message("... create Java Annotation objects")
@@ -80,26 +78,25 @@ AnnotationPipeline <- R6Class(
           .jnew("edu/stanford/nlp/pipeline/Annotation", S)
         }
       ))
-      self$annotations <- .jnew("java.util.Arrays")$asList(anno_array)
+      annotations <- .jnew("java.util.Arrays")$asList(anno_array)
       if (verbose) message("... annotate it")
       if (is.null(threads)){
-        self$pipeline$annotate(self$annotations)
+        self$pipeline$annotate(annotations)
       } else {
-        self$pipeline$annotate(self$annotations, as.integer(threads))
+        self$pipeline$annotate(annotations, as.integer(threads))
       }
-      invisible(self)
+      annotations
     },
     
     #' @description Experimental method that will parse annotation output and
     #'   return a `matrix`.
-    as.matrix = function(){
+    #' @param x A rJava AnnotationList object resulting from `$annotations()`.
+    as.matrix = function(x){
       conll_outputter <- rJava::.jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
       do.call(rbind, lapply(
-        0L:(self$annotations$size() - 1L),
+        0L:(x$size() - 1L),
         function(i){
-          # print(i)
-          # read.table(text = conll_outputter$print(self$annotations$get(i)))
-          do.call(rbind, strsplit(strsplit(conll_outputter$print(self$annotations$get(i)), "\n")[[1]], "\t"))
+          do.call(rbind, strsplit(strsplit(conll_outputter$print(x$get(i)), "\n")[[1]], "\t"))
         }
       ))
     }

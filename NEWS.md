@@ -9,6 +9,11 @@
 * The `corenlp_parse_json()` function will now add column names in line with the documentation of the `CoNLLOutputter` class (#23).
 * The `corenlp_parse_json()` function will now assign a column with the document id as column 'doc' to the `data.table` that is prepared.
 * The name of the column "id" of table input is changed to "doc_id" throughout to avoid confusion with the sentence token ids in the output of the CoNLLOutputter.
+* The `corenlp_install()` set the option "bignlp.corenlp_dir" to a directory within the 
+package, not to the location designated by argument `loc`. Fixed.
+* To avoid setting the Java heap space to 4GB upon loading the package, the pipeline used in examples had be reduced to a minimum that works with 512MB (#16).
+* The `StanfordCoreNLP` class now inherits from the `AnnotationPipeline` class, exposing the `$annotate()` method for parallel processing.
+* The `$annotate()` method of the `AnnotationPipeline` class will return a rJava object with annotations.
 
 
 # bignlp v0.1.0

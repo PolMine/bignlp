@@ -1,5 +1,4 @@
 .onLoad <- function(libname, pkgname) {
-  options(java.parameters = "-Xmx4g")
   rJava::.jpackage(name = pkgname, lib.loc = libname)
 }
 

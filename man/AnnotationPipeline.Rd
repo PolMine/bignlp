@@ -21,13 +21,13 @@ a <- list(
   "This is a sentences.",
   "Yet another sentence."
 )
-A$annotate(a)
-result <- A$as.matrix()
+s <- A$annotate(a)
+result <- A$as.matrix(s)
 
 reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
 B <- AnnotationPipeline$new()
-B$annotate(reuters_txt)
-result <- B$as.matrix()
+r <- B$annotate(reuters_txt)
+result <- B$as.matrix(r)
 
 \dontrun{
 library(polmineR)
@@ -36,16 +36,14 @@ gparl_by_date <- corpus("GERMAPARL") \%>\%
   split(s_attribute = "date") \%>\% 
   get_token_stream(p_attribute = "word", collapse = " ")
 C <- AnnotationPipeline$new()
-C$annotate(gparl_by_date, 4L)
-result <- C$as.matrix()
+anno <- C$annotate(gparl_by_date, 4L)
+result <- C$as.matrix(anno)
 }
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
 \item{\code{pipeline}}{AnnotationPipeline}
-
-\item{\code{annotations}}{A \code{List} of \code{Annotation} (Java) objects.}
 }
 \if{html}{\out{</div>}}
 }
@@ -97,7 +95,7 @@ Annotate a list of strings.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A \code{List} of \code{Annotation} objects.
+A Java object .
 }
 }
 \if{html}{\out{<hr>}}
@@ -107,9 +105,16 @@ A \code{List} of \code{Annotation} objects.
 Experimental method that will parse annotation output and
 return a \code{matrix}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AnnotationPipeline$as.matrix()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AnnotationPipeline$as.matrix(x)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{x}}{A rJava AnnotationList object resulting from \verb{$annotations()}.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

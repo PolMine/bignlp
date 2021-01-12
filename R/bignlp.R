@@ -45,12 +45,8 @@ corenlp_install <- function(lang = "de", loc){
   unzip(zipfile = zipfile, exdir = corenlp_dir)
   file.remove(zipfile)
   
-  options(
-    bignlp.corenlp_dir = system.file(
-      package = "bignlp", "extdata", "corenlp", "stanford-corenlp-4.2.0"
-    )
-  )
-  
+  options(bignlp.corenlp_dir = loc)
+
   languages <- list(
     de = function(){
       message("... installing model files for: German")
