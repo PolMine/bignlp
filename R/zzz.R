@@ -5,10 +5,7 @@
 
 
 .onAttach <- function (libname, pkgname) {
-  options(
-    "bignlp.corenlp_dir" = corenlp_get_jar_dir(),
-    "bignlp.properties_file" = ""
-  )
+  options("bignlp.corenlp_dir" = corenlp_get_jar_dir())
   
   packageStartupMessage(
     sprintf(

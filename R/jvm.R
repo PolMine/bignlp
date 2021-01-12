@@ -59,3 +59,9 @@ jvm_memory_usage = function(){
   rJava::J("java/lang/Runtime")$getRuntime()$gc()
 }
 
+#' @rdname jvm
+#' @export
+jvm_available_processors = function(){
+  .jnew("java/lang/Runtime")$availableProcessors()
+}
+

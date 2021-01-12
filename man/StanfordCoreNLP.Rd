@@ -36,20 +36,20 @@ txt <- "Das ist ein Satz. Und das ist ein zweiter Satz."
 
 props_file <- corenlp_get_properties_file(lang = "de")
 CNLP <- StanfordCoreNLP$new(output_format = "json", properties = props_file)
-j <- CNLP$annotate(txt = txt)
+j <- CNLP$process(txt = txt)
 
 CNLP <- StanfordCoreNLP$new(output_format = "xml", properties = props_file)
-x <- CNLP$annotate(txt = txt)
+x <- CNLP$process(txt = txt)
 
 CNLP <- StanfordCoreNLP$new(output_format = "conll", properties = props_file)
-c <- CNLP$annotate(txt = txt)
+c <- CNLP$process(txt = txt)
 
 
 # Java parallellization - processing sentences in parallel
 
 library(data.table)
 reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 
 options(java.parameters = "-Xmx4g")
 
@@ -61,7 +61,7 @@ props$put("ner.nthreads", as.character(parallel::detectCores() - 1L))
 
 CNLP <- StanfordCoreNLP$new(output_format = "conll", properties = props)
 
-y <- CNLP$annotate(dt[1][["text"]])
+y <- CNLP$process(dt[1][["text"]])
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -81,7 +81,7 @@ from annotations.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{StanfordCoreNLP$new()}}
-\item \href{#method-annotate}{\code{StanfordCoreNLP$annotate()}}
+\item \href{#method-process}{\code{StanfordCoreNLP$process()}}
 \item \href{#method-process_files}{\code{StanfordCoreNLP$process_files()}}
 \item \href{#method-verbose}{\code{StanfordCoreNLP$verbose()}}
 \item \href{#method-clone}{\code{StanfordCoreNLP$clone()}}
@@ -113,12 +113,12 @@ properties object.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-annotate"></a>}}
-\if{latex}{\out{\hypertarget{method-annotate}{}}}
-\subsection{Method \code{annotate()}}{
-Annotate a string.
+\if{html}{\out{<a id="method-process"></a>}}
+\if{latex}{\out{\hypertarget{method-process}{}}}
+\subsection{Method \code{process()}}{
+Process a string.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{StanfordCoreNLP$annotate(txt, purge = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{StanfordCoreNLP$process(txt, purge = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -128,7 +128,7 @@ Annotate a string.
 
 \item{\code{purge}}{A \code{logical} value, whether to preprocess input string \code{txt}.}
 
-\item{\code{id}}{An ID to prepend.}
+\item{\code{doc_id}}{An ID to prepend.}
 }
 \if{html}{\out{</div>}}
 }

@@ -41,20 +41,20 @@ NULL
 #' 
 #' props_file <- corenlp_get_properties_file(lang = "de")
 #' CNLP <- StanfordCoreNLP$new(output_format = "json", properties = props_file)
-#' j <- CNLP$annotate(txt = txt)
+#' j <- CNLP$process(txt = txt)
 #' 
 #' CNLP <- StanfordCoreNLP$new(output_format = "xml", properties = props_file)
-#' x <- CNLP$annotate(txt = txt)
+#' x <- CNLP$process(txt = txt)
 #' 
 #' CNLP <- StanfordCoreNLP$new(output_format = "conll", properties = props_file)
-#' c <- CNLP$annotate(txt = txt)
+#' c <- CNLP$process(txt = txt)
 #' 
 #' 
 #' # Java parallellization - processing sentences in parallel
 #' 
 #' library(data.table)
 #' reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-#' dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+#' dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 #' 
 #' options(java.parameters = "-Xmx4g")
 #' 
@@ -66,7 +66,7 @@ NULL
 #' 
 #' CNLP <- StanfordCoreNLP$new(output_format = "conll", properties = props)
 #' 
-#' y <- CNLP$annotate(dt[1][["text"]])
+#' y <- CNLP$process(dt[1][["text"]])
 StanfordCoreNLP <- R6Class(
   
   classname = "StanfordCoreNLP",
@@ -88,6 +88,18 @@ StanfordCoreNLP <- R6Class(
       properties, 
       output_format = c("xml", "json", "conll")
     ){
+      
+      # Check arguments --------------------------------------------------------
+      
+      if (length(output_format) != 1L){
+        stop("Argument 'output_format' required to be a length-one character vector")
+      }
+      if (!output_format %in% c("xml", "json", "conll")){
+        stop("Argument 'output_format' required to be one of the following: 'xml', 'json', 'conll'")
+      }
+      
+      self$output_format <- output_format
+      
       
       # Check that Java runtime meets requirements ------------------------------
       
@@ -124,19 +136,12 @@ StanfordCoreNLP <- R6Class(
       } else if (is_properties(properties)){
         self$properties <- properties
       }
+      properties_set_output_format(self$properties, fmt = output_format)
       self$pipeline <- .jnew("edu.stanford.nlp.pipeline.StanfordCoreNLP", self$properties)
       
 
       # Instantiate outputter -------------------------------------------
       
-      if (length(output_format) != 1L){
-        stop("output_format required to be a length-one character vector")
-      }
-      if (!output_format %in% c("xml", "json", "conll")){
-        stop("output_format required to be one of the following: xml | json | conll")
-      }
-      
-      self$output_format <- output_format
       self$outputter <- switch(
         self$output_format,
         "xml" = .jnew("edu.stanford.nlp.pipeline.XMLOutputter"),
@@ -148,13 +153,13 @@ StanfordCoreNLP <- R6Class(
     },
 
     
-    #' @description Annotate a string.
+    #' @description Process a string.
     #' @param txt A (length-one) `character` vector to process.
-    #' @param id An ID to prepend.
+    #' @param doc_id An ID to prepend.
     #' @param purge A `logical` value, whether to preprocess input string `txt`.
     #' @return If output_format is "json" or "xml", a string is returned, if output_format is 
     #'   "conll", a `data.frame`.
-    annotate = function(txt, purge = TRUE){
+    process = function(txt, purge = TRUE){
       if (purge){
         txt <- purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
       }
@@ -170,9 +175,10 @@ StanfordCoreNLP <- R6Class(
         conll_str <- self$outputter$print(anno)
         conll_lines <- strsplit(x = conll_str, split = "\n", fixed = TRUE)[[1L]]
         cols <- strsplit(conll_lines, split = "\t", fixed = TRUE)
-        df <- data.frame(do.call(rbind, cols))
-        df[[1]] <- as.integer(df[[1]])
-        return(df)
+        dt <- data.table(do.call(rbind, cols))
+        dt[[1]] <- as.integer(dt[[1]])
+        colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
+        return(dt)
       }
     },
     

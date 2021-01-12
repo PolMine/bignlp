@@ -5,7 +5,7 @@
 #' processed in parallel. The `segment()` function performs this split operation,
 #' i.e. it creates directories with chunks within a superdirectory.
 #' 
-#' @param x A `data.table` with columns 'id' (`integer` values) and 'text'.
+#' @param x A `data.table` with columns 'doc_id' (`integer` values) and 'text'.
 #'   Further columns are ignored.
 #' @param dir Superdirectory for directories with segments that will be 
 #'   processed sequentially.
@@ -18,7 +18,7 @@
 #' @examples 
 #' library(data.table)
 #' reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-#' dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+#' dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 #' segdir <- tempdir()
 #' dirs <- segment(x = dt, dir = segdir, chunksize = 10L)
 segment <- function(x, dir, chunksize = 10L, progress = interactive()){
@@ -26,8 +26,8 @@ segment <- function(x, dir, chunksize = 10L, progress = interactive()){
   # Check that object x meets requirements ----------------------------
   
   if (isFALSE(is.data.table(x))) stop("Argument 'x' is required to be a data.table object.")
-  if (isFALSE("id" %in% colnames(x))) stop("Column 'id' is required.")
-  if (isFALSE(is.integer(x[["id"]]))) stop("Column 'id' is required to be an integer vector.")
+  if (isFALSE("doc_id" %in% colnames(x))) stop("Column 'doc_id' is required.")
+  if (isFALSE(is.integer(x[["doc_id"]]))) stop("Column 'doc_id' is required to be an integer vector.")
   if (isFALSE("text" %in% colnames(x))) stop("Column 'text' is required.")
   
   chunk_factor <- cut(
@@ -36,14 +36,14 @@ segment <- function(x, dir, chunksize = 10L, progress = interactive()){
     include.lowest = TRUE, right = FALSE
   )
   chunks <- split(x, f = chunk_factor)
-  max_id <- max(x[["id"]])
+  max_id <- max(x[["doc_id"]])
   
   .fn <- function(i){
     outdir <- file.path(dir, i)
     if (!dir.exists(outdir)) dir.create(outdir)
     
     for (j in 1:nrow(chunks[[i]])){
-      f <- file.path(file.path(dir, i, sprintf("%0*d.txt", nchar(max_id),  chunks[[i]][["id"]][j])))
+      f <- file.path(file.path(dir, i, sprintf("%0*d.txt", nchar(max_id),  chunks[[i]][["doc_id"]][j])))
       cat(chunks[[i]][["text"]][j], file = f)
     }
     outdir

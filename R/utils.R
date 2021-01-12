@@ -12,7 +12,7 @@
 #' # First, generate a chunk_table file
 #' reuters_chunk_table <- file.path(tempdir(), "reuters_chunk_table.tsv")
 #' reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-#' reuters_dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+#' reuters_dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 #' data.table::fwrite(x = reuters_dt, file = reuters_chunk_table)
 #' 
 #' # Get nrow of the file. Note that the file includes colnames, so there is

@@ -7,7 +7,7 @@
 segment(x, dir, chunksize = 10L, progress = interactive())
 }
 \arguments{
-\item{x}{A \code{data.table} with columns 'id' (\code{integer} values) and 'text'.
+\item{x}{A \code{data.table} with columns 'doc_id' (\code{integer} values) and 'text'.
 Further columns are ignored.}
 
 \item{dir}{Superdirectory for directories with segments that will be
@@ -31,7 +31,7 @@ i.e. it creates directories with chunks within a superdirectory.
 \examples{
 library(data.table)
 reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 segdir <- tempdir()
 dirs <- segment(x = dt, dir = segdir, chunksize = 10L)
 }

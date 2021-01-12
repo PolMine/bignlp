@@ -32,7 +32,7 @@ Input and output data (which can be considerably larger than the input as annota
 
 ## Hardware Requirements
 
-The machine should at least have 8 GB of RAM as we recommend to allocate 4 GB of memory to the Java Virtual Machine (JVM).
+The machine should at least have 8 GB of RAM as we recommend to allocate 4 GB of memory to the Java Virtual Machine (JVM). You can do this as follows.
 
 ```{r java_heap_space}
 options(java.parameters = "-Xmx4g")
@@ -90,10 +90,6 @@ Another way to download Stanford CoreNLP is to (ab)use the installation mechanis
 
 Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the `system.file()`-function to find out where that is.
 
-```{r set_options}
-options(bignlp.properties_file = bignlp::corenlp_get_properties_file(lang = "en", fast = TRUE))
-```
-
 Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. CoreNLP and properties files can be stored anywhere on your system, and functions of the bignlp package take the paths as input.
 
 
@@ -103,22 +99,18 @@ Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. 
 
 #### Sample data
 
-In our example, we will use an excerpt from the Reuters corpus. The articles of the corpus are included as sample data in the package. We geneerate a `data.table` with the columns "id" and "text" that will serve as input for the subsequent steps.
+In our example, we will use an excerpt from the Reuters corpus. The articles of the corpus are included as sample data in the package. We geneerate a `data.table` with the columns "doc_id" (integer ids) and "text" that will serve as input for the subsequent steps.
 
 ```{r load_other_libraries}
 library(data.table)
 reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-reuters_dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+reuters_dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 ```
 
 
 #### Allocate sufficient memory
 
-Running CoreNLP may require substanial memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else. 
-
-```{r set_java_options, eval = TRUE}
-options(java.parameters = "-Xmx4g") # needs to be set before a JVM is initialized!
-```
+Running CoreNLP may require substanial memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else, i.e. note that setting the memory allocated for the JVM was the very first code executed in this vignette. It is necessary that this is done *before* rJava and/or bignlp are loaded.
 
 Please note: Other packages (such as [openNLP](https://CRAN.R-project.org/package=openNLP)) interfacing to Java may have instantiated a JVM already, with less memory than necessary for running coreNLP. If a JVM has already been initialized with insufficient memory, the memory allocated cannot be increased afterwards.
 
@@ -132,24 +124,25 @@ props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
 props <- properties(x = props_file)
 ```
 
-As we want to use parallelization, we set the number of threads in the properties object, and we define the output format we want to use.
+As we want to use parallelization, we set the number of threads in the properties object. 
 
 ```{r}
-properties_set_output_format(props, "conll")
 properties_set_threads(props, no_cores)
 ```
 
 
 ### Instantiate pipeline
 
+Our first stept then is to instantiate the pipeline for processing files. On this point, we define the output format (argument `output_format`) we want to use. Here, we use the CoNLL output format which is closest to the tabular data formats that can be processed quickly by R.
+
 ```{r}
-SCNLP <- StanfordCoreNLP$new(properties = props, output_format = "conll")
+Pipe <- StanfordCoreNLP$new(properties = props, output_format = "conll")
 ```
 
 While it is good to see the messages issued on the initialization of the different annotators, there will be too many status messages when files are processed. Therefore, we switch the verbosity of the annotator off.
 
 ```{r}
-SCNLP$verbose(FALSE)
+Pipe$verbose(FALSE)
 ```
 
 
@@ -163,7 +156,7 @@ segdirs <- segment(x = reuters_dt, dir = (nlpdir <- tempdir()), chunksize = 10L)
 **Step 2 - Appy** Process files
 
 ```{r}
-conll_files <- lapply(segdirs, SCNLP$process_files)
+conll_files <- lapply(segdirs, Pipe$process_files)
 ```
 
 
@@ -187,10 +180,9 @@ DT::datatable(dt[1:1000,])
 ```{r}
 library(magrittr)
 dt <- segment(x = reuters_dt, dir = tempdir(), chunksize = 10L) %>%
-  lapply(SCNLP$process_files) %>%
-  unlist() %>%
-  lapply(fread, blank.lines.skip = TRUE, quote = "") %>%
-  rbindlist()
+  lapply(Pipe$process_files) %>%
+  corenlp_parse_conll()
+DT::datatable(dt[1:100,])
 ```
 
 
@@ -212,7 +204,7 @@ props$put("pos.nthreads", as.character(no_cores))
 props$put("lemma.nthreads", as.character(no_cores))
 ```
 
-New we can run the annotation ... 
+New we can run the annotation. The data to be processed needs to be a `data.table` that contains the columns 'doc_id' (unique `integer` values at this stage) and 'text' (`character`).
 
 ```{r}
 reuters_annotated <- corenlp_annotate(reuters_dt, properties = props, progress = FALSE)
@@ -229,12 +221,17 @@ DT::datatable(reuters_annotated[1:1000,])
 
 ### Understanding properties
 
-```{r}
-props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
-```
+The most important instrument to define the annotation pipeline and to control its behavior are properties. The conventional format is as follows.
 
 ```{r}
-properties <- list(
+props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
+readLines(props_file)
+```
+
+A quick way to customize properties is to define a list, see the following example.
+
+```{r}
+propslist <- list(
   "annotators" = "tokenize, ssplit, pos, lemma, ner",
   "tokenize.language" = "de",
   "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
@@ -246,7 +243,9 @@ properties <- list(
   "ner.useSUTime" = "false",
   "ner.nthreads" = as.character(parallel::detectCores() - 1L)
 )
+properties(propslist)
 ```
+
 
 ### Output formats
 
@@ -254,7 +253,7 @@ properties <- list(
 
 ```{r}
 J <- StanfordCoreNLP$new(properties = props_file, output_format = "json")
-reuters_json <- J$annotate(reuters_dt[1][["text"]])
+reuters_json <- J$process(reuters_dt[1][["text"]])
 df <- corenlp_parse_json(reuters_json)
 ```
 
@@ -262,7 +261,7 @@ df <- corenlp_parse_json(reuters_json)
 
 ```{r}
 X <- StanfordCoreNLP$new(properties = props_file, output_format = "xml")
-reuters_xml <- X$annotate(reuters_dt[1][["text"]])
+reuters_xml <- X$process(reuters_dt[1][["text"]])
 y <- corenlp_parse_xml(reuters_xml)
 ```
 
@@ -270,7 +269,7 @@ y <- corenlp_parse_xml(reuters_xml)
 
 ```{r}
 C <- StanfordCoreNLP$new(properties = props_file, output_format = "conll")
-reuters_conll <- C$annotate(reuters_dt[1][["text"]])
+reuters_conll <- C$process(reuters_dt[1][["text"]])
 ```
 
 
@@ -282,7 +281,7 @@ Enjoy!
 
 ### Installing CoreNLP
 
-A good and conventional place for installing a tool such as CoreNLP on Linux and macOS is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file.
+A good and conventional place for installing a tool such as CoreNLP on Linux and macOS is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file. Note that
 
 ```{sh download_corenlp, eval = FALSE}
 mkdir /opt/stanford-corenlp
@@ -296,8 +295,6 @@ rm stanford-corenlp-4.2.0.zip
 
 ```{sh download_english_model, eval = FALSE}
 wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0-models-english.jar
-unzip stanford-corenlp-4.2.0-models-english.jar StanfordCoreNLP.properties
-zip -d stanford-corenlp-4.2.0-models-english.jar StanfordCoreNLP.properties
 ```
 
 

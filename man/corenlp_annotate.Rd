@@ -11,7 +11,7 @@ corenlp_annotate(x, ...)
 \S4method{corenlp_annotate}{data.table}(
   x,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
-  properties = getOption("bignlp.properties_file"),
+  properties,
   purge = TRUE,
   threads = 1L,
   progress = TRUE,
@@ -21,7 +21,7 @@ corenlp_annotate(x, ...)
 \S4method{corenlp_annotate}{character}(
   x,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
-  properties = getOption("bignlp.properties_file"),
+  properties,
   byline = NULL,
   output_format = "json",
   threads = 1L,
@@ -31,10 +31,10 @@ corenlp_annotate(x, ...)
 )
 }
 \arguments{
-\item{x}{Either a \code{data.table} (required to have the columns 'id' and
+\item{x}{Either a \code{data.table} (required to have the columns 'doc_id' and
 'text'), or a character vector with input file(s), or a directory. If
 \code{input} is a directory, all files in the directory are processed. Files
-are assumed to be tsv files with two columns ('id' and 'text').}
+are assumed to be tsv files with two columns ('doc_id' and 'text').}
 
 \item{...}{Further arguments.}
 
@@ -71,7 +71,7 @@ results will be stored as NDJSON files.
 \examples{
 library(data.table)
 reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-reuters_dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+reuters_dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 
 props <- corenlp_get_properties_file(lang = "en", fast = "TRUE")
 y <- corenlp_annotate(

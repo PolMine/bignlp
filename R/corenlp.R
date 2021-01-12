@@ -6,10 +6,10 @@
 #' If \code{threads} is higher than 1, \code{output} should be a directory where tagging
 #' results will be stored as NDJSON files.
 #' 
-#' @param x Either a \code{data.table} (required to have the columns 'id' and
+#' @param x Either a \code{data.table} (required to have the columns 'doc_id' and
 #'   'text'), or a character vector with input file(s), or a directory. If
 #'   \code{input} is a directory, all files in the directory are processed. Files
-#'   are assumed to be tsv files with two columns ('id' and 'text').
+#'   are assumed to be tsv files with two columns ('doc_id' and 'text').
 #' @param properties A properties file to configure annotator.
 #' @param threads An integer value.
 #' @param corenlp_dir The directory where corenlp resides.
@@ -31,7 +31,7 @@
 #' @examples 
 #' library(data.table)
 #' reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-#' reuters_dt <- data.table(id = 1L:length(reuters_txt), text = reuters_txt)
+#' reuters_dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 #' 
 #' props <- corenlp_get_properties_file(lang = "en", fast = "TRUE")
 #' y <- corenlp_annotate(
@@ -46,17 +46,17 @@ setGeneric("corenlp_annotate", function(x, ...) standardGeneric("corenlp_annotat
 
 
 #' @rdname corenlp_annotate
-setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), properties = getOption("bignlp.properties_file"), purge = TRUE, threads = 1L, progress = TRUE,  verbose = TRUE){
-  stopifnot(c("id", "text") %in% colnames(x))
+setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), properties, purge = TRUE, threads = 1L, progress = TRUE,  verbose = TRUE){
+  stopifnot(c("doc_id", "text") %in% colnames(x))
   Annotator <- StanfordCoreNLP$new(output_format = "conll", corenlp_dir = corenlp_dir, properties = properties)
-  if (progress) pb <- txtProgressBar(min = 0, max = uniqueN(x[["id"]]), style = 3)
-  retval <- x[, {if (progress) setTxtProgressBar(pb, value = .GRP); Annotator$annotate(.SD[["text"]], purge = purge)}, by = "id"]
+  if (progress) pb <- txtProgressBar(min = 0, max = uniqueN(x[["doc_id"]]), style = 3)
+  retval <- x[, {if (progress) setTxtProgressBar(pb, value = .GRP); Annotator$process(.SD[["text"]], purge = purge)}, by = "doc_id"]
   if (progress) close(pb)
   retval
 })
 
 #' @rdname corenlp_annotate
-setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), properties = getOption("bignlp.properties_file"), byline = NULL, output_format = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
+setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), properties, byline = NULL, output_format = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
   stop("not implemented")
 })
 

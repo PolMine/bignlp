@@ -6,6 +6,7 @@
 \alias{jvm_version}
 \alias{jvm_heap_space}
 \alias{jvm_memory_usage}
+\alias{jvm_available_processors}
 \title{Auxiliary functions to get information on JVM.}
 \usage{
 jvm_is_initialized()
@@ -17,6 +18,8 @@ jvm_version()
 jvm_heap_space(units = "MB")
 
 jvm_memory_usage()
+
+jvm_available_processors()
 }
 \arguments{
 \item{units}{See documentation of format.object_size, typically either "MB"

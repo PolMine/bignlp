@@ -2,6 +2,14 @@
 
 * As a safeguard that the order of segments of text is maintained, names of temporary txt files written by the `segment()` function are padded with leading zeros (#18).
 * Whether to call the `purge()` function to preprocess an input string is not exposed by the `corenlp_annotate()` method for `data.table`. Yet the default approach of the `StanfordCoreNLP$annotate()` worker to call `purge()`, leading to results that may differ from results of `StanfordCoreNLP$process_files()` (#20). To harmonize the two approaches, `corenlp_annotate()` for `data.table` objects now has the argument `purge` that will be passed on.
+* The option `bignlp.properties_file` is not set upon loading the packqge any more and it is not used as the default value of argument `corenlp_dir` of `corenlp_annotate()` any more. An implicit setting of properties contradicts the logic of the (new) bignlp package that requires an explicit and conscious handling of properties.
+* The `$initialize()` method of the `StanfordCoreNLP` class will assign the value of the argument `output_format` to the properties object. It is not necessary to set the output format seperately for the properties (#22).
+* The `corenlp_parse_conll()` function now also accepts a list of `character` vectors as input. If `x` is a list, it will be unlisted.
+* The `$annotate()` method of the `StanfordCoreNLP` class has been renamed as `$process()` method to reflect that the Java method called is `process`. This avoids confusion with the (Java) method `annotate` that also exists, and is a basis for turning `StanfordCoreNLP` into the superclass of the `AnnotationPipeline` class at a certain stage.
+* The `corenlp_parse_json()` function will now add column names in line with the documentation of the `CoNLLOutputter` class (#23).
+* The `corenlp_parse_json()` function will now assign a column with the document id as column 'doc' to the `data.table` that is prepared.
+* The name of the column "id" of table input is changed to "doc_id" throughout to avoid confusion with the sentence token ids in the output of the CoNLLOutputter.
+
 
 # bignlp v0.1.0
 

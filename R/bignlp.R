@@ -73,5 +73,6 @@ corenlp_install <- function(lang = "de", loc){
 }
 
 
+`:=` <- function(...) NULL
 .GRP <- .SD <- NULL
 

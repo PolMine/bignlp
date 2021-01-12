@@ -2,7 +2,6 @@
 % Please edit documentation in R/output.R
 \name{corenlp_parse_json}
 \alias{corenlp_parse_json}
-\alias{corenlp_parse_conll}
 \alias{corenlp_parse_xml}
 \title{Parse CoreNLP output formats.}
 \usage{
@@ -14,12 +13,10 @@ corenlp_parse_json(
   progress = TRUE
 )
 
-corenlp_parse_conll(x, progress = TRUE)
-
 corenlp_parse_xml(x)
 }
 \arguments{
-\item{x}{A filename, or filenames.}
+\item{x}{character vector, the JSON string(s) to be parsed}
 
 \item{cols_to_keep}{columns to keep}
 
@@ -44,7 +41,4 @@ logfile, if it is defined. If \code{filename} is present, the function will
 process one or more files with the output of Stanford CoreNLP in a NDJSON
 format. If the argument \code{output} has been defined during initialization, results are
 written/appended to that file. Otherwise, a \code{data.frame} is returned.
-
-\code{corenlp_parse_conll} is based on \code{data.table::fread()}
-and supplies settings that prevent undesired behaviour.
 }

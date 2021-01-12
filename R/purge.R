@@ -26,7 +26,7 @@ purge <- function(x, replacements, progress = TRUE){
 #' txt <- "Karadžiš!"
 #' properties_german_fast <- corenlp_get_properties_file(lang = "de")
 #' y <- corenlp_annotate(
-#'   data.table(id = 1L:length(txt), text = txt),
+#'   data.table(doc_id = 1L:length(txt), text = txt),
 #'   properties = properties_german_fast,
 #'   corenlp_dir = corenlp_get_jar_dir(),
 #' )
