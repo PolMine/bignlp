@@ -16,27 +16,26 @@ NULL
 #' or an error. So use the `$annotate()` method with appropriate care.
 #' @examples 
 #' A <- AnnotationPipeline$new()
-#' a <- list(
-#'   "This is a sentences.",
-#'   "Yet another sentence."
-#' )
+#' a <- c("This is a sentences.", "Yet another sentence.")
 #' s <- A$annotate(a)
-#' result <- A$as.matrix(s)
+#' result <- s$as.data.table()
 #' 
 #' reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
 #' B <- AnnotationPipeline$new()
 #' r <- B$annotate(reuters_txt)
-#' result <- B$as.matrix(r)
+#' result <- r$as.data.table()
 #' 
 #' \dontrun{
+#' # this will NOT work with 512GB heap space - 4 GB required
 #' library(polmineR)
 #' gparl_by_date <- corpus("GERMAPARL") %>%
 #'   subset(year %in% 1998) %>%
 #'   split(s_attribute = "date") %>% 
-#'   get_token_stream(p_attribute = "word", collapse = " ")
+#'   get_token_stream(p_attribute = "word", collapse = " ") %>%
+#'   as.character()
 #' C <- AnnotationPipeline$new()
 #' anno <- C$annotate(gparl_by_date, 4L)
-#' result <- C$as.matrix(anno)
+#' result <- anno$as.data.table(anno)
 #' }
 #' @export AnnotationPipeline
 #' @importFrom rJava .jarray
@@ -63,7 +62,8 @@ AnnotationPipeline <- R6Class(
     },
 
     #' @description Annotate a list of strings.
-    #' @param x A list of `character` vectors to annotate.
+    #' @param x A list of `character` vectors to annotate, an `AnnotationList`
+    #'   class object or an ArrayList with Annotation objects.
     #' @param threads If `NULL`, all available threads are used, otherwise an
     #'   `integer` value with number of threads to use.
     #' @param verbose A `logical` value, whether to show progress messages.
@@ -71,34 +71,18 @@ AnnotationPipeline <- R6Class(
     annotate = function(x, threads = NULL, verbose = TRUE){
       if (!is.null(threads)) stopifnot(is.numeric(threads))
       if (verbose) message("... create Java Annotation objects")
-      anno_array <- .jarray(lapply(
-        x,
-        function(chunk){
-          S <- .jnew("java.lang.String", chunk)
-          .jnew("edu/stanford/nlp/pipeline/Annotation", S)
-        }
-      ))
-      annotations <- .jnew("java.util.Arrays")$asList(anno_array)
+      x <- if (is.character(x)){
+        AnnotationList$new(x)
+      } else if (is(x)[[1]] == "AnnotationList"){
+        x
+      }
       if (verbose) message("... annotate it")
       if (is.null(threads)){
-        self$pipeline$annotate(annotations)
+        self$pipeline$annotate(x$obj)
       } else {
-        self$pipeline$annotate(annotations, as.integer(threads))
+        self$pipeline$annotate(x$obj, as.integer(threads))
       }
-      annotations
-    },
-    
-    #' @description Experimental method that will parse annotation output and
-    #'   return a `matrix`.
-    #' @param x A rJava AnnotationList object resulting from `$annotations()`.
-    as.matrix = function(x){
-      conll_outputter <- rJava::.jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
-      do.call(rbind, lapply(
-        0L:(x$size() - 1L),
-        function(i){
-          do.call(rbind, strsplit(strsplit(conll_outputter$print(x$get(i)), "\n")[[1]], "\t"))
-        }
-      ))
+      invisible(x)
     }
   )
 )

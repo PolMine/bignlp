@@ -93,7 +93,7 @@ Apart from the directory with the code jars, the location of a properties file t
 Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. CoreNLP and properties files can be stored anywhere on your system, and functions of the bignlp package take the paths as input.
 
 
-## The split-apply-combine default workflow
+## Workflow 1: A split-apply-combine approach
 
 ### Preparations 
 
@@ -186,7 +186,7 @@ DT::datatable(dt[1:100,])
 ```
 
 
-## Multithreading without temporary files
+## Workflow 2: In-memory multithreading of sentences
 
 A second workflow envisaged by CoreNLP for the multithreaded annotation works without saving files to disk. After splitting a segment of text into tokens and sentences, sentences are processed in parallel. So it is only a part of the annotators such as POS annotation, named entity recognition etc. that is parallelized. This in-memory operation is less parsimonous concerning memory usage - the corpus and the result are kept in memory throughout - but may have its merits because saving and reloading and parsing data is not necessary.
 
@@ -216,6 +216,47 @@ reuters_annotated <- corenlp_annotate(reuters_dt, properties = props, progress =
 DT::datatable(reuters_annotated[1:1000,])
 ```
 
+
+## Workflow 3: Processing annotations in parallel
+
+A third approach processes documents of text in parallel from the outset. It takes a list of annotation objects as input.
+
+```{r}
+alist <- AnnotationList$new(reuters_dt[["text"]])
+```
+
+We then call the `$annotate()` method of the annotation pipeline on this object.
+
+```{r}
+Pipe <- StanfordCoreNLP$new(properties = props, output_format = "conll")
+Pipe$annotate(alist)
+```
+
+There are two important issues to note here:
+
+(a) The `annotate()` method is inherited from the `AnnotationPipeline` superclass of the `StanfordCoreNLP` class.
+
+(b) The annotation list is modified in-place, there is no return value of the `$annotate()` method. This may feel somewhat unusual in the R context. But the in-place modification of the annotation object is a good contribution to memory efficiency.
+
+The `AnnotationList` object is an R6 class with a `$as.data.table()` that will get a `data.table` from the annotations that have been generated.
+
+```{r}
+dt3 <- alist$as.data.table()
+```
+
+Inspecting the result, we see it is the same result as with the two other workflows.
+
+```{r}
+DT::datatable(dt3)
+```
+
+Note that piping is possible with R6 class objects:
+
+```{r}
+dt4 <- StanfordCoreNLP$new(properties = props, output_format = "conll")$
+  annotate(reuters_dt[["text"]])$
+  as.data.table()
+```
 
 ## Digging deeper 
 
@@ -271,6 +312,11 @@ y <- corenlp_parse_xml(reuters_xml)
 C <- StanfordCoreNLP$new(properties = props_file, output_format = "conll")
 reuters_conll <- C$process(reuters_dt[1][["text"]])
 ```
+
+
+### Configuring AnnotationPipelines
+
+[to be written]
 
 
 ## Discussion

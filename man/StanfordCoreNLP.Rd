@@ -92,7 +92,6 @@ from annotations.}
 \out{<details open ><summary>Inherited methods</summary>}
 \itemize{
 \item \out{<span class="pkg-link" data-pkg="bignlp" data-topic="AnnotationPipeline" data-id="annotate">}\href{../../bignlp/html/AnnotationPipeline.html#method-annotate}{\code{bignlp::AnnotationPipeline$annotate()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="bignlp" data-topic="AnnotationPipeline" data-id="as.matrix">}\href{../../bignlp/html/AnnotationPipeline.html#method-as.matrix}{\code{bignlp::AnnotationPipeline$as.matrix()}}\out{</span>}
 }
 \out{</details>}
 }

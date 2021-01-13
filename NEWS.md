@@ -13,8 +13,9 @@
 package, not to the location designated by argument `loc`. Fixed.
 * To avoid setting the Java heap space to 4GB upon loading the package, the pipeline used in examples had be reduced to a minimum that works with 512MB (#16).
 * The `StanfordCoreNLP` class now inherits from the `AnnotationPipeline` class, exposing the `$annotate()` method for parallel processing.
-* The `$annotate()` method of the `AnnotationPipeline` class will return a rJava object with annotations.
-
+* A new `AnnotationList` class is introduced to manage annotation objects.
+* The `$annotate()` method of the `AnnotationPipeline` class will return an `AnnotationList`, the `$as.matrix()` method of this class has been removed; its functionality is assumed by the `$as.data.table()` method of the `AnnotationList` class.
+* The jars of CoreNLP are put on the classpath upon loading the package (experimental still).
 
 # bignlp v0.1.0
 

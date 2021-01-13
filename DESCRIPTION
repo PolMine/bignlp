@@ -30,6 +30,7 @@ LazyData: yes
 License: GPL-3
 Encoding: UTF-8
 Collate:
+    'AnnotationList.R'
     'bignlp.R'
     'AnnotationPipeline.R'
     'StanfordCoreNLP.R'

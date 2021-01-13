@@ -103,6 +103,7 @@ corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "
 #' of the CoNLLOutputter
 #' class](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/pipeline/CoNLLOutputter.html)
 #' @export corenlp_parse_conll
+#' @importFrom utils read.table
 corenlp_parse_conll = function(x, progress = TRUE){
   if (is.list(x)) x <- unlist(x)
   if (length(x) == 1L){
@@ -111,10 +112,13 @@ corenlp_parse_conll = function(x, progress = TRUE){
       colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
       dt[, "doc_id" := as.integer(sub("^(\\d+)\\..*$", "\\1", basename(x)))]
       setcolorder(dt, neworder = "doc_id")
-      return(dt)
     } else {
-      stop(sprintf("Trying to parse file '%s', but file does not exist.", x))
+      dt <- as.data.table(
+        read.table(text = x, blank.lines.skip = TRUE, header = FALSE, sep = "\t", quote = "")
+      )
+      colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
     }
+    return(dt)
   } else if (length(x) > 1L){
     .parse <- function(f) corenlp_parse_conll(f, progress = FALSE)
     dts <- if (progress) pblapply(x, .parse) else lapply(x, .parse)

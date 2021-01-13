@@ -1,5 +1,7 @@
 .onLoad <- function(libname, pkgname) {
   rJava::.jpackage(name = pkgname, lib.loc = libname)
+  stanford_path <- Sys.glob(paste0(corenlp_get_jar_dir(),"/*.jar"))
+  .jaddClassPath(stanford_path)
 }
 
 

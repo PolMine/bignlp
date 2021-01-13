@@ -17,27 +17,26 @@ or an error. So use the \verb{$annotate()} method with appropriate care.
 }
 \examples{
 A <- AnnotationPipeline$new()
-a <- list(
-  "This is a sentences.",
-  "Yet another sentence."
-)
+a <- c("This is a sentences.", "Yet another sentence.")
 s <- A$annotate(a)
-result <- A$as.matrix(s)
+result <- s$as.data.table()
 
 reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
 B <- AnnotationPipeline$new()
 r <- B$annotate(reuters_txt)
-result <- B$as.matrix(r)
+result <- r$as.data.table()
 
 \dontrun{
+# this will NOT work with 512GB heap space - 4 GB required
 library(polmineR)
 gparl_by_date <- corpus("GERMAPARL") \%>\%
   subset(year \%in\% 1998) \%>\%
   split(s_attribute = "date") \%>\% 
-  get_token_stream(p_attribute = "word", collapse = " ")
+  get_token_stream(p_attribute = "word", collapse = " ") \%>\%
+  as.character()
 C <- AnnotationPipeline$new()
 anno <- C$annotate(gparl_by_date, 4L)
-result <- C$as.matrix(anno)
+result <- anno$as.data.table(anno)
 }
 }
 \section{Public fields}{
@@ -52,7 +51,6 @@ result <- C$as.matrix(anno)
 \itemize{
 \item \href{#method-new}{\code{AnnotationPipeline$new()}}
 \item \href{#method-annotate}{\code{AnnotationPipeline$annotate()}}
-\item \href{#method-as.matrix}{\code{AnnotationPipeline$as.matrix()}}
 \item \href{#method-clone}{\code{AnnotationPipeline$clone()}}
 }
 }
@@ -85,7 +83,8 @@ Annotate a list of strings.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{x}}{A list of \code{character} vectors to annotate.}
+\item{\code{x}}{A list of \code{character} vectors to annotate, an \code{AnnotationList}
+class object or an ArrayList with Annotation objects.}
 
 \item{\code{threads}}{If \code{NULL}, all available threads are used, otherwise an
 \code{integer} value with number of threads to use.}
@@ -96,24 +95,6 @@ Annotate a list of strings.
 }
 \subsection{Returns}{
 A Java object .
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-as.matrix"></a>}}
-\if{latex}{\out{\hypertarget{method-as.matrix}{}}}
-\subsection{Method \code{as.matrix()}}{
-Experimental method that will parse annotation output and
-return a \code{matrix}.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AnnotationPipeline$as.matrix(x)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{A rJava AnnotationList object resulting from \verb{$annotations()}.}
-}
-\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
