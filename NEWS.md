@@ -1,4 +1,4 @@
-# bignlp v0.1.0.9001
+# bignlp v0.1.0.9001-v0.1.0.9002
 
 * As a safeguard that the order of segments of text is maintained, names of temporary txt files written by the `segment()` function are padded with leading zeros (#18).
 * Whether to call the `purge()` function to preprocess an input string is not exposed by the `corenlp_annotate()` method for `data.table`. Yet the default approach of the `StanfordCoreNLP$annotate()` worker to call `purge()`, leading to results that may differ from results of `StanfordCoreNLP$process_files()` (#20). To harmonize the two approaches, `corenlp_annotate()` for `data.table` objects now has the argument `purge` that will be passed on.
@@ -16,6 +16,7 @@ package, not to the location designated by argument `loc`. Fixed.
 * A new `AnnotationList` class is introduced to manage annotation objects.
 * The `$annotate()` method of the `AnnotationPipeline` class will return an `AnnotationList`, the `$as.matrix()` method of this class has been removed; its functionality is assumed by the `$as.data.table()` method of the `AnnotationList` class.
 * The jars of CoreNLP are put on the classpath upon loading the package (experimental still).
+* A new, experimental function `as.Annotation()` turns tabular data for tokenized text into an Annotation object (#17).
 
 # bignlp v0.1.0
 

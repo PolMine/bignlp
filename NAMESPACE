@@ -3,6 +3,7 @@
 export(AnnotationList)
 export(AnnotationPipeline)
 export(StanfordCoreNLP)
+export(as.Annotation)
 export(chunk_table_get_nrow)
 export(corenlp_annotate)
 export(corenlp_get_jar_dir)
