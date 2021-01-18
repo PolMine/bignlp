@@ -101,10 +101,10 @@ Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. 
 
 In our example, we will use an excerpt from the Reuters corpus. The articles of the corpus are included as sample data in the package. We geneerate a `data.table` with the columns "doc_id" (integer ids) and "text" that will serve as input for the subsequent steps.
 
-```{r load_other_libraries}
+```{r create_reuters_table}
 library(data.table)
 reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
-reuters_dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
+reuters_tab <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 ```
 
 
@@ -149,7 +149,7 @@ Pipe$verbose(FALSE)
 **Step 1 - Split** Create directories with text segments
 
 ```{r}
-segdirs <- segment(x = reuters_dt, dir = (nlpdir <- tempdir()), chunksize = 10L)
+segdirs <- segment(x = reuters_tab, dir = (nlpdir <- tempdir()), chunksize = 10L)
 ```
 
 
@@ -179,7 +179,7 @@ DT::datatable(dt[1:1000,])
 
 ```{r}
 library(magrittr)
-dt <- segment(x = reuters_dt, dir = tempdir(), chunksize = 10L) %>%
+dt <- segment(x = reuters_tab, dir = tempdir(), chunksize = 10L) %>%
   lapply(Pipe$process_files) %>%
   corenlp_parse_conll()
 DT::datatable(dt[1:100,])
@@ -207,7 +207,7 @@ props$put("lemma.nthreads", as.character(no_cores))
 New we can run the annotation. The data to be processed needs to be a `data.table` that contains the columns 'doc_id' (unique `integer` values at this stage) and 'text' (`character`).
 
 ```{r}
-reuters_annotated <- corenlp_annotate(reuters_dt, properties = props, progress = FALSE)
+reuters_annotated <- corenlp_annotate(reuters_tab, properties = props, progress = FALSE)
 ```
 
 ... and this is the resulting `data.table`.
@@ -222,7 +222,7 @@ DT::datatable(reuters_annotated[1:1000,])
 A third approach processes documents of text in parallel from the outset. It takes a list of annotation objects as input.
 
 ```{r}
-alist <- AnnotationList$new(reuters_dt[["text"]])
+alist <- AnnotationList$new(reuters_tab[["text"]])
 ```
 
 We then call the `$annotate()` method of the annotation pipeline on this object.
@@ -254,7 +254,7 @@ Note that piping is possible with R6 class objects:
 
 ```{r}
 dt4 <- StanfordCoreNLP$new(properties = props, output_format = "conll")$
-  annotate(reuters_dt[["text"]])$
+  annotate(reuters_tab[["text"]])$
   as.data.table()
 ```
 
@@ -294,7 +294,7 @@ properties(propslist)
 
 ```{r}
 J <- StanfordCoreNLP$new(properties = props_file, output_format = "json")
-reuters_json <- J$process(reuters_dt[1][["text"]])
+reuters_json <- J$process(reuters_tab[1][["text"]])
 df <- corenlp_parse_json(reuters_json)
 ```
 
@@ -302,7 +302,7 @@ df <- corenlp_parse_json(reuters_json)
 
 ```{r}
 X <- StanfordCoreNLP$new(properties = props_file, output_format = "xml")
-reuters_xml <- X$process(reuters_dt[1][["text"]])
+reuters_xml <- X$process(reuters_tab[1][["text"]])
 y <- corenlp_parse_xml(reuters_xml)
 ```
 
@@ -310,13 +310,83 @@ y <- corenlp_parse_xml(reuters_xml)
 
 ```{r}
 C <- StanfordCoreNLP$new(properties = props_file, output_format = "conll")
-reuters_conll <- C$process(reuters_dt[1][["text"]])
+reuters_conll <- C$process(reuters_tab[1][["text"]])
 ```
 
 
-### Configuring AnnotationPipelines
+### Customized AnnotationPipelines
 
 [to be written]
+
+### Scenario: Adding annotation layers to tokenized text
+
+A somewhat advanced yet commmon scenario is to add an annotation layer to a corpus that has already been tokenized. The corpus might be stored in some kind of database or corpus management system. It will be essential not to change the sequence of tokens. Based on the previous building blocks, we present two workflows that will maintain the tokenization and sequence of tokens as is.
+
+#### Option 1: Whitespace tokenization
+
+The first workflow builds on a CoreNLP whitespace tokenizer. Using this most basic and simple tokenizer is very useful if data has already been tokenized.
+
+To walk through this approach, we use the tokenized version of the REUTERS corpus that is included as sample data in the package. Your data may look differently, but if you work with tokenized data, it will be easy to generate this tabular data format.
+
+```{r load_other_libraries}
+DT::datatable(reuters_dt)
+```
+
+To prepare adding an annotation layer, we generate whitespace-separated strings, one for each document in the corpus. We split the table based on the document id (column 'doc_id') and concatenate the tokens (column 'word') in each table in the resulting list to one string.
+
+```{r}
+ts_ws <- lapply(
+  split(reuters_dt, f = reuters_dt[["doc_id"]]),
+  function(tab) paste(tab[["word"]], collapse = " ")
+)
+```
+
+To keep things simple (and fast) here, we will just add a sentence annotation. In real-life scenarios you might want to add annotations "further down the NLP road" such es POS, NER etc. 
+
+The crucial setting step is to ensure that a plain and simple whitespace tokenizer is used. We can do so using the properties that configure the NLP pipeline. Setting the property "tokenize.whitespace" as "true" will do the job. Then we instantiate the pipeline with these properties.
+
+```{r}
+properties_list <- list(
+  "annotators" = "tokenize, ssplit",
+  "tokenize.whitespace" = "true"
+)
+Pipe <- StanfordCoreNLP$new(properties = properties_list, output_format = "conll")
+```
+
+The rest is not new. We turn the vector of documents with whitespace-separated documents into an `AnnotationList`, we run the pipeline on the Annotation objects (in parallel) and convert the annotated data into a `data.table`.
+
+```{r}
+annoli <- AnnotationList$new(ts_ws)
+Pipe$annotate(annoli)
+reuters_dt_v2 <- annoli$as.data.table()
+```
+
+We now have a table that has that same number of rows (i.e. same number of tokens) as the (tokenized) input data. The should only be a technicality to write back the annotation layers that have been added back to your data source (i.e. database or corpus management system).
+
+
+#### Option 2: Turn tabular data into Annotation object
+
+There is a second workflow to work with pre-tokenized data that avoids generating a string. This step may appear somewhat inefficient. Wouldn't it be smart to generate the Java Annotation objects directly?
+
+Indeed, skipping generating a concatenated string with whitespace-delimiters should potentially speed up things. The current implementation of instantiating Java `Annotation` objects requires going back and forth between R and Java for every single token. This is very inefficient and inhibits performance dramatically. Thus, we present this appraoch as a proof-of-concept rather than for real life scenarios.
+
+```{r, eval = FALSE}
+anno_objs <- lapply(
+  split(reuters_dt, by = "doc_id"),
+  function(dt_sub){
+    df <- data.frame(word = as.data.frame(dt_sub)[, "word"])
+    as.Annotation(df)
+  }
+)
+anno_list <- AnnotationList$new()
+anno_list$obj <- rJava::.jnew("java.util.Arrays")$asList(rJava::.jarray(anno_objs))
+Pipe$annotate(anno_list)
+reuters_dt_v3 <- anno_list$as.data.table()
+```
+
+To explain: We generate `Annotation` objects from tabular input data and turn the list of `Annotation` objects into a proper Java `ArrayList` that is assigned to a new R `AnnotationList` object. This is annotated using the pipeline we instantiated for approach #1.
+
+This code is not run when preparing vignette because it is slow. If you do so, you will see it is slow indeed. So we do recommend to use the first approach.
 
 
 ## Discussion

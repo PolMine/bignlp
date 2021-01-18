@@ -33,6 +33,6 @@ pl <- .jnew("edu.stanford.nlp.pipeline.AnnotationPipeline")
 pl$addAnnotator(.jnew("edu.stanford.nlp.pipeline.WordsToSentencesAnnotator", FALSE))
 pl$annotate(a)
 
-cat(.jcall(json_outputter, "Ljava/lang/String;", "print", a))
+cat(.jcall(conll_outputter, "Ljava/lang/String;", "print", a))
 }
 }

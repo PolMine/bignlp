@@ -72,3 +72,23 @@ corenlp_install <- function(lang = "de", loc){
 `:=` <- function(...) NULL
 .GRP <- .SD <- NULL
 
+
+#' REUTERS-21578 dataset 
+#' 
+#' The package includes different representations of an excerpt from the
+#' REUTERS-21578 dataset as sample data. The REUTERS corpus is widely used as
+#' sample data for text classification tasks (Silva, Ribeiro 2010). The data
+#' here is taken from the *tm* package. See files in the 'data-raw' folder of
+#' the package how the sample data has been prepared.
+#' @format
+#' A `data.table` with two 2 and 20 rows:
+#' - *doc_id*: These are unique `integer` values to distinguish documents.
+#' - *text*: The unprocessed plain text of the documents in the corpus.
+#' @references
+#' Catarina Silva, Bernardete Ribeiro (2010) *Inductive Inference for Large
+#' Scale Text Classification. Kernel Approaches and Techniques*, Springer:
+#' Berlin, pp. 129ff.
+#' @docType data
+#' @keywords datasets
+"reuters_dt"
+

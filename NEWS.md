@@ -17,6 +17,9 @@ package, not to the location designated by argument `loc`. Fixed.
 * The `$annotate()` method of the `AnnotationPipeline` class will return an `AnnotationList`, the `$as.matrix()` method of this class has been removed; its functionality is assumed by the `$as.data.table()` method of the `AnnotationList` class.
 * The jars of CoreNLP are put on the classpath upon loading the package (experimental still).
 * A new, experimental function `as.Annotation()` turns tabular data for tokenized text into an Annotation object (#17).
+* Excerpt from REUTERS corpus is included as sample data, and a minimal documentation has been written. The 'data-raw' folder includes a file on data preparation.
+* The vignette now includes an explanation of two different workflows how to add an annotation layer to corpus data that has already been tokenized.
+
 
 # bignlp v0.1.0
 
