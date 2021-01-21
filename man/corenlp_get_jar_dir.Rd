@@ -7,5 +7,7 @@
 corenlp_get_jar_dir()
 }
 \description{
-Get directory with CoreNLP jar files.
+This utility function checks three options where CoreNLP jars might be: (a) The environment
+variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
+in the package cleanNLP.
 }

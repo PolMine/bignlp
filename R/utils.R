@@ -29,6 +29,9 @@ chunk_table_get_nrow <- function(filename){
 
 #' Get directory with CoreNLP jar files.
 #' 
+#' This utility function checks three options where CoreNLP jars might be: (a) The environment
+#' variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
+#' in the package cleanNLP.
 #' @export corenlp_get_jar_dir
 corenlp_get_jar_dir <- function(){
   if (nchar(Sys.getenv("CORENLP_DIR")) > 0L){

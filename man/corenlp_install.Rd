@@ -4,13 +4,15 @@
 \alias{corenlp_install}
 \title{Install Stanford CoreNLP.}
 \usage{
-corenlp_install(lang = "de", loc)
+corenlp_install(lang = "de", loc, verbose = TRUE)
 }
 \arguments{
 \item{lang}{Languages to install.}
 
 \item{loc}{Directory where to put jar files. If missing, the files will be
 placed in the bignlp package.}
+
+\item{verbose}{A \code{logical} value, whether to show output messages.}
 }
 \description{
 The function provides an installation mechanism to download and

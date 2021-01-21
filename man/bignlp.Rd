@@ -18,7 +18,7 @@ found, the option bignlp.corenlp_dir is empty ("").
 }
 \examples{
 Sys.setenv("_JAVA_OPTIONS" = "")
-if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "de")
+if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = NULL)
 }
 \author{
 Andreas Blaette

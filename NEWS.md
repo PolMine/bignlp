@@ -1,6 +1,9 @@
 # bignlp v0.1.1.9001
 
 * Downloading CoreNLP in the vignette is performed without downloading a model jar.
+* `curl::curl_download()` replaces `download.file()` to get CoreNLP.
+* The jars of CoreNLP are added to the Java classpath conditional on their presence upon loading CoreNLP.
+* The `corenlp_install()` function has a new argument `verbose`.
 
 # bignlp v0.1.1
 

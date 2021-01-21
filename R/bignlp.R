@@ -17,7 +17,7 @@
 #' @author Andreas Blaette
 #' @examples
 #' Sys.setenv("_JAVA_OPTIONS" = "")
-#' if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "de")
+#' if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = NULL)
 NULL
 
 
@@ -28,11 +28,12 @@ NULL
 #' @param lang Languages to install.
 #' @param loc Directory where to put jar files. If missing, the files will be
 #'   placed in the bignlp package.
+#' @param verbose A `logical` value, whether to show output messages.
 #' @export corenlp_install
 #' @rdname corenlp_install
 #' @importFrom utils download.file unzip zip
 #' @importFrom curl curl_download
-corenlp_install <- function(lang = "de", loc){
+corenlp_install <- function(lang = "de", loc, verbose = TRUE){
   # create necessary directories
   if (missing(loc)) loc <- system.file(package = "bignlp", "extdata")
   exttools_dir <- loc
@@ -43,9 +44,11 @@ corenlp_install <- function(lang = "de", loc){
   corenlp_url <- "http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip"
   zipfile <- file.path(corenlp_dir, basename(corenlp_url))
   # download.file(url = corenlp_url, destfile = zipfile)
-  curl_download(url = corenlp_url, destfile = zipfile, quiet = FALSE)
+  curl_download(url = corenlp_url, destfile = zipfile, quiet = !verbose)
   unzip(zipfile = zipfile, exdir = corenlp_dir)
   file.remove(zipfile)
+  
+  .jaddClassPath(Sys.glob(paste0(corenlp_dir,"/*.jar")))
   
   options(bignlp.corenlp_dir = loc)
 
