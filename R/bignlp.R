@@ -31,6 +31,7 @@ NULL
 #' @export corenlp_install
 #' @rdname corenlp_install
 #' @importFrom utils download.file unzip zip
+#' @importFrom curl curl_download
 corenlp_install <- function(lang = "de", loc){
   # create necessary directories
   if (missing(loc)) loc <- system.file(package = "bignlp", "extdata")
@@ -41,7 +42,8 @@ corenlp_install <- function(lang = "de", loc){
   
   corenlp_url <- "http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip"
   zipfile <- file.path(corenlp_dir, basename(corenlp_url))
-  download.file(url = corenlp_url, destfile = zipfile)
+  # download.file(url = corenlp_url, destfile = zipfile)
+  curl_download(url = corenlp_url, destfile = zipfile, quiet = FALSE)
   unzip(zipfile = zipfile, exdir = corenlp_dir)
   file.remove(zipfile)
   

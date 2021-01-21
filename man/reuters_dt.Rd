@@ -16,10 +16,10 @@ reuters_dt
 }
 \description{
 The package includes different representations of an excerpt from the
-REUTERS-21578 dataset, which is widely used as sample data for text
-classification tasks (Silva, Ribeiro). The data here is taken from the \emph{tm}
-package. See files in the 'data-raw' folder of the package how the sample
-data has been prepared.
+REUTERS-21578 dataset as sample data. The REUTERS corpus is widely used as
+sample data for text classification tasks (Silva, Ribeiro 2010). The data
+here is taken from the \emph{tm} package. See files in the 'data-raw' folder of
+the package how the sample data has been prepared.
 }
 \references{
 Catarina Silva, Bernardete Ribeiro (2010) \emph{Inductive Inference for Large

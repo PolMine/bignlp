@@ -18,7 +18,8 @@ Imports:
     pbapply,
     jsonlite,
     cli,
-    coreNLP
+    coreNLP,
+    curl
 Suggests:
     parallel,
     knitr,
