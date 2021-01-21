@@ -1,3 +1,7 @@
+# bignlp v0.1.1.9001
+
+* Downloading CoreNLP in the vignette is performed without downloading a model jar.
+
 # bignlp v0.1.1
 
 * As a safeguard that the order of segments of text is maintained, names of temporary txt files written by the `segment()` function are padded with leading zeros (#18).

@@ -79,11 +79,11 @@ As CoreNLP is based on Oracle Java 8, you would ideally see "Java(TM) SE Runtime
 
 ### CoreNLP
 
-The CoreNLP code jar and models for specific languages can be downloaded from the [CoreNLP website](https://stanfordnlp.github.io/CoreNLP/) without restrictions. Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary.
+The CoreNLP code jar and models for specific languages can be downloaded from the [CoreNLP website](https://stanfordnlp.github.io/CoreNLP/) without restrictions. Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary. In this vignette, we avoid downloading a lanugage model (argument `lang` is `NULL`).
 
 ```{r load_bignlp, eval = TRUE}
 library(bignlp)
-if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = "en")
+if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = NULL)
 ```
 
 Another way to download Stanford CoreNLP is to (ab)use the installation mechanism included in the [cleanNLP](https://CRAN.R-project.org/package=cleanNLP) package. 
