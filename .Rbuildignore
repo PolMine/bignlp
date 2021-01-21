@@ -1,6 +1,6 @@
 ^data-raw$
-^.travis.yml$
 ^_pkgdown\.yml$
 ^docs$
 ^appveyor.yml$
 ^README.Rmd$
+^\.github$

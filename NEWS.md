@@ -19,7 +19,7 @@ package, not to the location designated by argument `loc`. Fixed.
 * A new, experimental function `as.Annotation()` turns tabular data for tokenized text into an Annotation object (#17).
 * Excerpt from REUTERS corpus is included as sample data, and a minimal documentation has been written. The 'data-raw' folder includes a file on data preparation.
 * The vignette now includes an explanation of two different workflows how to add an annotation layer to corpus data that has already been tokenized.
-
+* Continuous integration with Travis CI is replaced by CI with GitHub Actions.
 
 # bignlp v0.1.0
 
