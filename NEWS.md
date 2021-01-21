@@ -1,4 +1,4 @@
-# bignlp v0.1.0.9001-v0.1.0.9002
+# bignlp v0.1.1
 
 * As a safeguard that the order of segments of text is maintained, names of temporary txt files written by the `segment()` function are padded with leading zeros (#18).
 * Whether to call the `purge()` function to preprocess an input string is not exposed by the `corenlp_annotate()` method for `data.table`. Yet the default approach of the `StanfordCoreNLP$annotate()` worker to call `purge()`, leading to results that may differ from results of `StanfordCoreNLP$process_files()` (#20). To harmonize the two approaches, `corenlp_annotate()` for `data.table` objects now has the argument `purge` that will be passed on.
