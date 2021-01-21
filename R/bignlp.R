@@ -48,7 +48,7 @@ corenlp_install <- function(lang = "de", loc, verbose = TRUE){
   unzip(zipfile = zipfile, exdir = corenlp_dir)
   file.remove(zipfile)
   
-  .jaddClassPath(Sys.glob(paste0(corenlp_dir,"/*.jar")))
+  .jaddClassPath(Sys.glob(paste0(file.path(corenlp_dir, "stanford-corenlp-4.2.0"),"/*.jar")))
   
   options(bignlp.corenlp_dir = loc)
 
