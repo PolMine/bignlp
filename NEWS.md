@@ -5,6 +5,7 @@
 * The jars of CoreNLP are added to the Java classpath conditional on their presence upon loading CoreNLP.
 * The `corenlp_install()` function has a new argument `verbose`.
 * The properties file for English included in the package is limited to the essential minimum (tokenisation, sentence segmentation) to make it useful for testing.
+* Packages 'rmarkdown' and 'webshot' have been added to suggests section in DESCRIPTION to ensure that package vignette can be built.
 
 # bignlp v0.1.1
 

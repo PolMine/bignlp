@@ -25,7 +25,9 @@ Suggests:
     knitr,
     magrittr,
     DT,
-    testthat
+    testthat,
+    rmarkdown,
+    webshot
 Additional_repositories: https://polmine.github.io/drat/
 BugReports: https://github.com/PolMine/bignlp/issues
 VignetteBuilder: knitr
