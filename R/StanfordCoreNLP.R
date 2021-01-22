@@ -115,7 +115,7 @@ StanfordCoreNLP <- R6Class(
         }
       }
       
-      if (as.numeric(gsub("^(\\d+)\\s.*$", "\\1", jvm_heap_space(units = "Mb"))) < 4096){
+      if (as.numeric(gsub("^(\\d+)\\.?\\d*?\\s.*$", "\\1", jvm_heap_space(units = "Mb"))) < 4096){
         cli_alert_warning(
           sprintf(
             "JVM maximum heap space: %s - recommended: 4 GB",

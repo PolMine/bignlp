@@ -82,7 +82,6 @@ props <- properties(plist)
 properties <- list(
   "annotators" = "tokenize, ssplit, pos, lemma, ner",
   "tokenize.language" = "de",
-  "tokenize.postProcessor" = "edu.stanford.nlp.international.german.process.GermanTokenizerPostProcessor",
   "pos.model" = "edu/stanford/nlp/models/pos-tagger/german-ud.tagger",
   "ner.model" = "edu/stanford/nlp/models/ner/german.distsim.crf.ser.gz",
   "ner.applyNumericClassifiers" = "false",
