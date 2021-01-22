@@ -35,12 +35,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: '8'
-          java-package: jdk
-
       - uses: r-lib/actions/setup-r@v1
         with:
           r-version: ${{ matrix.config.r }}
