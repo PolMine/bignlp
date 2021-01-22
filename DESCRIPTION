@@ -35,7 +35,7 @@ Encoding: UTF-8
 Collate:
     'Annotation.R'
     'AnnotationList.R'
-    'bignlp.R'
+    'bignlp-package.R'
     'AnnotationPipeline.R'
     'StanfordCoreNLP.R'
     'corenlp.R'

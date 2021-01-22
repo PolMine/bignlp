@@ -1,4 +1,4 @@
-#' @include bignlp.R
+#' @include bignlp-package.R
 NULL
 
 #' @title AnnotationPipeline Class.

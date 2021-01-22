@@ -12,5 +12,6 @@ corenlp_get_properties_file(lang = c("en", "de"), fast = TRUE)
 \item{fast}{fast property file?}
 }
 \description{
-Get path to properties file.
+The package includes minimal, adapted versions of the properties files for
+English and German for testing purposes.
 }

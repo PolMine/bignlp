@@ -4,6 +4,8 @@
 #' @export AnnotationList
 #' @importFrom rJava .jarray
 #' @examples
+#' if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = NULL)
+#' 
 #' docs <- c("Das ist das erste Dokument.", "Ein weiteres Dokument!")
 #' annoli <- AnnotationList$new(docs)
 #' Pipe <- AnnotationPipeline$new()

@@ -41,7 +41,7 @@
 #'   progress = FALSE
 #' )
 #' @export corenlp_annotate
-#' @include bignlp.R
+#' @include bignlp-package.R
 setGeneric("corenlp_annotate", function(x, ...) standardGeneric("corenlp_annotate"))
 
 

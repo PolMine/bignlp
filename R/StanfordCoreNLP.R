@@ -1,4 +1,4 @@
-#' @include bignlp.R AnnotationPipeline.R
+#' @include bignlp-package.R AnnotationPipeline.R
 NULL
 
 #' StanfordCoreNLP Annotator Class.

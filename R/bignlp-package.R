@@ -10,9 +10,11 @@
 #' searching for CoreNLP in packages. If it has not been
 #' found, the option bignlp.corenlp_dir is empty ("").
 #' 
-#' @name bignlp
+#' @name bignlp-package
+#' @aliases bignlp
 #' @docType package
-#' @rdname bignlp
+#' @keywords package
+#' @rdname bignlp-package
 #' @import methods
 #' @author Andreas Blaette
 #' @examples
