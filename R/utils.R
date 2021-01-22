@@ -48,6 +48,9 @@ corenlp_get_jar_dir <- function(){
 
 #' Get path to properties file.
 #' 
+#' The package includes minimal, adapted versions of the properties files for
+#' English and German for testing purposes.
+#' 
 #' @param lang the language
 #' @param fast fast property file?
 #' @export corenlp_get_properties_file
