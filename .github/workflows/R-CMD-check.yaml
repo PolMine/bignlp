@@ -64,6 +64,7 @@ jobs:
           do
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
+      
       - name: Install CoreNLP
         run: |
           mkdir /opt/stanford-corenlp
@@ -71,6 +72,7 @@ jobs:
           wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip
           unzip stanford-corenlp-4.2.0.zip
           rm stanford-corenlp-4.2.0.zip
+      
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)
@@ -81,6 +83,7 @@ jobs:
       - name: Check
         env:
           _R_CHECK_CRAN_INCOMING_REMOTE_: false
+          CORENLP_DIR: /opt/stanford-corenlp/stanford-corenlp-4.2.0
         run: rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"), error_on = "warning", check_dir = "check")
         shell: Rscript {0}
 
