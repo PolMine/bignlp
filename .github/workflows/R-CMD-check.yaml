@@ -67,11 +67,11 @@ jobs:
       
       - name: Install CoreNLP
         run: |
-          mkdir /opt/stanford-corenlp
+          sudo mkdir /opt/stanford-corenlp
           cd /opt/stanford-corenlp
-          wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip
-          unzip stanford-corenlp-4.2.0.zip
-          rm stanford-corenlp-4.2.0.zip
+          sudo wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip
+          sudo unzip stanford-corenlp-4.2.0.zip
+          sudo rm stanford-corenlp-4.2.0.zip
       
       - name: Install dependencies
         run: |
