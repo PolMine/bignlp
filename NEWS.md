@@ -1,5 +1,6 @@
-# bignlp v0.1.1.9001
+# bignlp v0.1.2
 
+* This version adapts the package such that GitHub Actions can be used for CI.
 * Downloading CoreNLP in the vignette is performed without downloading a model jar.
 * `curl::curl_download()` replaces `download.file()` to get CoreNLP.
 * The jars of CoreNLP are added to the Java classpath conditional on their presence upon loading CoreNLP.
