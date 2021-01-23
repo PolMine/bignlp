@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - codecov
   pull_request:
     branches:
       - main
@@ -63,7 +64,13 @@ jobs:
           do
             eval sudo $cmd
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
-
+      - name: Install CoreNLP
+        run: |
+          mkdir /opt/stanford-corenlp
+          cd /opt/stanford-corenlp
+          wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip
+          unzip stanford-corenlp-4.2.0.zip
+          rm stanford-corenlp-4.2.0.zip
       - name: Install dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)
@@ -85,6 +92,8 @@ jobs:
           path: check
           
       - name: Test coverage
+        env:
+          CORENLP_DIR: /opt/stanford-corenlp/stanford-corenlp-4.2.0
         run: covr::codecov()
         shell: Rscript {0}
 
