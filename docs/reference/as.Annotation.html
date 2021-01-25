@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Get directory with CoreNLP jar files. — corenlp_get_jar_dir • bignlp</title>
+<title>CoreNLP Annotation class. — as.Annotation • bignlp</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,8 @@
 
 
 
-<meta property="og:title" content="Get directory with CoreNLP jar files. — corenlp_get_jar_dir" />
-<meta property="og:description" content="This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP." />
+<meta property="og:title" content="CoreNLP Annotation class. — as.Annotation" />
+<meta property="og:description" content="Generate Annotation class from tokenized data (tabular format)." />
 
 
 
@@ -125,21 +123,50 @@ in the package cleanNLP." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Get directory with CoreNLP jar files.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>corenlp_get_jar_dir.Rd</code></div>
+    <h1>CoreNLP Annotation class.</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/Annotation.R'><code>R/Annotation.R</code></a></small>
+    <div class="hidden name"><code>as.Annotation.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP.</p>
+    <p>Generate Annotation class from tokenized data (tabular format).</p>
     </div>
 
-    <pre class="usage"><span class='fu'>corenlp_get_jar_dir</span>()</pre>
+    <pre class="usage"><span class='fu'>as.Annotation</span>(<span class='no'>x</span>)</pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x</th>
+      <td><p>A <code>data.frame</code>.</p></td>
+    </tr>
+    </table>
 
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
+<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>polmineR</span>)
 
+<span class='no'>p_attrs</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"word"</span>, <span class='st'>"pos"</span>)
+<span class='no'>x</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/lapply.html'>lapply</a></span>(
+  <span class='fu'><a href='https://rdrr.io/r/stats/setNames.html'>setNames</a></span>(<span class='no'>p_attrs</span>, <span class='no'>p_attrs</span>),
+  <span class='kw'>function</span>(<span class='no'>p_attr</span>) <span class='fu'><a href='https://rdrr.io/pkg/polmineR/man/corpus-class.html'>corpus</a></span>(<span class='st'>"GERMAPARLMINI"</span>) <span class='kw'>%&gt;%</span>
+    <span class='fu'><a href='https://rdrr.io/pkg/polmineR/man/subset.html'>subset</a></span>(<span class='kw'>speaker</span> <span class='kw'>=</span> <span class='st'>"Angela Dorothea Merkel"</span>) <span class='kw'>%&gt;%</span>
+    <span class='fu'><a href='https://rdrr.io/pkg/polmineR/man/get_token_stream-method.html'>get_token_stream</a></span>(<span class='kw'>p_attribute</span> <span class='kw'>=</span> <span class='no'>p_attr</span>)
+))
+
+<span class='no'>a</span> <span class='kw'>&lt;-</span> <span class='fu'>as.Annotation</span>(<span class='no'>x</span>)
+
+<span class='no'>json_outputter</span> <span class='kw'>&lt;-</span> <span class='fu'>.jnew</span>(<span class='st'>"edu.stanford.nlp.pipeline.JSONOutputter"</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/cat.html'>cat</a></span>(<span class='fu'>.jcall</span>(<span class='no'>json_outputter</span>, <span class='st'>"Ljava/lang/String;"</span>, <span class='st'>"print"</span>, <span class='no'>a</span>))
+
+<span class='no'>pl</span> <span class='kw'>&lt;-</span> <span class='fu'>.jnew</span>(<span class='st'>"edu.stanford.nlp.pipeline.AnnotationPipeline"</span>)
+<span class='no'>pl</span>$<span class='fu'>addAnnotator</span>(<span class='fu'>.jnew</span>(<span class='st'>"edu.stanford.nlp.pipeline.WordsToSentencesAnnotator"</span>, <span class='fl'>FALSE</span>))
+<span class='no'>pl</span>$<span class='fu'>annotate</span>(<span class='no'>a</span>)
+
+<span class='fu'><a href='https://rdrr.io/r/base/cat.html'>cat</a></span>(<span class='fu'>.jcall</span>(<span class='no'>conll_outputter</span>, <span class='st'>"Ljava/lang/String;"</span>, <span class='st'>"print"</span>, <span class='no'>a</span>))
+}</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

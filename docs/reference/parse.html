@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Get directory with CoreNLP jar files. — corenlp_get_jar_dir • bignlp</title>
+<title>Parse CoreNLP output formats. — corenlp_parse_json • bignlp</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,8 @@
 
 
 
-<meta property="og:title" content="Get directory with CoreNLP jar files. — corenlp_get_jar_dir" />
-<meta property="og:description" content="This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP." />
+<meta property="og:title" content="Parse CoreNLP output formats. — corenlp_parse_json" />
+<meta property="og:description" content="Parse output from CoreNLP." />
 
 
 
@@ -125,20 +123,63 @@ in the package cleanNLP." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Get directory with CoreNLP jar files.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>corenlp_get_jar_dir.Rd</code></div>
+    <h1>Parse CoreNLP output formats.</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/output.R'><code>R/output.R</code></a></small>
+    <div class="hidden name"><code>parse.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP.</p>
+    <p>Parse output from CoreNLP.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>corenlp_get_jar_dir</span>()</pre>
+    <pre class="usage"><span class='fu'>corenlp_parse_json</span>(
+  <span class='no'>x</span>,
+  <span class='kw'>cols_to_keep</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"sentence"</span>, <span class='st'>"index"</span>, <span class='st'>"word"</span>, <span class='st'>"pos"</span>, <span class='st'>"ner"</span>),
+  <span class='kw'>output</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>logfile</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>progress</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
+)
 
+<span class='fu'>corenlp_parse_xml</span>(<span class='no'>x</span>)</pre>
 
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x</th>
+      <td><p>character vector, the JSON string(s) to be parsed</p></td>
+    </tr>
+    <tr>
+      <th>cols_to_keep</th>
+      <td><p>columns to keep</p></td>
+    </tr>
+    <tr>
+      <th>output</th>
+      <td><p>a destfile</p></td>
+    </tr>
+    <tr>
+      <th>logfile</th>
+      <td><p>a character string naming the file to an error log to; if
+provided, json strings will be written to this file if parsing the json
+string string fails</p></td>
+    </tr>
+    <tr>
+      <th>progress</th>
+      <td><p>logical</p></td>
+    </tr>
+    </table>
+
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The JSON results of applying the Stanford CoreNLP annotators can be
+written to a streaming JSON file (ndjson format). <code>corenlp_parse_json</code>
+will parse a json string to a data.frame. If output is specified, the
+output will be appended to the file provided. If <code>output</code> is <code>NULL</code>, a
+data.frame is returned. Strings that cannot be parsed are written to the
+logfile, if it is defined. If <code>filename</code> is present, the function will
+process one or more files with the output of Stanford CoreNLP in a NDJSON
+format. If the argument <code>output</code> has been defined during initialization, results are
+written/appended to that file. Otherwise, a <code>data.frame</code> is returned.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

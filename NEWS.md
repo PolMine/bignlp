@@ -1,3 +1,9 @@
+# bignlp v0.1.2.9001 - 
+
+* Added lifecylce badge 'maturing'.
+* Add repostatus badge 'Active'.
+
+
 # bignlp v0.1.2
 
 * This version adapts the package such that GitHub Actions can be used for CI.

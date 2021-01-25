@@ -8,6 +8,11 @@ v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/li
 [![R build
 status](https://github.com/PolMine/bignlp/workflows/R-CMD-check/badge.svg)](https://github.com/PolMine/bignlp/actions)
 [![codecov](https://codecov.io/gh/PolMine/bignlp/branch/master/graph/badge.svg)](https://codecov.io/gh/PolMine/bignlp/branch/master)
+[![Project Status: Active – The project has reached a stable, usable
+state and is being actively
+developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Lifecycle:
+maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 <!-- badges: end -->
 
 ## The ‘bignlp’-package: Objectives

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Get directory with CoreNLP jar files. — corenlp_get_jar_dir • bignlp</title>
+<title>Auxiliary functions to get information on JVM. — jvm_is_initialized • bignlp</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,11 @@
 
 
 
-<meta property="og:title" content="Get directory with CoreNLP jar files. — corenlp_get_jar_dir" />
-<meta property="og:description" content="This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP." />
+<meta property="og:title" content="Auxiliary functions to get information on JVM. — jvm_is_initialized" />
+<meta property="og:description" content="Upon loading the bignlp package, a Java Virtual Machine (JVM) is initialized.
+Some auxiliary functions provide information on the configuration of the JVM
+and its status. Use the functions to check which Java is installed
+(recommended: Oracle Java), the Java version and the heap space of the JVM." />
 
 
 
@@ -125,21 +126,55 @@ in the package cleanNLP." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Get directory with CoreNLP jar files.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>corenlp_get_jar_dir.Rd</code></div>
+    <h1>Auxiliary functions to get information on JVM.</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/jvm.R'><code>R/jvm.R</code></a></small>
+    <div class="hidden name"><code>jvm.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP.</p>
+    <p>Upon loading the bignlp package, a Java Virtual Machine (JVM) is initialized.
+Some auxiliary functions provide information on the configuration of the JVM
+and its status. Use the functions to check which Java is installed
+(recommended: Oracle Java), the Java version and the heap space of the JVM.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>corenlp_get_jar_dir</span>()</pre>
+    <pre class="usage"><span class='fu'>jvm_is_initialized</span>()
 
+<span class='fu'>jvm_name</span>()
 
+<span class='fu'>jvm_version</span>()
 
+<span class='fu'>jvm_heap_space</span>(<span class='kw'>units</span> <span class='kw'>=</span> <span class='st'>"MB"</span>)
+
+<span class='fu'>jvm_memory_usage</span>()
+
+<span class='fu'>jvm_available_processors</span>()</pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>units</th>
+      <td><p>See documentation of format.object_size, typically either "MB"
+or "GB".</p></td>
+    </tr>
+    </table>
+
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p><code>jvm_is_initialized</code> checks whether a JVM has been initialized
+already. The return value is a <code>logical</code> value, <code>TRUE</code> if JVM has been
+initialized, <code>FALSE</code> if not. As a JVM is initialized upon loading bignlp,
+the expected value is always <code>TRUE</code> if your installation of Java and rJave
+works.</p>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'>jvm_is_initialized</span>()</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='fu'>jvm_name</span>()</div><div class='output co'>#&gt; [1] "OpenJDK Runtime Environment"</div><div class='input'><span class='fu'>jvm_version</span>()</div><div class='output co'>#&gt; [1] "12.0.1+12"</div><div class='input'><span class='fu'>jvm_heap_space</span>()</div><div class='output co'>#&gt; [1] "512 Mb"</div><div class='input'><span class='fu'>jvm_memory_usage</span>()</div><div class='output co'>#&gt; $totalMemory
+#&gt; [1] 270532608
+#&gt; 
+#&gt; $freeMemory
+#&gt; [1] 254096728
+#&gt; </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

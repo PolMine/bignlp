@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Get directory with CoreNLP jar files. — corenlp_get_jar_dir • bignlp</title>
+<title>R-Package 'bignlp'. — bignlp-package • bignlp</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,8 @@
 
 
 
-<meta property="og:title" content="Get directory with CoreNLP jar files. — corenlp_get_jar_dir" />
-<meta property="og:description" content="This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP." />
+<meta property="og:title" content="R-Package 'bignlp'. — bignlp-package" />
+<meta property="og:description" content="R corpus annotation pipeline for large corpora." />
 
 
 
@@ -125,21 +123,30 @@ in the package cleanNLP." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Get directory with CoreNLP jar files.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>corenlp_get_jar_dir.Rd</code></div>
+    <h1>R-Package 'bignlp'.</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/bignlp-package.R'><code>R/bignlp-package.R</code></a></small>
+    <div class="hidden name"><code>bignlp-package.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP.</p>
+    <p>R corpus annotation pipeline for large corpora.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>corenlp_get_jar_dir</span>()</pre>
 
 
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
+    <p>The package is an interface to the Stanford CoreNLP Natural Language
+Processing Toolkit. CoreNLP is implemented in Java and its "jars" needs to be
+available. When the package is attached, the availability of Stanford CoreNLP
+is checked. The first take is to use the environment variable CORENLP_DIR. If
+it is set, the option bignlp.corenlp_dir is set accordingly. Then we move to
+searching for CoreNLP in packages. If it has not been
+found, the option bignlp.corenlp_dir is empty ("").</p>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Sys.setenv.html'>Sys.setenv</a></span>(<span class='st'>"_JAVA_OPTIONS"</span> <span class='kw'>=</span> <span class='st'>""</span>)
+<span class='kw'>if</span> (<span class='fu'><a href='https://rdrr.io/r/base/options.html'>getOption</a></span>(<span class='st'>"bignlp.corenlp_dir"</span>) <span class='kw'>==</span> <span class='st'>""</span>) <span class='fu'><a href='corenlp_install.html'>corenlp_install</a></span>(<span class='kw'>lang</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

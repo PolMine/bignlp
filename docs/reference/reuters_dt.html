@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Get directory with CoreNLP jar files. — corenlp_get_jar_dir • bignlp</title>
+<title>REUTERS-21578 dataset — reuters_dt • bignlp</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,12 @@
 
 
 
-<meta property="og:title" content="Get directory with CoreNLP jar files. — corenlp_get_jar_dir" />
-<meta property="og:description" content="This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP." />
+<meta property="og:title" content="REUTERS-21578 dataset — reuters_dt" />
+<meta property="og:description" content="The package includes different representations of an excerpt from the
+REUTERS-21578 dataset as sample data. The REUTERS corpus is widely used as
+sample data for text classification tasks (Silva, Ribeiro 2010). The data
+here is taken from the tm package. See files in the 'data-raw' folder of
+the package how the sample data has been prepared." />
 
 
 
@@ -125,20 +127,34 @@ in the package cleanNLP." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Get directory with CoreNLP jar files.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
-    <div class="hidden name"><code>corenlp_get_jar_dir.Rd</code></div>
+    <h1>REUTERS-21578 dataset</h1>
+    <small class="dont-index">Source: <a href='https://github.com/PolMine/bignlp/blob/master/R/bignlp-package.R'><code>R/bignlp-package.R</code></a></small>
+    <div class="hidden name"><code>reuters_dt.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This utility function checks three options where CoreNLP jars might be: (a) The environment
-variable 'CORENLP_DIR', then in the directory 'extdata/corenlp' of the bignlp, and finally,
-in the package cleanNLP.</p>
+    <p>The package includes different representations of an excerpt from the
+REUTERS-21578 dataset as sample data. The REUTERS corpus is widely used as
+sample data for text classification tasks (Silva, Ribeiro 2010). The data
+here is taken from the <em>tm</em> package. See files in the 'data-raw' folder of
+the package how the sample data has been prepared.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>corenlp_get_jar_dir</span>()</pre>
+    <pre class="usage"><span class='no'>reuters_dt</span></pre>
 
 
+    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
+
+    <p>A <code>data.table</code> with two 2 and 20 rows:</p><ul>
+<li><p><em>doc_id</em>: These are unique <code>integer</code> values to distinguish documents.</p></li>
+<li><p><em>text</em>: The unprocessed plain text of the documents in the corpus.</p></li>
+</ul>
+
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p>Catarina Silva, Bernardete Ribeiro (2010) <em>Inductive Inference for Large
+Scale Text Classification. Kernel Approaches and Techniques</em>, Springer:
+Berlin, pp. 129ff.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
