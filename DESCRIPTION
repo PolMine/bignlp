@@ -7,7 +7,9 @@ Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de"),
   person("Christoph", "Leonhardt", role = "aut", email = "christoph.leonhardt@uni-due.de")
   )
-Description: Parallel line-by-line NLP processing for big corpora using Stanford CoreNLP.
+Description: Parallel line-by-line NLP processing for big corpora using 'CoreNLP'
+  (<https://stanfordnlp.github.io/CoreNLP/>).
+SystemRequirements: Java (>= 8), CoreNLP <https://stanfordnlp.github.io/CoreNLP/> (>= 4.2.0)
 Depends:
     R (>= 3.5.0)
 Imports:
