@@ -12,7 +12,7 @@ corenlp_annotate(x, ...)
 \S4method{corenlp_annotate}{data.table}(
   x,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
-  properties,
+  pipe,
   purge = TRUE,
   threads = 1L,
   progress = TRUE,
@@ -22,7 +22,7 @@ corenlp_annotate(x, ...)
 \S4method{corenlp_annotate}{character}(
   x,
   corenlp_dir = getOption("bignlp.corenlp_dir"),
-  properties,
+  pipe,
   byline = NULL,
   output_format = "json",
   threads = 1L,
@@ -35,8 +35,11 @@ corenlp_annotate(x, ...)
   x,
   xpath = "//p",
   pipe,
+  threads = 1L,
   cols = c("word", "lemma", "pos"),
-  sentences = TRUE
+  sentences = TRUE,
+  verbose = TRUE,
+  progress = FALSE
 )
 }
 \arguments{
@@ -49,7 +52,7 @@ are assumed to be tsv files with two columns ('doc_id' and 'text').}
 
 \item{corenlp_dir}{The directory where corenlp resides.}
 
-\item{properties}{A properties file to configure annotator.}
+\item{pipe}{A Pipe object or a properties file to configure annotator.}
 
 \item{purge}{A \code{logical} value, whether to preprocess input.}
 
@@ -64,6 +67,14 @@ are assumed to be tsv files with two columns ('doc_id' and 'text').}
 \item{output_format}{The output generated, either "json" (default), "txt", or "xml".}
 
 \item{preclean}{Logical, whether to preprocess string.}
+
+\item{xpath}{An XPath expression for looking up nodes with text that shall be
+annotated.}
+
+\item{cols}{Columns of the parsed CoNLL output of annotation to be kept.}
+
+\item{sentences}{A \code{logical} value - whether to wrap annotated annotated
+sentences in s element.}
 }
 \value{
 The target files will be returned, so that they can serve as input to
@@ -85,7 +96,15 @@ reuters_dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 props <- corenlp_get_properties_file(lang = "en", fast = "TRUE")
 y <- corenlp_annotate(
   x = reuters_dt,
-  properties = props,
+  pipe = props,
+  corenlp_dir = corenlp_get_jar_dir(),
+  progress = FALSE
+)
+
+y <- corenlp_annotate(
+  x = reuters_dt,
+  pipe = props,
+  threads = TRUE,
   corenlp_dir = corenlp_get_jar_dir(),
   progress = FALSE
 )
@@ -103,5 +122,5 @@ xml_doc2 <- corenlp_annotate(x = xml_doc, pipe = Pipe, sentences = TRUE)
 
 # Write annotated document to disc
 y <- tempfile(fileext = ".xml")
-write_xml(x = xml_doc, file = y, options = NULL)
+xml2::write_xml(x = xml_doc, file = y, options = NULL)
 }

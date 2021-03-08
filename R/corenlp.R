@@ -10,7 +10,7 @@
 #'   'text'), or a character vector with input file(s), or a directory. If
 #'   \code{input} is a directory, all files in the directory are processed. Files
 #'   are assumed to be tsv files with two columns ('doc_id' and 'text').
-#' @param properties A properties file to configure annotator.
+#' @param pipe A Pipe object or a properties file to configure annotator.
 #' @param threads An integer value.
 #' @param corenlp_dir The directory where corenlp resides.
 #' @param preclean Logical, whether to preprocess string.
@@ -36,7 +36,15 @@
 #' props <- corenlp_get_properties_file(lang = "en", fast = "TRUE")
 #' y <- corenlp_annotate(
 #'   x = reuters_dt,
-#'   properties = props,
+#'   pipe = props,
+#'   corenlp_dir = corenlp_get_jar_dir(),
+#'   progress = FALSE
+#' )
+#' 
+#' y <- corenlp_annotate(
+#'   x = reuters_dt,
+#'   pipe = props,
+#'   threads = TRUE,
 #'   corenlp_dir = corenlp_get_jar_dir(),
 #'   progress = FALSE
 #' )
@@ -46,23 +54,50 @@ setGeneric("corenlp_annotate", function(x, ...) standardGeneric("corenlp_annotat
 
 
 #' @rdname corenlp_annotate
-setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), properties, purge = TRUE, threads = 1L, progress = TRUE,  verbose = TRUE){
+setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), pipe, purge = TRUE, threads = 1L, progress = TRUE,  verbose = TRUE){
   stopifnot(c("doc_id", "text") %in% colnames(x))
-  Annotator <- StanfordCoreNLP$new(output_format = "conll", corenlp_dir = corenlp_dir, properties = properties)
-  if (progress) pb <- txtProgressBar(min = 0, max = uniqueN(x[["doc_id"]]), style = 3)
-  retval <- x[, {if (progress) setTxtProgressBar(pb, value = .GRP); Annotator$process(.SD[["text"]], purge = purge)}, by = "doc_id"]
-  if (progress) close(pb)
+  
+  Annotator <- if (inherits(pipe, "AnnotationPipeline")){
+    pipe
+  } else {
+    StanfordCoreNLP$new(output_format = "conll", corenlp_dir = corenlp_dir, properties = pipe)
+  }
+  
+  if (threads == 1L){
+    if (progress) pb <- txtProgressBar(min = 0, max = uniqueN(x[["doc_id"]]), style = 3)
+    retval <- x[, {if (progress) setTxtProgressBar(pb, value = .GRP); Annotator$process(.SD[["text"]], purge = purge)}, by = "doc_id"]
+    if (progress) close(pb)
+  } else {
+    annolist <- AnnotationList$new(x[["text"]])
+    Annotator$annotate(annolist, verbose = verbose)
+    conll_outputter <- rJava::.jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
+    retval <- rbindlist(
+      lapply(
+        0L:(annolist$obj$size() - 1L),
+        function(i){
+          corenlp_parse_conll(
+            conll_outputter$print(annolist$obj$get(i))
+          )[, "doc_id" := x[["doc_id"]][i + 1L]]
+        }
+      )
+    )
+  }
   retval
 })
 
 #' @rdname corenlp_annotate
 #' @examples
 #' xml_files <- list.files(system.file(package = "bignlp", "extdata", "xml"))
-setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), properties, byline = NULL, output_format = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
+setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), pipe, byline = NULL, output_format = "json", threads = 1L, progress = TRUE,  preclean = TRUE, verbose = TRUE){
   stop("not implemented")
 })
 
 
+#' @param xpath An XPath expression for looking up nodes with text that shall be
+#'   annotated.
+#' @param cols Columns of the parsed CoNLL output of annotation to be kept.
+#' @param sentences A `logical` value - whether to wrap annotated annotated
+#'   sentences in s element.
 #' @rdname corenlp_annotate
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child xml_text<- write_xml
 #' @examples
@@ -80,53 +115,50 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' # Write annotated document to disc
 #' y <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
-setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, cols = c("word", "lemma", "pos"), sentences = TRUE, verbose = TRUE){
+setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, verbose = TRUE, progress = FALSE){
+  if (verbose) message("... get text nodes")
   text_nodes <- xml2::xml_find_all(x = x, xpath)
-  text <- lapply(text_nodes, xml_text)
-  annolist <- AnnotationList$new(text)
+  dt <- data.table(doc_id = 1L:length(text_nodes), text = sapply(text_nodes, xml_text))
   
-  pipe$annotate(annolist, verbose = verbose)
+  if (verbose) message("... annotate text")
+  dt_annotated <- corenlp_annotate(x = dt, pipe = pipe, threads = threads, verbose = verbose, progress = progress)
   
-  conll_outputter <- rJava::.jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
+  if (verbose) message("... enhance xml")
   lapply(
-    0L:(annolist$obj$size() - 1L),
-    function(i){
-      tab <- read.table(
-        text = conll_outputter$print(annolist$obj$get(i)),
-        blank.lines.skip = TRUE, header = FALSE, sep = "\t", quote = ""
-      )
-      colnames(tab) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
+    split(dt_annotated, f = dt_annotated[["doc_id"]]),
+    function(dt){
+      node_id <- unique(dt[["doc_id"]])
       if (isFALSE(sentences)){
-        m <- as.matrix(tab[, cols])
+        m <- as.matrix(dt[, cols, with = FALSE])
         txt <- paste(apply(m, 1, function(row) paste(row, collapse = "\t")), collapse = "\n")
-        xml_set_text(x = text_nodes[[i + 1L]], value = sprintf("\n%s\n", txt))
+        xml_set_text(x = text_nodes[[ node_id ]], value = sprintf("\n%s\n", txt))
       } else {
-        if (nrow(tab) > 1L){
+        if (nrow(dt) > 1L){
           f <- cut(
-            1L:nrow(tab),
-            unique(c(which(tab[, "idx"] == 1L), nrow(tab))),
+            1L:nrow(dt),
+            unique(c(which(dt[, "idx"] == 1L), nrow(dt))),
             include.lowest = TRUE, right = FALSE
           )
-          sentences <- split(x = tab, f = f)
+          sentences <- split(x = dt, f = f)
           lapply(
             sentences,
             function(s){
-              txt <- paste(apply(as.matrix(s[, cols]), 1, function(row) paste(row, collapse = "\t")), collapse = "\n")
-              xml_add_child(.x = text_nodes[[i + 1L]], .value = "s", sprintf("\n%s\n", txt))
+              txt <- paste(apply(as.matrix(s[, cols, with = FALSE]), 1, function(row) paste(row, collapse = "\t")), collapse = "\n")
+              xml_add_child(.x = text_nodes[[node_id]], .value = "s", sprintf("\n%s\n", txt))
             }
           )
-          xml_text(text_nodes[[i + 1L]]) <- ""
+          xml_text(text_nodes[[node_id]]) <- ""
         } else {
           xml_add_child(
-          .x = text_nodes[[i + 1L]],
+          .x = text_nodes[[node_id]],
           .value = "s",
-          sprintf("\n%s\n", paste(unlist(tab[, cols]), collapse = "\t"))
+          sprintf("\n%s\n", paste(unlist(dt[, cols, with = FALSE]), collapse = "\t"))
         )
-          xml_text(text_nodes[[i + 1L]]) <- ""
+          xml_text(text_nodes[[node_id]]) <- ""
         }
       }
       invisible(NULL)
     }
   )
-  x
+  invisible(x)
 })

@@ -207,7 +207,7 @@ props$put("lemma.nthreads", as.character(no_cores))
 New we can run the annotation. The data to be processed needs to be a `data.table` that contains the columns 'doc_id' (unique `integer` values at this stage) and 'text' (`character`).
 
 ```{r}
-reuters_annotated <- corenlp_annotate(reuters_tab, properties = props, progress = FALSE)
+reuters_annotated <- corenlp_annotate(reuters_tab, pipe = props, progress = FALSE)
 ```
 
 ... and this is the resulting `data.table`.

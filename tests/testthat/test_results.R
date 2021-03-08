@@ -17,7 +17,7 @@ test_that(
     Sys.sleep(0.2)
     dt1 <- corenlp_parse_conll(conll_files, progress = FALSE)
     
-    dt2 <- corenlp_annotate(reuters_dt, properties = props, progress = FALSE)
+    dt2 <- corenlp_annotate(reuters_dt, pipe = props, progress = FALSE)
     
     expect_identical(dt1, dt2)
   }
