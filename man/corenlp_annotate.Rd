@@ -15,6 +15,7 @@ corenlp_annotate(x, ...)
   pipe,
   purge = TRUE,
   threads = 1L,
+  inmemory = TRUE,
   progress = TRUE,
   verbose = TRUE
 )
@@ -38,6 +39,7 @@ corenlp_annotate(x, ...)
   threads = 1L,
   cols = c("word", "lemma", "pos"),
   sentences = TRUE,
+  inmemory = FALSE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -57,6 +59,10 @@ are assumed to be tsv files with two columns ('doc_id' and 'text').}
 \item{purge}{A \code{logical} value, whether to preprocess input.}
 
 \item{threads}{An integer value.}
+
+\item{inmemory}{If \code{TRUE}, documents are processed in-memory using
+\code{AnnotationPipeline$annotate()}, if \code{FALSE}, documents written to disk
+temporarily are used as input for \code{StanfordCoreNLP$process_files()}.}
 
 \item{progress}{Logical, whether to show progress bar.}
 

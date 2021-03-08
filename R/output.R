@@ -86,6 +86,7 @@ corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "
 #'   (of `character` vectors of filenames), it will be unlisted to yield a
 #'   `character` vector.
 #' @param progress logical 
+#' @param threads An `integer` value, number of threads to use.
 #' @importFrom data.table fread rbindlist setcolorder
 #' @importFrom jsonlite fromJSON
 #' @return A `data.frame` with 8 columns:
@@ -104,7 +105,7 @@ corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "
 #' class](https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/pipeline/CoNLLOutputter.html)
 #' @export corenlp_parse_conll
 #' @importFrom utils read.table
-corenlp_parse_conll = function(x, progress = TRUE){
+corenlp_parse_conll = function(x, progress = TRUE, threads = 1L){
   if (is.list(x)) x <- unlist(x)
   if (length(x) == 1L){
     if (file.exists(x)){
@@ -121,7 +122,7 @@ corenlp_parse_conll = function(x, progress = TRUE){
     return(dt)
   } else if (length(x) > 1L){
     .parse <- function(f) corenlp_parse_conll(f, progress = FALSE)
-    dts <- if (progress) pblapply(x, .parse) else lapply(x, .parse)
+    dts <- if (progress) pblapply(x, .parse) else mclapply(x, .parse, mc.cores = threads)
     return(rbindlist(dts))
   }
 }

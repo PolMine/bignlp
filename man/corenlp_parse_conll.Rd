@@ -4,7 +4,7 @@
 \alias{corenlp_parse_conll}
 \title{Parse the CoNLL output of CoreNLP.}
 \usage{
-corenlp_parse_conll(x, progress = TRUE)
+corenlp_parse_conll(x, progress = TRUE, threads = 1L)
 }
 \arguments{
 \item{x}{A filename, or a \code{character} vector of filenames. If \code{x} is a \code{list}
@@ -12,6 +12,8 @@ corenlp_parse_conll(x, progress = TRUE)
 \code{character} vector.}
 
 \item{progress}{logical}
+
+\item{threads}{An \code{integer} value, number of threads to use.}
 }
 \value{
 A \code{data.frame} with 8 columns:
