@@ -4,6 +4,7 @@
 \alias{corenlp_annotate}
 \alias{corenlp_annotate,data.table-method}
 \alias{corenlp_annotate,character-method}
+\alias{corenlp_annotate,xml_document-method}
 \title{Annotate a string.}
 \usage{
 corenlp_annotate(x, ...)
@@ -28,6 +29,14 @@ corenlp_annotate(x, ...)
   progress = TRUE,
   preclean = TRUE,
   verbose = TRUE
+)
+
+\S4method{corenlp_annotate}{xml_document}(
+  x,
+  xpath = "//p",
+  pipe,
+  cols = c("word", "lemma", "pos"),
+  sentences = TRUE
 )
 }
 \arguments{
@@ -80,4 +89,19 @@ y <- corenlp_annotate(
   corenlp_dir = corenlp_get_jar_dir(),
   progress = FALSE
 )
+xml_files <- list.files(system.file(package = "bignlp", "extdata", "xml"))
+xml_dir <- system.file(package = "bignlp", "extdata", "xml")
+xml_files <- list.files(xml_dir, full.names = TRUE)
+xml_doc <- xml2::read_xml(x = xml_files[[1]])
+
+Pipe <- StanfordCoreNLP$new(
+  output_format = "conll",
+  properties = corenlp_get_properties_file(lang = "en", fast = TRUE)
+)
+
+xml_doc2 <- corenlp_annotate(x = xml_doc, pipe = Pipe, sentences = TRUE)
+
+# Write annotated document to disc
+y <- tempfile(fileext = ".xml")
+write_xml(x = xml_doc, file = y, options = NULL)
 }
