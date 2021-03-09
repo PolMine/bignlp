@@ -1,10 +1,11 @@
-FROM rocker/r-base
+FROM ubuntu/latest
+
+RUN echo "deb http://cloud.r-project.org/bin/linux/debian buster-cran40/" >> /etc/apt/sources.list
 
 RUN apt update && \
   apt upgrade -y && \
-  apt install -y default-jdk && \
-  apt install -y libsodium-dev libglib2.0-dev libxml2-dev \\
-    libcurl4-openssl-dev libssl-dev git libxslt1-dev pandoc-citeproc pandoc
+  apt install -y openjdk-8-jdk r-base r-base-dev libsodium-dev libglib2.0-dev libxml2-dev && \
+  apt install -y libcurl4-openssl-dev libssl-dev git libxslt1-dev pandoc-citeproc pandoc
 
 RUN R CMD javareconf
   
