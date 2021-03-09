@@ -3,8 +3,7 @@ FROM rocker/r-base
 RUN apt update && \
   apt upgrade -y && \
   apt install -y default-jdk && \
-  apt install -y libsodium-dev libglib2.0-dev libxml2-dev \\
-    libcurl4-openssl-dev libssl-dev git libxslt1-dev pandoc-citeproc pandoc
+  apt install -y libsodium-dev libglib2.0-dev libxml2-dev libcurl4-openssl-dev libssl-dev git libxslt1-dev pandoc-citeproc pandoc
 
 RUN R CMD javareconf
   
