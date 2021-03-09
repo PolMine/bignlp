@@ -75,16 +75,20 @@ setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption(
       annolist <- AnnotationList$new(x[["text"]])
       Annotator$annotate(annolist, verbose = verbose)
       conll_outputter <- rJava::.jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
+      if (verbose) message("... get results")
+      conll_output <- lapply(
+        0L:(annolist$obj$size() - 1L),
+        function(i)conll_outputter$print(annolist$obj$get(i))
+      )
+      if (verbose) message("... parse conll")
       retval <- rbindlist(
-        lapply(
-          0L:(annolist$obj$size() - 1L),
-          function(i){
-            corenlp_parse_conll(
-              conll_outputter$print(annolist$obj$get(i))
-            )[, "doc_id" := x[["doc_id"]][i + 1L]]
-          }
+        mclapply(
+          1L:length(conll_output),
+          function(i) corenlp_parse_conll(conll_output[[i]])[, "doc_id" := x[["doc_id"]][i]],
+          mc.cores = threads
         )
       )
+      if (verbose) message("... finished")
     } else if (isFALSE(inmemory)){
       if (verbose) message("... create empty chunkdir")
       Annotator$verbose(x = FALSE)
