@@ -1,6 +1,10 @@
 # We use an Ubuntu image due to the availability of Java 8;
 # it is not available for Debian (as far as I can see)
 
+# We build R ourselves (and do not use rocker/r-base or apt-get install r-base)
+# to ensure that this image can also be build on Apple Silicon
+# (arm64 builds may be around, but I could not find it)
+
 FROM ubuntu:latest
 
 RUN apt-get update && \
@@ -12,18 +16,40 @@ RUN apt install --no-install-recommends -y software-properties-common dirmngr # 
 RUN apt-get update && \
   apt-get upgrade -y && \
   apt-get install -y openjdk-8-jdk && \ # Java 8, required by rJava and bignlp
-  apt-get install -y git && \
+  apt-get install -y git wget zip unzip && \ # unversal tools we will need
   apt-get install -y libsodium-dev libglib2.0-dev libxml2-dev && \
   apt-get install -y libcurl4-openssl-dev libssl-dev  libxslt1-dev pandoc-citeproc pandoc
 
+RUN apt-get install -y build-essential gfortran # compilers required to build R
+RUN apt-get install -y libreadline-dev libbz2-dev liblzma-dev # R dependencies
+
+RUN cd ~ && \
+  mkdir Lab && \
+  mkdir Lab/R && \
+  cd ~/Lab/R && \
+  wget --no-check-certificate https://stat.ethz.ch/CRAN/src/base/R-4/R-4.0.4.tar.gz && \
+  tar xfv R-4.0.4.tar.gz && \
+  cd R-4.0.4 && \
+  ./configure \
+    --prefix=/opt/R/R-4.0.4 \
+    --enable-memory-profiling \
+    --enable-R-shlib \
+    --with-blas \
+    --with-lapack && \
+  make && \
+  make install
+
+ENV PATH="/opt/R/R-4.0.4/bin:${PATH}"
+
 RUN R CMD javareconf
   
-RUN Rscript -e 'install.packages(c("rJava", "remotes", "RcppCWB", "cwbtools", "polmineR", "pbapply", "xslt", "webshot", "testthat"))'
-RUN Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "dev")' && \
-  Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")' && \
-  Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")'
+RUN Rscript -e 'install.packages(c("rJava", "remotes", "pbapply", "xslt", "webshot", "testthat"), repos = "https://cran.uni-muenster.de")'
 
-RUN apt-get install wget
+# Install RcppCWB first because the other PolMine packages depend on it
+RUN Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")' && \
+  Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "dev")' && \
+  Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")' && \
+  Rscript -e 'remotes::install_github("PolMine/GermaParl", ref = "dev")'
 
 RUN mkdir /opt/stanford-corenlp && \
   cd /opt/stanford-corenlp && \
@@ -31,9 +57,7 @@ RUN mkdir /opt/stanford-corenlp && \
   unzip stanford-corenlp-4.2.0.zip && \
   rm stanford-corenlp-4.2.0.zip
 
-ENV CORENLP_DIR=/opt/stanford-corenlp/stanford-corenlp-4.2.0
-RUN echo 'options(java.parameters = "-Xmx4g")' >> ~/.Rprofile
-  
+# jars with models for specific languages could be put into another Dockerfile extending this one 
 RUN cd /opt/stanford-corenlp/stanford-corenlp-4.2.0 && \
   wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0-models-english.jar
   
@@ -41,3 +65,7 @@ RUN cd /opt/stanford-corenlp/stanford-corenlp-4.2.0 && \
   wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0-models-german.jar && \
   unzip stanford-corenlp-4.2.0-models-german.jar StanfordCoreNLP-german.properties && \
   zip -d stanford-corenlp-4.2.0-models-german.jar StanfordCoreNLP-german.properties
+
+# Settings required by bignlp
+ENV CORENLP_DIR=/opt/stanford-corenlp/stanford-corenlp-4.2.0
+RUN echo 'options(java.parameters = "-Xmx4g")' >> ~/.Rprofile
