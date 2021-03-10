@@ -1,16 +1,20 @@
+# We use an Ubuntu image due to the availability of Java 8;
+# it is not available for Debian (as far as I can see)
+
 FROM ubuntu:latest
-
-RUN apt-get update && apt-get upgrade -y && apt-get install -y gnupg
-
-RUN apt install --no-install-recommends -y software-properties-common dirmngr
-
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
-RUN echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >> /etc/apt/sources.list
 
 RUN apt-get update && \
   apt-get upgrade -y && \
-  apt-get install -y openjdk-8-jdk r-base r-base-dev libsodium-dev libglib2.0-dev libxml2-dev && \
-  apt-get install -y libcurl4-openssl-dev libssl-dev git libxslt1-dev pandoc-citeproc pandoc
+  apt-get install -y gnupg # maybe installing gnupg is not necessary when building R 
+
+RUN apt install --no-install-recommends -y software-properties-common dirmngr # potentially not necessary
+
+RUN apt-get update && \
+  apt-get upgrade -y && \
+  apt-get install -y openjdk-8-jdk && \ # Java 8, required by rJava and bignlp
+  apt-get install -y git && \
+  apt-get install -y libsodium-dev libglib2.0-dev libxml2-dev && \
+  apt-get install -y libcurl4-openssl-dev libssl-dev  libxslt1-dev pandoc-citeproc pandoc
 
 RUN R CMD javareconf
   
