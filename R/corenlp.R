@@ -90,24 +90,24 @@ setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption(
       )
       if (verbose) message("... finished")
     } else if (isFALSE(inmemory)){
-      if (verbose) message("... create empty chunkdir")
+      if (verbose) message("... write documents to disk")
       Annotator$verbose(x = FALSE)
       chunkdir <- file.path(tempdir(), "chunks")
       if (!dir.exists(chunkdir)) dir.create(path = chunkdir)
       debris <- list.files(chunkdir, full.names = TRUE)
       if (length(debris) >= 0L) unlink(debris, recursive = TRUE)
-      
-      if (verbose) message("... segment")
       segdirs <- segment(x = x, dir = chunkdir, chunksize = 40L, progress = FALSE)
       
-      if (verbose) message("... process files")
+      if (verbose) message("... process documents")
       conll_files <- lapply(segdirs, Annotator$process_files)
-      Sys.sleep(0.5)
+      while(length(Sys.glob(sprintf("%s/*.conll", segdirs))) < nrow(x)){
+        Sys.sleep(0.1)
+      }
       
-      if (verbose) message("... parse CoNLL")
+      if (verbose) message("... parse CoNLL files")
       retval <- corenlp_parse_conll(conll_files, progress = FALSE, threads = threads)
 
-      if (verbose) message("... cleaning up")
+      if (verbose) message("... remove temporary files")
       unlink(x = chunkdir, recursive = TRUE)
     }
   }
@@ -144,17 +144,17 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' # Write annotated document to disc
 #' y <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
-setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, inmemory = FALSE, verbose = TRUE, progress = FALSE){
-  if (verbose) message("... get text nodes")
+setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ner = TRUE, inmemory = FALSE, verbose = TRUE, progress = FALSE){
+  if (verbose) message("... get text nodes ", appendLF = FALSE)
   text_nodes <- xml2::xml_find_all(x = x, xpath)
+  if (verbose) message(sprintf("(%d)", length(text_nodes)))
   dt <- data.table(doc_id = 1L:length(text_nodes), text = sapply(text_nodes, xml_text))
   
-  if (verbose) message("... annotate text")
   dt_annotated <- corenlp_annotate(x = dt, pipe = pipe, threads = threads, inmemory = inmemory, verbose = verbose, progress = progress)
   
-  if (verbose) message("... enhance xml")
   dt_docs <- split(dt_annotated, f = dt_annotated[["doc_id"]])
   if (isFALSE(sentences)){
+    if (verbose) message("... enhance XML")
     lapply(
       dt_docs,
       function(dt){
@@ -166,7 +166,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
       }
     )
   } else {
-    if (verbose) message("... creating content")
+    if (verbose) message("... creating sentence nodes ", appendLF = FALSE)
     sentences_list <- mclapply(
       dt_docs,
       function(dt){
@@ -191,12 +191,32 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
       },
       mc.cores = threads
     )
+    if (verbose) message(sprintf("(%d)", sum(sapply(sentences_list, length))))
     
-    if (verbose) message("... creating nodes")
+    if (verbose) message("... create and insert XML nodes")
     lapply(
       1L:length(sentences_list),
       function(i){
-        lapply(sentences_list[[i]], function(s) xml_add_child(.x = text_nodes[[i]], .value = "s", s))
+        lapply(
+          sentences_list[[i]],
+          function(s){
+            if (isTRUE(ner)){
+              s <- gsub("\n(.*?\t.*?\t)(PERSON|LOCATION|ORGANIZATION|MISC)", '\n<ner type="\\2">\n\\1\\2\n</ner type="\\2">', s, perl = TRUE)
+              s <- gsub('</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n', "", s, perl = TRUE)
+              s <- gsub('</ner\\stype=".*?">', "</ner>", s)
+              xml_add_child(
+                .x = text_nodes[[i]],
+                .value = xml_find_first(
+                  x = read_html(x = sprintf("<html><body><s>%s</s></body></html>", s)),
+                  xpath = "/html/body/s"
+                )
+              )
+              
+            } else {
+              xml_add_child(.x = text_nodes[[i]], .value = "s", s)
+            }
+          }
+        )
         xml_text(text_nodes[[i]]) <- ""
         invisible(NULL)
       }
