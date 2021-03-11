@@ -36,13 +36,16 @@ annoli$as.data.table()
 \subsection{Method \code{new()}}{
 Initialize AnnotationPipeline
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AnnotationList$new(x)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AnnotationList$new(x, purge = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{x}}{A \code{character} vector with text documents.}
+
+\item{\code{purge}}{A \code{logical} value, whether to remove invalid characters as defined by
+\code{corenlp_preprocessing_replacements} before running annotators.}
 }
 \if{html}{\out{</div>}}
 }

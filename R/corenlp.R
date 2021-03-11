@@ -96,7 +96,7 @@ setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption(
       if (!dir.exists(chunkdir)) dir.create(path = chunkdir)
       debris <- list.files(chunkdir, full.names = TRUE)
       if (length(debris) >= 0L) unlink(debris, recursive = TRUE)
-      segdirs <- segment(x = x, dir = chunkdir, chunksize = 40L, progress = FALSE)
+      segdirs <- segment(x = x, dir = chunkdir, chunksize = 40L, progress = FALSE, purge = purge)
       
       if (verbose) message("... process documents")
       conll_files <- lapply(segdirs, Annotator$process_files)
@@ -127,8 +127,11 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' @param cols Columns of the parsed CoNLL output of annotation to be kept.
 #' @param sentences A `logical` value - whether to wrap annotated annotated
 #'   sentences in s element.
+#' @param ner A `logical` value, whether to turn column 'ner' into XML annotation 
+#'   of named entities. 
 #' @rdname corenlp_annotate
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child xml_text<- write_xml
+#' @importFrom xml2 xml_find_first read_html
 #' @examples
 #' xml_dir <- system.file(package = "bignlp", "extdata", "xml")
 #' xml_files <- list.files(xml_dir, full.names = TRUE)
@@ -144,7 +147,7 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' # Write annotated document to disc
 #' y <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
-setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ner = TRUE, inmemory = FALSE, verbose = TRUE, progress = FALSE){
+setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ner = FALSE, inmemory = FALSE, purge = TRUE, verbose = TRUE, progress = FALSE){
   
   if (isTRUE(ner)){
     if (isFALSE("ner" %in% cols)) stop("Argument 'ner' is TRUE but 'ner' is not a column stated in argument 'cols'.")
@@ -167,7 +170,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   if (verbose) message(sprintf("(%d)", length(text_nodes)))
   dt <- data.table(doc_id = 1L:length(text_nodes), text = sapply(text_nodes, xml_text))
   
-  dt_annotated <- corenlp_annotate(x = dt, pipe = pipe, threads = threads, inmemory = inmemory, verbose = verbose, progress = progress)
+  dt_annotated <- corenlp_annotate(x = dt, pipe = pipe, threads = threads, inmemory = inmemory, purge = purge, verbose = verbose, progress = progress)
   
   dt_docs <- split(dt_annotated, f = dt_annotated[["doc_id"]])
   if (isFALSE(sentences)){

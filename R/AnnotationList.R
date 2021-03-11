@@ -22,6 +22,8 @@ AnnotationList <- R6Class(
 
     #' @description Initialize AnnotationPipeline
     #' @param x A `character` vector with text documents.
+    #' @param purge A `logical` value, whether to remove invalid characters as defined by 
+    #'   `corenlp_preprocessing_replacements` before running annotators.
     initialize = function(x, purge = TRUE){
       if (!missing(x)){
         if (is.character(x) || is.list(x)){

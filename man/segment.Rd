@@ -4,7 +4,7 @@
 \alias{segment}
 \title{Split table into directories with text segments.}
 \usage{
-segment(x, dir, chunksize = 10L, progress = interactive())
+segment(x, dir, chunksize = 10L, purge = TRUE, progress = interactive())
 }
 \arguments{
 \item{x}{A \code{data.table} with columns 'doc_id' (\code{integer} values) and 'text'.
@@ -15,6 +15,10 @@ processed sequentially.}
 
 \item{chunksize}{An \code{integer} value, the number of strings that will reside
 in the chunk directories.}
+
+\item{purge}{A \code{logical} value. If \code{TRUE} (default), potentially disruptive
+characters in segments of text are replaced as defined by
+\code{corenlp_preprocessing_replacements}.}
 
 \item{progress}{A \code{logical} value, whether to show progress bar.}
 }

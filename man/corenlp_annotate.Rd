@@ -39,7 +39,9 @@ corenlp_annotate(x, ...)
   threads = 1L,
   cols = c("word", "lemma", "pos"),
   sentences = TRUE,
+  ner = FALSE,
   inmemory = FALSE,
+  purge = TRUE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -81,6 +83,9 @@ annotated.}
 
 \item{sentences}{A \code{logical} value - whether to wrap annotated annotated
 sentences in s element.}
+
+\item{ner}{A \code{logical} value, whether to turn column 'ner' into XML annotation
+of named entities.}
 }
 \value{
 The target files will be returned, so that they can serve as input to
