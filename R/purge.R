@@ -37,6 +37,13 @@ corenlp_postprocessing_replacements <- list(
   c("<vz", "\u17E")
 )
 
+
+
 #' @export corenlp_preprocessing_replacements
 #' @rdname purge
-corenlp_preprocessing_replacements <- list(c("\u202F", ""), c("\uFFFD", ""), c("\u2011", "-"))
+corenlp_preprocessing_replacements <- list(
+  c("\u202F", ""),
+  c("\uFFFD", ""),
+  c("\u2011", "-"),
+  c("\u200e", "")
+)

@@ -11,6 +11,9 @@
 #'   processed sequentially.
 #' @param chunksize An `integer` value, the number of strings that will reside 
 #'   in the chunk directories.
+#' @param purge A `logical` value. If `TRUE` (default), potentially disruptive
+#'   characters in segments of text are replaced as defined by
+#'   `corenlp_preprocessing_replacements`.
 #' @param progress A `logical` value, whether to show progress bar.
 #' @return The function returns a `character` vector with the directories that 
 #'   contain files with text segments.
@@ -21,7 +24,7 @@
 #' dt <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 #' segdir <- tempdir()
 #' dirs <- segment(x = dt, dir = segdir, chunksize = 10L)
-segment <- function(x, dir, chunksize = 10L, progress = interactive()){
+segment <- function(x, dir, chunksize = 10L, purge = TRUE, progress = interactive()){
   
   # Check that object x meets requirements ----------------------------
   
@@ -44,7 +47,9 @@ segment <- function(x, dir, chunksize = 10L, progress = interactive()){
     
     for (j in 1:nrow(chunks[[i]])){
       f <- file.path(file.path(dir, i, sprintf("%0*d.txt", nchar(max_id),  chunks[[i]][["doc_id"]][j])))
-      cat(chunks[[i]][["text"]][j], file = f)
+      txt <- chunks[[i]][["text"]][j]
+      if (isTRUE(purge)) txt <- purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+      cat(txt, file = f)
     }
     outdir
   }

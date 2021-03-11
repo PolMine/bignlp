@@ -22,12 +22,17 @@ AnnotationList <- R6Class(
 
     #' @description Initialize AnnotationPipeline
     #' @param x A `character` vector with text documents.
-    initialize = function(x){
+    initialize = function(x, purge = TRUE){
       if (!missing(x)){
         if (is.character(x) || is.list(x)){
           anno_array <- .jarray(lapply(
             x,
-            function(doc) .jnew("edu/stanford/nlp/pipeline/Annotation", .jnew("java.lang.String", doc))
+            function(doc){
+              if (isTRUE(purge)){
+                doc <- purge(doc, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+              }
+              .jnew("edu/stanford/nlp/pipeline/Annotation", .jnew("java.lang.String", doc))
+            }
           ))
           self$obj <- .jnew("java.util.Arrays")$asList(anno_array)
         } else if (is(s) == "jobjRef"){
