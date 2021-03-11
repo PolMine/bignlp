@@ -1,11 +1,11 @@
-# bignlp v0.1.2.9001 - 
+# bignlp v0.1.2.9001 - v0.1.2.9003
 
 * Added lifecylce badge 'maturing'.
 * Add repostatus badge 'Active'.
 * Method `corenlp_annotate()` for `data.table`: Argument `properties` replaced by argument `pipe`. If value of `pipe` is a `list` or  `properties` object, a pipe will be instantiated, but it is now also possible to pass in an instantiated pipe. Furthermore, the method will call `$annotate()` method of pipe for parallel processing if argument `threads` is larger than 1.
 *  New method `corenlp_annotate()` for `xml_document` objects.
 * A Dockerfile in ./Docker/annoenv can be used to run bignlp in a dockerized environment.
-
+* Method `corenlp_annotate()` accepts argument `ner` that will turn ner column into ner tags, removing the column.
 
 # bignlp v0.1.2
 

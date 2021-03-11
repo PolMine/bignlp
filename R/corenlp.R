@@ -145,6 +145,23 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' y <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
 setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ner = TRUE, inmemory = FALSE, verbose = TRUE, progress = FALSE){
+  
+  if (isTRUE(ner)){
+    if (isFALSE("ner" %in% cols)) stop("Argument 'ner' is TRUE but 'ner' is not a column stated in argument 'cols'.")
+    if (grep("ner", cols) == 1L) stop("Argument 'ner' - column 'ner' may not be first column that is stated.")
+    ner_types <- c("PERSON", "LOCATION", "ORGANIZATION", "MISC")
+    ner_regex <- sprintf(
+      c("\n(%s)(%s)(%s)", "\n(%s)(%s|O)(%s)"), 
+      paste(rep(x =  ".*?\t", times = grep("ner", cols) - 1L), collapse = ""),
+      paste(ner_types, collapse = "|"),
+      if (grep("ner", cols) < length(cols)){
+        paste("\t", paste(rep(x =  ".*?", times = length(cols) - grep("ner", cols)), collapse = "\t"), sep ="")
+      } else {
+        ""
+      }
+    )
+  }
+  
   if (verbose) message("... get text nodes ", appendLF = FALSE)
   text_nodes <- xml2::xml_find_all(x = x, xpath)
   if (verbose) message(sprintf("(%d)", length(text_nodes)))
@@ -201,13 +218,19 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
           sentences_list[[i]],
           function(s){
             if (isTRUE(ner)){
-              s <- gsub("\n(.*?\t.*?\t)(PERSON|LOCATION|ORGANIZATION|MISC)", '\n<ner type="\\2">\n\\1\\2\n</ner type="\\2">', s, perl = TRUE)
-              s <- gsub('</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n', "", s, perl = TRUE)
-              s <- gsub('</ner\\stype=".*?">', "</ner>", s)
+              s1 <- gsub(ner_regex[1], '\n<ner type="\\2">\n\\1\\2\\3\n</ner type="\\2">', s, perl = TRUE)
+              # Remove closing and opening tag of the same type so that one multi-word ner is wrapped
+              # into one element
+              s2 <- gsub('</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n', "", s1, perl = TRUE)
+              s3 <- gsub('</ner\\stype=".*?">', "</ner>", s2)
+              s4 <- gsub(ner_regex[2], '\n\\1\\3', s3, perl = TRUE) # Remove ner column
+              # Note that a temporary XML document is parsed as HTML: This is more robust
+              # when characters invalid in XML (such as ampersan / &) are included in the 
+              # document
               xml_add_child(
                 .x = text_nodes[[i]],
                 .value = xml_find_first(
-                  x = read_html(x = sprintf("<html><body><s>%s</s></body></html>", s)),
+                  x = read_html(x = sprintf("<html><body><s>%s</s></body></html>", s4)),
                   xpath = "/html/body/s"
                 )
               )
