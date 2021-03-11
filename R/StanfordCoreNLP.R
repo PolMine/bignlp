@@ -172,11 +172,7 @@ StanfordCoreNLP <- R6Class(
         return(.jcall(doc, "Ljava/lang/String;", "toXML"))
       } else if (self$output_format == "conll"){
         conll_str <- self$outputter$print(anno)
-        conll_lines <- strsplit(x = conll_str, split = "\n", fixed = TRUE)[[1L]]
-        cols <- strsplit(conll_lines, split = "\t", fixed = TRUE)
-        dt <- data.table(do.call(rbind, cols))
-        dt[[1]] <- as.integer(dt[[1]])
-        colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
+        dt <- corenlp_parse_conll(x = conll_str, progress = FALSE, threads = 1L)
         return(dt)
       }
     },

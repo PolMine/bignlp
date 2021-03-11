@@ -168,7 +168,25 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   if (verbose) message("... get text nodes ", appendLF = FALSE)
   text_nodes <- xml2::xml_find_all(x = x, xpath)
   if (verbose) message(sprintf("(%d)", length(text_nodes)))
-  dt <- data.table(doc_id = 1L:length(text_nodes), text = sapply(text_nodes, xml_text))
+  text_nodes_text <- sapply(text_nodes, xml_text)
+  if (isTRUE(purge)){
+    text_nodes_text <- sapply(
+      text_nodes_text,
+      function(txt) purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+    )
+  }
+  empty_nodes <- grep("^\\s*$", text_nodes_text)
+  if (length(empty_nodes) > 0L){
+    warning(sprintf("%d empty nodes detected that are removed", length(empty_nodes)))
+    for (i in rev(empty_nodes)) xml2::xml_remove(text_nodes[[i]])
+    text_nodes <- xml2::xml_find_all(x = x, xpath)
+    text_nodes_text <- sapply(
+      sapply(text_nodes, xml_text),
+      function(txt) purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+    )
+  }
+  
+  dt <- data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text)
   
   dt_annotated <- corenlp_annotate(x = dt, pipe = pipe, threads = threads, inmemory = inmemory, purge = purge, verbose = verbose, progress = progress)
   

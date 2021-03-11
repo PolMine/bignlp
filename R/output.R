@@ -127,10 +127,18 @@ corenlp_parse_conll = function(x, progress = TRUE, threads = 1L){
         setcolorder(dt, neworder = "doc_id")
       }
     } else {
-      dt <- as.data.table(
-        read.table(text = x, blank.lines.skip = TRUE, header = FALSE, sep = "\t", quote = "")
-      )
-      colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
+      if (nchar(x) > 0L){
+        dt <- as.data.table(
+          read.table(text = x, blank.lines.skip = TRUE, header = FALSE, sep = "\t", quote = "")
+        )
+        colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
+      } else {
+        dt <- data.table(
+          idx = integer(),
+          word = character(), lemma = character(), pos = character(), ner = character(),
+          headidx = character(), deprel = character()
+        )
+      }
     }
     return(dt)
   } else if (length(x) > 1L){
