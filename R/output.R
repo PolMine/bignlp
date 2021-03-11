@@ -109,10 +109,23 @@ corenlp_parse_conll = function(x, progress = TRUE, threads = 1L){
   if (is.list(x)) x <- unlist(x)
   if (length(x) == 1L){
     if (file.exists(x)){
-      dt <- fread(x, na.strings = NULL, blank.lines.skip = TRUE, quote = "", header = FALSE)
-      colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
-      dt[, "doc_id" := as.integer(sub("^(\\d+)\\..*$", "\\1", basename(x)))]
-      setcolorder(dt, neworder = "doc_id")
+      # If an empty document has been processed, the conll file will be empty 
+      # and. data.table::fread will issue a warning. To avoid an error, an
+      # empty data.table is returned
+      dt <- suppressWarnings(
+        fread(x, na.strings = NULL, blank.lines.skip = TRUE, quote = "", header = FALSE)
+      )
+      if (nrow(dt) == 0L){
+        dt <- data.table(
+          doc_id = integer(), idx = integer(),
+          word = character(), lemma = character(), pos = character(), ner = character(),
+          headidx = character(), deprel = character()
+        )
+      } else {
+        colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
+        dt[, "doc_id" := as.integer(sub("^(\\d+)\\..*$", "\\1", basename(x)))]
+        setcolorder(dt, neworder = "doc_id")
+      }
     } else {
       dt <- as.data.table(
         read.table(text = x, blank.lines.skip = TRUE, header = FALSE, sep = "\t", quote = "")

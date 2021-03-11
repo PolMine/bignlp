@@ -6,6 +6,7 @@
 *  New method `corenlp_annotate()` for `xml_document` objects.
 * A Dockerfile in ./Docker/annoenv can be used to run bignlp in a dockerized environment.
 * Method `corenlp_annotate()` accepts argument `ner` that will turn ner column into ner tags, removing the column.
+* The `corenlp_parse_conll()` method will no be robust if the file with annotated output is empty.
 
 # bignlp v0.1.2
 
