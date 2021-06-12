@@ -66,3 +66,18 @@ RUN cd /opt/stanford-corenlp/stanford-corenlp-4.2.0 && \
 # Settings required by bignlp
 ENV CORENLP_DIR=/opt/stanford-corenlp/stanford-corenlp-4.2.0
 RUN echo 'options(java.parameters = "-Xmx4g")' >> ~/.Rprofile
+
+RUN apt-get -y install locales
+RUN locale-gen en_US.UTF-8
+RUN update-locale LANG=en_US.UTF-8
+RUN echo "LANG=en_US.UTF-8" >> ~/.Renviron
+
+RUN Rscript -e 'install.packages(c("remotes", "pbapply", "xml2", "xslt", "magrittr"),  repos = "https://cran.uni-muenster.de")'
+RUN Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")'
+RUN Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")'
+RUN Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "ner")'
+RUN Rscript -e 'remotes::install_github("PolMine/polmineR", ref = "dev")'
+RUN Rscript -e 'remotes::install_github("PolMine/GermaParl", ref = "dev")'
+
+RUN mkdir -p /xml
+RUN mkdir -p /vrt

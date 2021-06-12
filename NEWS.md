@@ -8,6 +8,8 @@
 * Method `corenlp_annotate()` accepts argument `ner` that will turn ner column into ner tags, removing the column.
 * The `corenlp_parse_conll()` method will no be robust if the file with annotated output is empty.
 * The method `AnnotationList$initialize()` and `StanfordCoreNLP$process_files()` now have an argument `purge` that will trigger `purge()` on input text with `corenlp_preprocessing_replacements` as argument `replacements`.
+* An error caused by '#' signs in the text that would break parsing the conll output is fixed (#33).
+* The experimental Dockerfile is improved so that it could use productively.
 
 # bignlp v0.1.2
 

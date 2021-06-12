@@ -129,7 +129,7 @@ corenlp_parse_conll = function(x, progress = TRUE, threads = 1L){
     } else {
       if (nchar(x) > 0L){
         dt <- as.data.table(
-          read.table(text = x, blank.lines.skip = TRUE, header = FALSE, sep = "\t", quote = "")
+          read.table(text = x, blank.lines.skip = TRUE, header = FALSE, sep = "\t", quote = "", comment.char = "")
         )
         colnames(dt) <- c("idx", "word", "lemma", "pos", "ner", "headidx", "deprel")
       } else {
