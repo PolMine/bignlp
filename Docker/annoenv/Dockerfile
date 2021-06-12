@@ -1,3 +1,5 @@
+FROM ubuntu:latest
+
 # We use an Ubuntu image due to the availability of Java 8;
 # it is not available for Debian (as far as I can see)
 
@@ -5,7 +7,6 @@
 # to ensure that this image can also be build on Apple Silicon
 # (arm64 builds may be around, but I could not find it)
 
-FROM ubuntu:latest
 
 RUN apt-get update && \
   apt-get upgrade -y && \
@@ -13,12 +14,8 @@ RUN apt-get update && \
 
 RUN apt install --no-install-recommends -y software-properties-common dirmngr # potentially not necessary
 
-RUN apt-get update && \
-  apt-get upgrade -y && \
-  apt-get install -y openjdk-8-jdk && \ # Java 8, required by rJava and bignlp
-  apt-get install -y git wget zip unzip && \ # unversal tools we will need
-  apt-get install -y libsodium-dev libglib2.0-dev libxml2-dev && \
-  apt-get install -y libcurl4-openssl-dev libssl-dev  libxslt1-dev pandoc-citeproc pandoc
+RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-8-jdk  # Java 8, required by rJava and bignlp
+RUN apt-get install -y git wget zip unzip libsodium-dev libglib2.0-dev libxml2-dev libcurl4-openssl-dev libssl-dev  libxslt1-dev pandoc-citeproc pandoc
 
 RUN apt-get install -y build-essential gfortran # compilers required to build R
 RUN apt-get install -y libreadline-dev libbz2-dev liblzma-dev # R dependencies
