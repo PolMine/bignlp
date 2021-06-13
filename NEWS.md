@@ -1,4 +1,4 @@
-# bignlp v0.1.2.9001 - v0.1.2.9003
+# bignlp v0.1.2.9001 - v0.1.2.9005
 
 * Added lifecylce badge 'maturing'.
 * Add repostatus badge 'Active'.
@@ -10,6 +10,7 @@
 * The method `AnnotationList$initialize()` and `StanfordCoreNLP$process_files()` now have an argument `purge` that will trigger `purge()` on input text with `corenlp_preprocessing_replacements` as argument `replacements`.
 * An error caused by '#' signs in the text that would break parsing the conll output is fixed (#33).
 * The experimental Dockerfile is improved so that it could use productively.
+* If an annotated chunk of text includes only tokens that look like numbers, parsing the CoNLL output may result in an `integer` column, resulting in an error when multiple tables shall be concatenated. Fixed with a preemptive definition of expected column types (#34).
 
 # bignlp v0.1.2
 

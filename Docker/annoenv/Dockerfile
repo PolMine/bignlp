@@ -75,9 +75,7 @@ RUN echo "LANG=en_US.UTF-8" >> ~/.Renviron
 RUN Rscript -e 'install.packages(c("remotes", "pbapply", "xml2", "xslt", "magrittr"),  repos = "https://cran.uni-muenster.de")'
 RUN Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")'
 RUN Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")'
-RUN Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "ner")'
-RUN Rscript -e 'remotes::install_github("PolMine/polmineR", ref = "dev")'
-RUN Rscript -e 'remotes::install_github("PolMine/GermaParl", ref = "dev")'
+RUN Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "ner", force = TRUE)'
 
 RUN mkdir -p /xml
 RUN mkdir -p /vrt
