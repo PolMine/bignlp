@@ -180,6 +180,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     warning(sprintf("%d empty nodes detected that are removed", length(empty_nodes)))
     for (i in rev(empty_nodes)) xml2::xml_remove(text_nodes[[i]])
     text_nodes <- xml2::xml_find_all(x = x, xpath)
+    # why repeated here?
     text_nodes_text <- sapply(
       sapply(text_nodes, xml_text),
       function(txt) purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
