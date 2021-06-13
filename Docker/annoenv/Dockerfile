@@ -72,6 +72,7 @@ RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8
 RUN echo "LANG=en_US.UTF-8" >> ~/.Renviron
 
+ARG UPDATE_PACKAGES=true
 RUN Rscript -e 'install.packages(c("remotes", "pbapply", "xml2", "xslt", "magrittr"),  repos = "https://cran.uni-muenster.de")'
 RUN Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")'
 RUN Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")'
