@@ -24,11 +24,11 @@ RUN cd ~ && \
   mkdir Lab && \
   mkdir Lab/R && \
   cd ~/Lab/R && \
-  wget --no-check-certificate https://stat.ethz.ch/CRAN/src/base/R-4/R-4.0.4.tar.gz && \
-  tar xfv R-4.0.4.tar.gz && \
-  cd R-4.0.4 && \
+  wget --no-check-certificate https://cran.r-project.org/src/base/R-4/R-4.1.0.tar.gz && \
+  tar xfv R-4.1.0.tar.gz && \
+  cd R-4.1.0 && \
   ./configure \
-    --prefix=/opt/R/R-4.0.4 \
+    --prefix=/opt/R/R-4.1.0 \
     --enable-memory-profiling \
     --enable-R-shlib \
     --with-blas \
@@ -36,18 +36,10 @@ RUN cd ~ && \
   make && \
   make install
 
-ENV PATH="/opt/R/R-4.0.4/bin:${PATH}"
+ENV PATH="/opt/R/R-4.1.0/bin:${PATH}"
 
 RUN R CMD javareconf
   
-RUN Rscript -e 'install.packages(c("rJava", "remotes", "pbapply", "xslt", "webshot", "testthat"), repos = "https://cran.uni-muenster.de")'
-
-# Install RcppCWB first because the other PolMine packages depend on it
-RUN Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")' && \
-  Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "dev")' && \
-  Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")' && \
-  Rscript -e 'remotes::install_github("PolMine/GermaParl", ref = "dev")'
-
 RUN mkdir /opt/stanford-corenlp && \
   cd /opt/stanford-corenlp && \
   wget http://nlp.stanford.edu/software/stanford-corenlp-4.2.0.zip && \
@@ -72,11 +64,12 @@ RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8
 RUN echo "LANG=en_US.UTF-8" >> ~/.Renviron
 
-ARG UPDATE_PACKAGES=true
-RUN Rscript -e 'install.packages(c("remotes", "pbapply", "xml2", "xslt", "magrittr"),  repos = "https://cran.uni-muenster.de")'
-RUN Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")'
-RUN Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")'
-RUN Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "ner", force = TRUE)'
+RUN Rscript -e 'install.packages(c("rJava", "remotes", "pbapply", "xslt", "webshot", "testthat", "magrittr"), repos = "https://cran.uni-muenster.de")'
+RUN Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")' && \
+  Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")' && \
+  Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "ner")' && \
+  Rscript -e 'remotes::install_github("PolMine/GermaParl", ref = "dev")'
+
 
 RUN mkdir -p /xml
 RUN mkdir -p /vrt
