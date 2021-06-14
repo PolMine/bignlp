@@ -11,6 +11,8 @@
 * An error caused by '#' signs in the text that would break parsing the conll output is fixed (#33).
 * The experimental Dockerfile is improved so that it could use productively.
 * If an annotated chunk of text includes only tokens that look like numbers, parsing the CoNLL output may result in an `integer` column, resulting in an error when multiple tables shall be concatenated. Fixed with a preemptive definition of expected column types (#34).
+* Signs untokenizable by CoreNLP added to list of replacements in `corenlp_preprocessing_replacements`: '‧' / \u2027 and '‒' / \u2012
+
 
 # bignlp v0.1.2
 

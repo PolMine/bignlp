@@ -47,5 +47,6 @@ corenlp_preprocessing_replacements <- list(
   c("\u2011", "-"),
   c("\u2012", "-"),
   c("\u200e", ""),
-  c("\u00A0", " ")
+  c("\u00A0", " "),
+  c("\u2027", "-")
 )
