@@ -65,6 +65,7 @@ RUN update-locale LANG=en_US.UTF-8
 RUN echo "LANG=en_US.UTF-8" >> ~/.Renviron
 
 RUN Rscript -e 'install.packages(c("rJava", "remotes", "pbapply", "xslt", "webshot", "testthat", "magrittr"), repos = "https://cran.uni-muenster.de")'
+ARG BUILD=0001
 RUN Rscript -e 'remotes::install_github("PolMine/RcppCWB", ref = "dev")' && \
   Rscript -e 'remotes::install_github("PolMine/cwbtools", ref = "dev")' && \
   Rscript -e 'remotes::install_github("PolMine/bignlp", ref = "ner")' && \

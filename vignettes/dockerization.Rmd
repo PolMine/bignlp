@@ -1,0 +1,135 @@
+---
+title: "Dockerizing "
+subtitle: "Fast and memory-efficient annotation of big corpora"
+author: "Andreas Blaette (andreas.blaette@uni-due.de)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{bignlp}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+  
+## Why dockerize
+
+Installation requirements for the bignp package are modest, but they may still cause headaches: A specific Java version is required. The [rJava](https://CRAN.R-project.org/package=rJava) package, the indispensable interface to the CoreNLP Java code is not yet available for Apple silicon chips. And admittedly, getting rJava installed and running is not always trivial.
+
+This is why there are good reasons to consider an environment for building corpora that is even more portable across systems than running a Java Virtual Machine (JVM) with CoreNLP natively on your system and using bignlp as the interface through rJava.
+
+Dockerizing the build process is a potential solution that is technically less demanding than you might think at the outset. Indeed, it may safe you the hustle with the issues we know and others we do not yet know. The essential idea is to put anything that needs to be installed into a Docker container. Corpus data to be processed and the output generated stay on the host machine. The host Docker container serves as an engine to process data on your machine, and you do not need to care about its internals.
+
+This vignette explains how to process a corpus using a Docker container with Java, CoreNLP, rJava and bignlp inside.
+
+
+### Installation requirements
+
+The precondition for using the dockerized build is that Docker is installed on the host system and that docker commands can be run from the command line. This is possible on all common OSes.
+
+
+## Workflow
+
+### Input files and output directory
+
+The files to be processed are assumed to be present on your host system. For demonstration purposes, we use XML of the UN General Assembly shipped with the bignlp package.
+
+```{r}
+xml_indir <- system.file(package = "bignlp", "extdata", "xml")
+```
+
+We also need a directory where annotated files will be written to.
+
+```{r}
+xml_outdir <- file.path(tempdir(), "xml_out")
+dir.create(xml_outdir)
+```
+
+
+## The docker images
+
+### Docker image 1: bignlp
+
+The bignlp Docker image needs to be present on your system. A build of the image is available at Dockerhub and can be retrieved from the command line as follows.
+
+```{sh}
+docker pull polmine/bignlp:latest
+```
+
+The image at Dockerhub is is not yet a cross-plattform build. This is why it may be reasonable to build the docker image locally. The Dockerfile is is included in the bignlp repository. Build the docker image as follows.
+
+```{sh, eval = FALSE}
+cd `Rscript -e 'system.file(package = "bignlp", "extdata", "docker")'`
+docker build -t polmine/bignlp:latest
+```
+
+
+### Docker image 2: The project-related part
+
+A second docker image adds information on input and output directories to the bignlp Docker image. Equally important, it copies the script required for corpus preparation into the docker container.
+
+A minimalistic script might look as follows. Of course you may write a more advanced script for your scenario.
+
+```{r, eval = FALSE}
+options(java.parameters = "-Xmx4g")
+
+library(bignlp)
+library(xml2)
+
+input_dir <- "/input"
+input_files <- Sys.glob(sprintf("%s/*", path.expand(input_dir)))
+output_dir <- "/output"
+
+props <- properties(list(annotators = "tokenize, ssplit", tokenize.language = "en", pos.nthreads = 1L))
+properties_set_threads(props, 1L)
+
+Pipe <- StanfordCoreNLP$new(output_format = "conll", properties = props)
+
+for (input_file in input_files){
+  message("Processing file: ", input_file)
+  xml1 <- xml2::read_xml(x = input_file) %>%
+    corenlp_annotate(pipe = Pipe, cols = "word", threads = no_cores) %>%
+    as.character() %>% 
+    writeLines(con = file.path(output_dir, basename(output_file)))
+}
+```
+
+Save this file as "annotation.R" in a directory, together with a Dockerfile with the following content.
+
+```{sh}
+FROM polmine/bignlp:latest
+RUN mkdir /script
+COPY annotation.R /script/annotation.R
+CMD Rscript /script/annotation.R
+```
+
+This Dockerfile takes the bignlp image as the point of departure, creates a directory "script", copies the file 'annotation.R' into this directory within the docker container and finally executes this script.
+
+Building the container with the srcipt inside should be fast.
+
+```{sh}
+docker build -t exampleannotation:latest .
+```
+
+
+## Run the annotation
+
+Run that docker image. The crucial part is to map the input and output directories on your host machine on the respective directories envisaged in your annotation script.
+
+```{sh}
+docker run -it --rm \
+  -v /PATH/TO/INPUT/DATA/DIR:/tei \
+  -v /PATH/TO/OUTPUT/DATA/DIR:/vrt \
+  exampleannotation:latest
+```
+
+
+## Discussion
+
+Dockerizing the corpus annotation project is not that fastest option: Running Java/CoreNLP/bignlp natively on your system will usually yield the best performance. We still do not know how to run a multi-threaded annotation within the docker container. As bignlp is about exposing the multi-threading potential of CoreNLP, this is not a small drawback.
+
+On the other side: There is a tradeoff between optimizing the corpus build process and getting the annotation exercise going without deley. The dockerized approach may save you a lot of time. It is not the fastest option out there, but it may save you a lot of time with getting everything installed. This is why we like to explain this option.
+
+
+
+
