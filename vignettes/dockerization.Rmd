@@ -5,7 +5,7 @@ author: "Andreas Blaette (andreas.blaette@uni-due.de)"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{bignlp}
+  %\VignetteIndexEntry{dockerized}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -52,7 +52,7 @@ dir.create(xml_outdir)
 
 The bignlp Docker image needs to be present on your system. A build of the image is available at Dockerhub and can be retrieved from the command line as follows.
 
-```{sh}
+```{sh, eval = FALSE}
 docker pull polmine/bignlp:latest
 ```
 
@@ -96,7 +96,7 @@ for (input_file in input_files){
 
 Save this file as "annotation.R" in a directory, together with a Dockerfile with the following content.
 
-```{sh}
+```{sh, eval = FALSE}
 FROM polmine/bignlp:latest
 RUN mkdir /script
 COPY annotation.R /script/annotation.R
@@ -107,7 +107,7 @@ This Dockerfile takes the bignlp image as the point of departure, creates a dire
 
 Building the container with the srcipt inside should be fast.
 
-```{sh}
+```{sh, eval = FALSE}
 docker build -t exampleannotation:latest .
 ```
 
@@ -116,7 +116,7 @@ docker build -t exampleannotation:latest .
 
 Run that docker image. The crucial part is to map the input and output directories on your host machine on the respective directories envisaged in your annotation script.
 
-```{sh}
+```{sh, eval = FALSE}
 docker run -it --rm \
   -v /PATH/TO/INPUT/DATA/DIR:/tei \
   -v /PATH/TO/OUTPUT/DATA/DIR:/vrt \
