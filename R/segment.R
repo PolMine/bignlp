@@ -33,11 +33,15 @@ segment <- function(x, dir, chunksize = 10L, purge = TRUE, progress = interactiv
   if (isFALSE(is.integer(x[["doc_id"]]))) stop("Column 'doc_id' is required to be an integer vector.")
   if (isFALSE("text" %in% colnames(x))) stop("Column 'text' is required.")
   
-  chunk_factor <- cut(
-    1L:nrow(x),
-    breaks = unique(c(1L, cumsum(rep(chunksize, floor(nrow(x) / chunksize))), nrow(x))),
-    include.lowest = TRUE, right = FALSE
-  )
+  if (nrow(x) > 1L){
+    chunk_factor <- cut(
+      1L:nrow(x),
+      breaks = unique(c(1L, cumsum(rep(chunksize, floor(nrow(x) / chunksize))), nrow(x))),
+      include.lowest = TRUE, right = FALSE
+    )
+  } else {
+    chunk_factor <- as.factor(1L)
+  }
   chunks <- split(x, f = chunk_factor)
   max_id <- max(x[["doc_id"]])
   
