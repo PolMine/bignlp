@@ -1,4 +1,4 @@
-# bignlp v0.1.2.9001 - v0.1.2.9005
+# bignlp v0.1.2.9001 - v0.1.2.9008
 
 * Added lifecylce badge 'maturing'.
 * Add repostatus badge 'Active'.
@@ -28,6 +28,10 @@ definition of expected column types (#34).
 `corenlp_preprocessing_replacements`: '‧' / \u2027 and '‒' / \u2012
 * The `corenlp_annotate()` method for `data.table` objects failed for `inmemory
 = FALSE` for tables with just one row. Fixed.
+* The `corenlp_parse_conll()` function did not include expectations for column 
+types of parsed conll, resulting in a scenario that paragraphs only with numbers
+as tokens would result in a integer64 column type, resulting in an `rbindlist()`
+error (#34). Fixed.
 
 
 # bignlp v0.1.2

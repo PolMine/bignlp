@@ -84,7 +84,8 @@ setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption(
       retval <- rbindlist(
         mclapply(
           1L:length(conll_output),
-          function(i) corenlp_parse_conll(conll_output[[i]])[, "doc_id" := x[["doc_id"]][i]],
+          function(i)
+            corenlp_parse_conll(conll_output[[i]])[, "doc_id" := x[["doc_id"]][i]],
           mc.cores = threads
         )
       )
@@ -96,7 +97,10 @@ setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption(
       if (!dir.exists(chunkdir)) dir.create(path = chunkdir)
       debris <- list.files(chunkdir, full.names = TRUE)
       if (length(debris) >= 0L) unlink(debris, recursive = TRUE)
-      segdirs <- segment(x = x, dir = chunkdir, chunksize = 40L, progress = FALSE, purge = purge)
+      segdirs <- segment(
+        x = x, dir = chunkdir, chunksize = 40L,
+        progress = FALSE, purge = purge
+      )
       
       if (verbose) message("... process documents")
       conll_files <- lapply(segdirs, Annotator$process_files)
@@ -105,7 +109,10 @@ setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption(
       }
       
       if (verbose) message("... parse CoNLL files")
-      retval <- corenlp_parse_conll(conll_files, progress = FALSE, threads = threads)
+      retval <- corenlp_parse_conll(
+        conll_files,
+        progress = FALSE, threads = threads
+      )
 
       if (verbose) message("... remove temporary files")
       unlink(x = chunkdir, recursive = TRUE)
@@ -169,22 +176,20 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   text_nodes <- xml2::xml_find_all(x = x, xpath)
   if (verbose) message(sprintf("(%d)", length(text_nodes)))
   text_nodes_text <- sapply(text_nodes, xml_text)
+  
   if (isTRUE(purge)){
     text_nodes_text <- sapply(
       text_nodes_text,
-      function(txt) purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+      function(txt)
+        purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
     )
   }
+  
   empty_nodes <- grep("^\\s*$", text_nodes_text)
   if (length(empty_nodes) > 0L){
     warning(sprintf("%d empty nodes detected that are removed", length(empty_nodes)))
     for (i in rev(empty_nodes)) xml2::xml_remove(text_nodes[[i]])
     text_nodes <- xml2::xml_find_all(x = x, xpath)
-    # why repeated here?
-    text_nodes_text <- sapply(
-      sapply(text_nodes, xml_text),
-      function(txt) purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
-    )
   }
   
   dt <- data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text)
