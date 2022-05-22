@@ -32,6 +32,7 @@ definition of expected column types (#34).
 types of parsed conll, resulting in a scenario that paragraphs only with numbers
 as tokens would result in a integer64 column type, resulting in an `rbindlist()`
 error (#34). Fixed.
+* Removed a slippage in the data that occured when empty nodes were present.
 
 
 # bignlp v0.1.2
