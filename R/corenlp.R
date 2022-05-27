@@ -282,7 +282,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
           "<html><body><%s>\n%s\n</%s></body></html>",
           element,
           paste(
-            sprintf("<s>%s</s>", unlist(sentences_list[[i]][[1]])),
+            sprintf("<s>%s</s>", unlist(sentences_list[[i]])),
             collapse = "\n"
           ),
           element
