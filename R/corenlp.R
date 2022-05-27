@@ -135,7 +135,7 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' @param sentences A `logical` value - whether to wrap annotated annotated
 #'   sentences in s element.
 #' @param ner A `logical` value, whether to turn column 'ner' into XML annotation 
-#'   of named entities. 
+#'   of named entities.
 #' @rdname corenlp_annotate
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child xml_text<- write_xml
 #' @importFrom xml2 xml_find_first read_html
@@ -226,7 +226,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
       }
     )
   } else {
-    if (verbose) message("... creating sentence nodes ", appendLF = FALSE)
+    if (verbose) message("... generate sentence annotation", appendLF = FALSE)
     sentences_list <- mclapply(
       dt_docs,
       function(dt){
@@ -238,52 +238,62 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
             include.lowest = TRUE, right = FALSE
           )
           sentences <- split(x = dt, f = f)
-          lapply(
+          y <- lapply(
             sentences,
             function(s){
-              txt <- paste(apply(as.matrix(s[, cols, with = FALSE]), 1, function(row) paste(row, collapse = "\t")), collapse = "\n")
+              txt <- paste(
+                apply(
+                  as.matrix(s[, cols, with = FALSE]), 1,
+                  function(row) paste(row, collapse = "\t")
+                ),
+                collapse = "\n"
+              )
+              if (isTRUE(ner)){
+                txt2 <- gsub(ner_regex[1], '\n<ner type="\\2">\n\\1\\2\\3\n</ner type="\\2">', txt, perl = TRUE)
+                # Remove closing and opening tag of the same type so that one multi-word ner is wrapped
+                # into one element
+                txt3 <- gsub('</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n', "", txt2, perl = TRUE)
+                txt4 <- gsub('</ner\\stype=".*?">', "</ner>", txt3)
+                txt <- gsub(ner_regex[2], '\n\\1\\3', txt4, perl = TRUE) # Remove ner column
+              }
               sprintf("\n%s\n", txt)
             }
           )
         } else {
-          sprintf("\n%s\n", paste(unlist(dt[, cols, with = FALSE]), collapse = "\t"))
+          y <- sprintf(
+            "\n%s\n",
+            paste(unlist(dt[, cols, with = FALSE]), collapse = "\t")
+          )
+          y <- gsub(ner_regex[1], '\n<ner type="\\2">\n\\1\\3\n</ner>\n', y, perl = TRUE)
         }
+
+        y
       },
       mc.cores = threads
     )
     if (verbose) message(sprintf("(%d)", sum(sapply(sentences_list, length))))
     
-    if (verbose) message("... create and insert XML nodes")
+    if (verbose) message("... augment input XML document")
     lapply(
-      1L:length(sentences_list),
+      1:length(sentences_list),
       function(i){
-        lapply(
-          sentences_list[[i]],
-          function(s){
-            if (isTRUE(ner)){
-              s1 <- gsub(ner_regex[1], '\n<ner type="\\2">\n\\1\\2\\3\n</ner type="\\2">', s, perl = TRUE)
-              # Remove closing and opening tag of the same type so that one multi-word ner is wrapped
-              # into one element
-              s2 <- gsub('</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n', "", s1, perl = TRUE)
-              s3 <- gsub('</ner\\stype=".*?">', "</ner>", s2)
-              s4 <- gsub(ner_regex[2], '\n\\1\\3', s3, perl = TRUE) # Remove ner column
-              # Note that a temporary XML document is parsed as HTML: This is more robust
-              # when characters invalid in XML (such as ampersan / &) are included in the 
-              # document
-              xml_add_child(
-                .x = text_nodes[[i]],
-                .value = xml_find_first(
-                  x = read_html(x = sprintf("<html><body><s>%s</s></body></html>", s4)),
-                  xpath = "/html/body/s"
-                )
-              )
-              
-            } else {
-              xml_add_child(.x = text_nodes[[i]], .value = "s", s)
-            }
-          }
+        element <- xml_name(text_nodes[[i]])
+        doc_tmp <- read_html(sprintf(
+          "<html><body><%s>\n%s\n</%s></body></html>",
+          element,
+          paste(
+            sprintf("<s>%s</s>", unlist(sentences_list[[i]][[1]])),
+            collapse = "\n"
+          ),
+          element
+        ))
+        xml_replace(
+          .x = text_nodes[[i]],
+          .value = xml_find_first(
+            doc_tmp,
+            xpath = sprintf("/html/body/%s", element)
+          )
         )
-        xml_text(text_nodes[[i]]) <- ""
         invisible(NULL)
       }
     )

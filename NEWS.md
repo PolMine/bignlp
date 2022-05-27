@@ -19,7 +19,7 @@ now have an argument `purge` that will trigger `purge()` on input text with
 `corenlp_preprocessing_replacements` as argument `replacements`.
 * An error caused by '#' signs in the text that would break parsing the conll
 output is fixed (#33).
-* The experimental Dockerfile is improved so that it could use productively.
+* The experimental Dockerfile is improved so that it could be used productively.
 * If an annotated chunk of text includes only tokens that look like numbers,
 parsing the CoNLL output may result in an `integer` column, resulting in an
 error when multiple tables shall be concatenated. Fixed with a preemptive
@@ -33,6 +33,15 @@ types of parsed conll, resulting in a scenario that paragraphs only with numbers
 as tokens would result in a integer64 column type, resulting in an `rbindlist()`
 error (#34). Fixed.
 * Removed a slippage in the data that occured when empty nodes were present.
+* Added "&amp;lt;" and  "&amp;gt;" to `corenlp_postprocessing_replacements` (
+insert blank sign)
+* Creating ner nodes is moved from inserting new XML nodes to creating node
+content as string content, which allows parallelization and speeds up 
+augmenting the XML document.
+* `conll_parse()` will insert all new sentence nodes at once, which speeds up 
+the process of annotating XML documents significantly.
+* `purge()` will remove XML elements from the string.
+
 
 
 # bignlp v0.1.2

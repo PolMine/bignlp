@@ -1,14 +1,16 @@
 #' Purge character vector from villain characters.
 #' 
-#' Both preprocessing and postprocessing required!
-#' 
-#' @param x character vector to purge
-#' @param replacements ...
-#' @param progress logical
+#' Input and output from CoreNLP may require preprocessing and postprocessing.
+#' `purge()` will also remove XML elements.
+#' @param x A `character` vector to purge
+#' @param replacements A `list` of length-2 `character` vectors with a regular 
+#'   expression and the corresponding replacement.
+#' @param progress A `logical` value.
 #' @export purge
 #' @rdname purge
 #' @importFrom utils txtProgressBar setTxtProgressBar
 purge <- function(x, replacements, progress = TRUE){
+  x <- gsub("<.*?>", " ", x) # Remove remaining XML elements
   if (progress) pb <- txtProgressBar(min = 1L, max = length(replacements), style = 3)
   for (i in 1L:length(replacements)){
     if (progress) setTxtProgressBar(pb, i)
@@ -31,9 +33,19 @@ purge <- function(x, replacements, progress = TRUE){
 #'   corenlp_dir = corenlp_get_jar_dir(),
 #' )
 corenlp_postprocessing_replacements <- list(
-  c("a<`", "\uE0"), c("e<'", "\uE9"), c("o<\\^", "\u00F4"), c("<vs", "s"),
-  c("<'c", "c"), c("s<v", "\u0161"), c("a<'", "\uE1"), c("<vs", "\u0161"),
-  c("<i<'", "\uED"), c("e<`", "\uE8"), c("o<'", "\uF3"), c("z<v", "\u17E"), c("c<'", "\u107"),
+  c("a<`", "\uE0"),
+  c("e<'", "\uE9"),
+  c("o<\\^", "\u00F4"),
+  c("<vs", "s"),
+  c("<'c", "c"),
+  c("s<v", "\u0161"),
+  c("a<'", "\uE1"),
+  c("<vs", "\u0161"),
+  c("<i<'", "\uED"),
+  c("e<`", "\uE8"),
+  c("o<'", "\uF3"),
+  c("z<v", "\u17E"),
+  c("c<'", "\u107"),
   c("<vz", "\u17E")
 )
 
@@ -48,5 +60,9 @@ corenlp_preprocessing_replacements <- list(
   c("\u2012", "-"),
   c("\u200e", ""),
   c("\u00A0", " "),
-  c("\u2027", "-")
+  c("\u2027", "-"),
+  c("&lt;", " "),
+  c("&gt;", " "),
+  c("<", " "),
+  c(">", " ")
 )
