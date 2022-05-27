@@ -240,8 +240,8 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     )
   } else {
     
-    if (verbose) message("... generate sentence annotation ", appendLF = FALSE)
-    sentences <- unlist(mclapply(
+    if (verbose) message("... generate sentence annotation ", appendLF = TRUE)
+    chunks <- mclapply(
       dt_docs,
       function(dt){
         if (nrow(dt) > 1L){
@@ -251,7 +251,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
             include.lowest = TRUE, right = FALSE
           )
           s_list <- split(x = dt, f = f)
-          y <- paste(lapply(
+          lapply(
             s_list,
             function(s){
               sprintf(
@@ -259,44 +259,48 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
                 paste(s[["tokenline"]], collapse = "\n")
               )
             }
-          ), collapse = "\n")
+          )
         } else {
-          y <- sprintf("\n<s>\n%s\n</s>\n", dt[["tokenline"]])
+          sprintf("\n<s>\n%s\n</s>\n", dt[["tokenline"]])
         }
-        y
       },
       mc.cores = threads
-    ))
-    if (verbose) message(sprintf("(%d)", sum(sapply(sentences, length))))
-    
+    )
+
     if (verbose) message("... generate ner annotation")
     if (isTRUE(ner)){
-      s2 <- gsub(
-        ner_regex[1],
-        '\n<ner type="\\2">\n\\1\\2\\3\n</ner type="\\2">',
-        sentences,
-        perl = TRUE
+      chunks <- mclapply(
+        chunks,
+        function(chunk){
+          s2 <- gsub(
+            ner_regex[1],
+            '\n<ner type="\\2">\n\\1\\2\\3\n</ner type="\\2">',
+            chunk,
+            perl = TRUE
+          )
+          # Remove closing and opening tag of the same type so that one multi-word ner is wrapped
+          # into one element
+          s3 <- gsub('</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n', "", s2, perl = TRUE)
+          s4 <- gsub('</ner\\stype=".*?">', "</ner>", s3)
+          gsub(ner_regex[2], '\n\\1\\3', s4, perl = TRUE) # Remove ner column
+        },
+        mc.cores = threads
       )
-      # Remove closing and opening tag of the same type so that one multi-word ner is wrapped
-      # into one element
-      s3 <- gsub(
-        '</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n',
-        "",
-        s2,
-        perl = TRUE
-      )
-      s4 <- gsub('</ner\\stype=".*?">', "</ner>", s3)
-      sentences <- gsub(ner_regex[2], '\n\\1\\3', s4, perl = TRUE) # Remove ner column
     }
 
     if (verbose) message("... insert annotation into XML document")
     lapply(
-      seq_along(sentences),
+      seq_along(chunks),
       function(i){
         element <- xml_name(text_nodes[[i]])
         # read_html() is more forgiving than read_xml()
         doc_tmp <- read_html(
-          sprintf("<%s>\n%s\n</%s>", element, sentences[[i]], element)
+          sprintf(
+            "<%s>\n%s\n</%s>",
+            element,
+            paste(chunks[[i]], collapse = "\n"),
+            element
+          )
         )
         xml_replace(
           .x = text_nodes[[i]],
