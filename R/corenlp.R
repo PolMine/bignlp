@@ -156,9 +156,13 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
 setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ner = FALSE, inmemory = FALSE, purge = TRUE, verbose = TRUE, progress = FALSE){
   
-  if (isTRUE(ner)){
-    if (isFALSE("ner" %in% cols)) stop("Argument 'ner' is TRUE but 'ner' is not a column stated in argument 'cols'.")
-    if (grep("ner", cols) == 1L) stop("Argument 'ner' - column 'ner' may not be first column that is stated.")
+  if (ner){
+    if (isFALSE("ner" %in% cols))
+      stop("Argument 'ner' is TRUE but 'ner' is not a column stated in argument 'cols'.")
+    
+    if (grep("ner", cols) == 1L)
+      stop("Argument 'ner' - column 'ner' may not be first column that is stated.")
+    
     ner_types <- c("PERSON", "LOCATION", "ORGANIZATION", "MISC")
     ner_regex <- sprintf(
       c("\n(%s)(%s)(%s)", "\n(%s)(%s|O)(%s)"), 
@@ -177,6 +181,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   if (verbose) message(sprintf("(%d)", length(text_nodes)))
   text_nodes_text <- sapply(text_nodes, xml_text)
   
+  if (verbose) message("... preprocessing text", appendLF = TRUE)
   if (isTRUE(purge)){
     text_nodes_text <- sapply(
       text_nodes_text,
@@ -184,19 +189,13 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
         purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
     )
   }
-
-  empty_nodes <- grep("^\\s*$", text_nodes_text)
   
-  # To be really, really sure that there are no empty nodes, we iterate
-  while(length(empty_nodes) > 0L){
-    warning(
-      sprintf("%d empty nodes detected that are removed", length(empty_nodes))
-    )
+  if (verbose) message("... remove empty text nodes", appendLF = TRUE)
+  empty_nodes <- grep("^\\s*$", text_nodes_text)
+  if (length(empty_nodes) > 0L){
     for (i in rev(empty_nodes)) xml2::xml_remove(text_nodes[[i]])
-    
-    text_nodes <- xml2::xml_find_all(x = x, xpath)
+    text_nodes <- xml2::xml_find_all(x = x, xpath = xpath)
     text_nodes_text <- sapply(text_nodes, xml_text)
-    
     if (isTRUE(purge)){
       text_nodes_text <- sapply(
         text_nodes_text,
@@ -204,89 +203,101 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
           purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
       )
     }
-    
     empty_nodes <- grep("^\\s*$", text_nodes_text)
+    if (length(empty_nodes) > 0L) stop("non-empty node which should be gone!")
   }
 
   dt <- data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text)
+  dt_annotated <- corenlp_annotate(
+    x = dt, pipe = pipe,
+    threads = threads, inmemory = inmemory,
+    purge = purge,
+    verbose = verbose, progress = progress
+  )
   
-  dt_annotated <- corenlp_annotate(x = dt, pipe = pipe, threads = threads, inmemory = inmemory, purge = purge, verbose = verbose, progress = progress)
-  
+  fmt <- paste(rep("%s", times = length(cols)), collapse = "\t")
+  tokenline <- do.call(
+    sprintf,
+    c(fmt, lapply(cols, function(col) dt_annotated[[col]]))
+  )
+  dt_annotated[, "tokenline" := tokenline]
   dt_docs <- split(dt_annotated, f = dt_annotated[["doc_id"]])
   if (isFALSE(sentences)){
     if (verbose) message("... enhance XML")
+    if (ner) warning("sentences is FALSE, but NER is TRUE - ner skipped")
     lapply(
       dt_docs,
       function(dt){
-        node_id <- unique(dt[["doc_id"]])
-        m <- as.matrix(dt[, cols, with = FALSE])
-        txt <- paste(apply(m, 1, function(row) paste(row, collapse = "\t")), collapse = "\n")
-        xml_set_text(x = text_nodes[[ node_id ]], value = sprintf("\n%s\n", txt))
+        xml_set_text(
+          x = text_nodes[[dt[["doc_id"]][1]]],
+          value = sprintf(
+            "\n%s\n",
+            paste(dt_docs[["tokenline"]], collapse = "\n")
+          )
+        )
         invisible(NULL)
       }
     )
   } else {
-    if (verbose) message("... generate sentence annotation", appendLF = FALSE)
-    sentences_list <- mclapply(
+    
+    if (verbose) message("... generate sentence annotation ", appendLF = FALSE)
+    sentences <- unlist(mclapply(
       dt_docs,
       function(dt){
-        node_id <- unique(dt[["doc_id"]])
         if (nrow(dt) > 1L){
           f <- cut(
             1L:nrow(dt),
             unique(c(which(dt[, "idx"] == 1L), nrow(dt))),
             include.lowest = TRUE, right = FALSE
           )
-          sentences <- split(x = dt, f = f)
-          y <- lapply(
-            sentences,
+          s_list <- split(x = dt, f = f)
+          y <- paste(lapply(
+            s_list,
             function(s){
-              txt <- paste(
-                apply(
-                  as.matrix(s[, cols, with = FALSE]), 1,
-                  function(row) paste(row, collapse = "\t")
-                ),
-                collapse = "\n"
+              sprintf(
+                "\n<s>\n%s\n</s>\n",
+                paste(s[["tokenline"]], collapse = "\n")
               )
-              if (isTRUE(ner)){
-                txt2 <- gsub(ner_regex[1], '\n<ner type="\\2">\n\\1\\2\\3\n</ner type="\\2">', txt, perl = TRUE)
-                # Remove closing and opening tag of the same type so that one multi-word ner is wrapped
-                # into one element
-                txt3 <- gsub('</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n', "", txt2, perl = TRUE)
-                txt4 <- gsub('</ner\\stype=".*?">', "</ner>", txt3)
-                txt <- gsub(ner_regex[2], '\n\\1\\3', txt4, perl = TRUE) # Remove ner column
-              }
-              sprintf("\n%s\n", txt)
             }
-          )
+          ), collapse = "\n")
         } else {
-          y <- sprintf(
-            "\n%s\n",
-            paste(unlist(dt[, cols, with = FALSE]), collapse = "\t")
-          )
-          y <- gsub(ner_regex[1], '\n<ner type="\\2">\n\\1\\3\n</ner>\n', y, perl = TRUE)
+          y <- sprintf("\n<s>\n%s\n</s>\n", dt[["tokenline"]])
         }
-
         y
       },
       mc.cores = threads
-    )
-    if (verbose) message(sprintf("(%d)", sum(sapply(sentences_list, length))))
+    ))
+    if (verbose) message(sprintf("(%d)", sum(sapply(sentences, length))))
     
-    if (verbose) message("... augment input XML document")
+    if (verbose) message("... generate ner annotation")
+    if (isTRUE(ner)){
+      s2 <- gsub(
+        ner_regex[1],
+        '\n<ner type="\\2">\n\\1\\2\\3\n</ner type="\\2">',
+        sentences,
+        perl = TRUE
+      )
+      # Remove closing and opening tag of the same type so that one multi-word ner is wrapped
+      # into one element
+      s3 <- gsub(
+        '</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n',
+        "",
+        s2,
+        perl = TRUE
+      )
+      s4 <- gsub('</ner\\stype=".*?">', "</ner>", s3)
+      sentences <- gsub(ner_regex[2], '\n\\1\\3', s4, perl = TRUE) # Remove ner column
+    }
+
+    if (verbose) message("... insert annotation into XML document")
     lapply(
-      1:length(sentences_list),
+      seq_along(sentences),
       function(i){
         element <- xml_name(text_nodes[[i]])
-        doc_tmp <- read_html(sprintf(
-          "<html><body><%s>\n%s\n</%s></body></html>",
-          element,
-          paste(
-            sprintf("<s>%s</s>", unlist(sentences_list[[i]])),
-            collapse = "\n"
-          ),
-          element
-        ))
+        # read_html() is more forgiving than read_xml()
+        doc_tmp <- read_html(
+          sprintf("<%s>\n%s\n</%s>", element, sentences[[i]], element)
+        )
         xml_replace(
           .x = text_nodes[[i]],
           .value = xml_find_first(
