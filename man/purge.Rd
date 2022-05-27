@@ -9,7 +9,7 @@
 \format{
 An object of class \code{list} of length 14.
 
-An object of class \code{list} of length 4.
+An object of class \code{list} of length 12.
 }
 \usage{
 purge(x, replacements, progress = TRUE)
@@ -19,14 +19,16 @@ corenlp_postprocessing_replacements
 corenlp_preprocessing_replacements
 }
 \arguments{
-\item{x}{character vector to purge}
+\item{x}{A \code{character} vector to purge}
 
-\item{replacements}{...}
+\item{replacements}{A \code{list} of length-2 \code{character} vectors with a regular
+expression and the corresponding replacement.}
 
-\item{progress}{logical}
+\item{progress}{A \code{logical} value.}
 }
 \description{
-Both preprocessing and postprocessing required!
+Input and output from CoreNLP may require preprocessing and postprocessing.
+\code{purge()} will also remove XML elements.
 }
 \examples{
 library(data.table)

@@ -134,7 +134,7 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' @param cols Columns of the parsed CoNLL output of annotation to be kept.
 #' @param sentences A `logical` value - whether to wrap annotated annotated
 #'   sentences in s element.
-#' @param ner A `logical` value, whether to turn column 'ner' into XML annotation 
+#' @param ne A `logical` value, whether to turn column 'ner' into XML annotation 
 #'   of named entities.
 #' @rdname corenlp_annotate
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child xml_text<- write_xml
@@ -154,20 +154,20 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' # Write annotated document to disc
 #' y <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
-setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ner = FALSE, inmemory = FALSE, purge = TRUE, verbose = TRUE, progress = FALSE){
+setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ne = FALSE, inmemory = FALSE, purge = TRUE, verbose = TRUE, progress = FALSE){
   
-  if (ner){
+  if (ne){
     if (isFALSE("ner" %in% cols))
-      stop("Argument 'ner' is TRUE but 'ner' is not a column stated in argument 'cols'.")
+      stop("Argument 'ne' is TRUE but 'ner' is not a column stated in argument 'cols'.")
     
     if (grep("ner", cols) == 1L)
-      stop("Argument 'ner' - column 'ner' may not be first column that is stated.")
+      stop("column 'ner' may not be first column that is stated.")
     
-    ner_types <- c("PERSON", "LOCATION", "ORGANIZATION", "MISC")
-    ner_regex <- sprintf(
+    ne_types <- c("PERSON", "LOCATION", "ORGANIZATION", "MISC")
+    ne_regex <- sprintf(
       c("\n(%s)(%s)(%s)", "\n(%s)(%s|O)(%s)"), 
       paste(rep(x =  ".*?\t", times = grep("ner", cols) - 1L), collapse = ""),
-      paste(ner_types, collapse = "|"),
+      paste(ne_types, collapse = "|"),
       if (grep("ner", cols) < length(cols)){
         paste("\t", paste(rep(x =  ".*?", times = length(cols) - grep("ner", cols)), collapse = "\t"), sep ="")
       } else {
@@ -224,7 +224,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   dt_docs <- split(dt_annotated, f = dt_annotated[["doc_id"]])
   if (isFALSE(sentences)){
     if (verbose) message("... enhance XML")
-    if (ner) warning("sentences is FALSE, but NER is TRUE - ner skipped")
+    if (ne) warning("sentences is FALSE, but `ne` is TRUE - `ne` skipped")
     lapply(
       dt_docs,
       function(dt){
@@ -267,49 +267,42 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
       mc.cores = threads
     )
 
-    if (verbose) message("... generate ner annotation")
-    if (isTRUE(ner)){
+    if (verbose) message("... generate named entity annotation")
+    if (isTRUE(ne)){
       chunks <- mclapply(
         chunks,
         function(chunk){
           s2 <- gsub(
-            ner_regex[1],
-            '\n<ner type="\\2">\n\\1\\2\\3\n</ner type="\\2">',
+            ne_regex[1],
+            '\n<ne type="\\2">\n\\1\\2\\3\n</ne type="\\2">',
             chunk,
             perl = TRUE
           )
-          # Remove closing and opening tag of the same type so that one multi-word ner is wrapped
+          # Remove closing and opening tag of the same type so that one multi-word ne is wrapped
           # into one element
-          s3 <- gsub('</ner\\stype="(.*?)">\n<ner\\stype="\\1">\n', "", s2, perl = TRUE)
-          s4 <- gsub('</ner\\stype=".*?">', "</ner>", s3)
-          gsub(ner_regex[2], '\n\\1\\3', s4, perl = TRUE) # Remove ner column
+          s3 <- gsub('</ne\\stype="(.*?)">\n<ne\\stype="\\1">\n', "", s2, perl = TRUE)
+          s4 <- gsub('</ne\\stype=".*?">', "</ne>", s3)
+          s5 <- gsub(ne_regex[2], '\n\\1\\3', s4, perl = TRUE) # Remove ner column
+          paste(s5, collapse = "\n")
         },
         mc.cores = threads
       )
     }
 
     if (verbose) message("... insert annotation into XML document")
-    lapply(
+    foo <- lapply(
       seq_along(chunks),
       function(i){
         element <- xml_name(text_nodes[[i]])
-        # read_html() is more forgiving than read_xml()
-        doc_tmp <- read_html(
-          sprintf(
-            "<%s>\n%s\n</%s>",
-            element,
-            paste(chunks[[i]], collapse = "\n"),
-            element
-          )
+        x <- sprintf("<%s>\n%s\n</%s>", element, chunks[[i]], element)
+        doc <- read_xml(
+          x = charToRaw(enc2utf8(x)),
+          encoding = "UTF-8",
+          as_html = FALSE,
+          options = c("RECOVER", "NOERROR", "NOBLANKS")
         )
-        xml_replace(
-          .x = text_nodes[[i]],
-          .value = xml_find_first(
-            doc_tmp,
-            xpath = sprintf("/html/body/%s", element)
-          )
-        )
-        invisible(NULL)
+        # doc <- read_xml(xml, options = )
+        xml_replace(.x = text_nodes[[i]], .value = doc)
       }
     )
   }

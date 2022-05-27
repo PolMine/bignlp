@@ -64,5 +64,6 @@ corenlp_preprocessing_replacements <- list(
   c("&lt;", " "),
   c("&gt;", " "),
   c("<", " "),
-  c(">", " ")
+  c(">", " "),
+  c("&", " and ")
 )

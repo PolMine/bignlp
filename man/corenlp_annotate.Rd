@@ -84,7 +84,7 @@ annotated.}
 \item{sentences}{A \code{logical} value - whether to wrap annotated annotated
 sentences in s element.}
 
-\item{ner}{A \code{logical} value, whether to turn column 'ner' into XML annotation
+\item{ne}{A \code{logical} value, whether to turn column 'ner' into XML annotation
 of named entities.}
 }
 \value{
