@@ -2,21 +2,22 @@
 #' 
 #' Use CoreNLP to annotate strings.
 #' 
-#' If argument \code{threads} is 1, the tagging result is returned, if output is NULL.
-#' If \code{threads} is higher than 1, \code{output} should be a directory where tagging
-#' results will be stored as NDJSON files.
+#' If argument `threads` is 1, the tagging  result is returned, if output is
+#' NULL. If `threads` is higher than 1, `output` should be a directory where
+#' tagging results will be stored as NDJSON files.
 #' 
-#' @param x Either a \code{data.table} (required to have the columns 'doc_id' and
+#' @param x Either a `data.table` (required to have the columns 'doc_id' and
 #'   'text'), or a character vector with input file(s), or a directory. If
-#'   \code{input} is a directory, all files in the directory are processed. Files
-#'   are assumed to be tsv files with two columns ('doc_id' and 'text').
+#'   `input` is a directory, all files in the directory are processed. Files are
+#'   assumed to be tsv files with two columns ('doc_id' and 'text').
 #' @param pipe A Pipe object or a properties file to configure annotator.
 #' @param threads An integer value.
 #' @param corenlp_dir The directory where corenlp resides.
 #' @param preclean Logical, whether to preprocess string.
 #' @param purge A `logical` value, whether to preprocess input.
 #' @param byline Logical, whether to process files in a line-by-line manner.
-#' @param output_format The output generated, either "json" (default), "txt", or "xml".
+#' @param output_format The output generated, either "json" (default), "txt", or
+#'   "xml".
 #' @param inmemory If `TRUE`, documents are processed in-memory using
 #'   `AnnotationPipeline$annotate()`, if `FALSE`, documents written to disk
 #'   temporarily are used as input for `StanfordCoreNLP$process_files()`.
@@ -24,7 +25,7 @@
 #' @param verbose Logical, whether to output messages.
 #' @param ... Further arguments.
 #' @return The target files will be returned, so that they can serve as input to
-#'   \code{corenlp_parse_ndjson}.
+#'   `corenlp_parse_ndjson`.
 #' @importFrom pbapply pblapply
 #' @importFrom parallel mclapply
 #' @importFrom data.table data.table rbindlist fread fwrite uniqueN is.data.table
@@ -288,23 +289,31 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
         mc.cores = threads
       )
     }
-
-    if (verbose) message("... insert annotation into XML document")
-    foo <- lapply(
+    
+    if (verbose) message("... create temporary XML document")
+    newnodes <- mclapply(
       seq_along(chunks),
       function(i){
-        element <- xml_name(text_nodes[[i]])
-        x <- sprintf("<%s>\n%s\n</%s>", element, chunks[[i]], element)
-        doc <- read_xml(
-          x = charToRaw(enc2utf8(x)),
-          encoding = "UTF-8",
-          as_html = FALSE,
-          options = c("RECOVER", "NOERROR", "NOBLANKS")
-        )
-        # doc <- read_xml(xml, options = )
-        xml_replace(.x = text_nodes[[i]], .value = doc)
-      }
+        el <- xml_name(text_nodes[[i]])
+        sprintf("<%s>\n%s\n</%s>", el, chunks[[i]], el)
+      },
+      mc.cores = threads
     )
+    xml_doc_char <- sprintf(
+      "<tmpdoc>%s</tmpdoc>",
+      paste(newnodes, collapse = "\n")
+    )
+    xml_doc_tmp <- read_xml(
+      x = charToRaw(enc2utf8(xml_doc_char)),
+      encoding = "UTF-8",
+      as_html = FALSE,
+      options = c("RECOVER", "NOERROR", "NOBLANKS")
+    )
+    new_nodes <- xml_find_all(xml_doc_tmp, xpath = xpath)
+    
+
+    if (verbose) message("... insert annotation into XML document")
+    dummy <- mapply(xml_replace, text_nodes, new_nodes)
   }
   invisible(x)
 })
