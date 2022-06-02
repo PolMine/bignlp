@@ -138,7 +138,8 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' @param ne A `logical` value, whether to turn column 'ner' into XML annotation 
 #'   of named entities.
 #' @rdname corenlp_annotate
-#' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child xml_text<- write_xml
+#' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child
+#'   xml_text<- write_xml
 #' @importFrom xml2 xml_find_first read_html
 #' @examples
 #' xml_dir <- system.file(package = "bignlp", "extdata", "xml")
@@ -156,26 +157,6 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' y <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
 setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ne = FALSE, inmemory = FALSE, purge = TRUE, verbose = TRUE, progress = FALSE){
-  
-  if (ne){
-    if (isFALSE("ner" %in% cols))
-      stop("Argument 'ne' is TRUE but 'ner' is not a column stated in argument 'cols'.")
-    
-    if (grep("ner", cols) == 1L)
-      stop("column 'ner' may not be first column that is stated.")
-    
-    ne_types <- c("PERSON", "LOCATION", "ORGANIZATION", "MISC")
-    ne_regex <- sprintf(
-      c("\n(%s)(%s)(%s)", "\n(%s)(%s|O)(%s)"), 
-      paste(rep(x =  ".*?\t", times = grep("ner", cols) - 1L), collapse = ""),
-      paste(ne_types, collapse = "|"),
-      if (grep("ner", cols) < length(cols)){
-        paste("\t", paste(rep(x =  ".*?", times = length(cols) - grep("ner", cols)), collapse = "\t"), sep ="")
-      } else {
-        ""
-      }
-    )
-  }
   
   if (verbose) message("... get text nodes ", appendLF = FALSE)
   text_nodes <- xml2::xml_find_all(x = x, xpath)
@@ -208,24 +189,43 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     if (length(empty_nodes) > 0L) stop("non-empty node which should be gone!")
   }
 
-  dt <- data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text)
-  dt_annotated <- corenlp_annotate(
-    x = dt, pipe = pipe,
+  dt <- corenlp_annotate(
+    x = data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text),
+    pipe = pipe,
     threads = threads, inmemory = inmemory,
     purge = purge,
     verbose = verbose, progress = progress
   )
   
   fmt <- paste(rep("%s", times = length(cols)), collapse = "\t")
-  tokenline <- do.call(
-    sprintf,
-    c(fmt, lapply(cols, function(col) dt_annotated[[col]]))
+  tokenline <- do.call(sprintf, c(fmt, lapply(cols, function(col) dt[[col]])))
+  dt[, "tokenline" := tokenline]
+  
+  sentence_id <- cut(
+    1L:nrow(dt),
+    unique(c(which(dt[["idx"]] == 1L), nrow(dt))),
+    include.lowest = TRUE, right = FALSE
   )
-  dt_annotated[, "tokenline" := tokenline]
-  dt_docs <- split(dt_annotated, f = dt_annotated[["doc_id"]])
+  dt[, "sentence_id" := as.integer(sentence_id)]
+  
+
+  if (ne){
+    ne <- ifelse(dt[["ner"]] == "O", NA, dt[["ner"]])
+    dt[, "ne_begin" := ifelse(!is.na(ne), sprintf('<ne type="%s">\n', ner), "")]
+    dt[, "ne_end" := ifelse(!is.na(ne), "\n</ne>\n", "")]
+    multiline_ne <- c(ifelse(ne[2:length(ne)] == ne[1:(length(ne) - 1)], TRUE, FALSE), FALSE)
+    multiline_ne <- ifelse(is.na(multiline_ne), FALSE, multiline_ne)
+    
+    # Next line is new sentence? Keep closing tag
+    multiline_ne <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, FALSE, multiline_ne)
+    dt[, "ne_end" := ifelse(multiline_ne, "", dt[["ne_end"]])]
+    dt[, "ne_begin" := ifelse(c(FALSE, multiline_ne[1:(nrow(dt) - 1L)]), "", dt[["ne_begin"]])]
+    dt[, "tokenline" := sprintf("%s%s%s", ne_begin, tokenline, ne_end)]
+  }
+    
+  dt_docs <- split(dt, f = dt[["doc_id"]])
   if (isFALSE(sentences)){
     if (verbose) message("... enhance XML")
-    if (ne) warning("sentences is FALSE, but `ne` is TRUE - `ne` skipped")
     lapply(
       dt_docs,
       function(dt){
@@ -242,17 +242,12 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   } else {
     
     if (verbose) message("... generate sentence annotation ", appendLF = TRUE)
-    chunks <- mclapply(
-      dt_docs,
-      function(dt){
-        if (nrow(dt) > 1L){
-          f <- cut(
-            1L:nrow(dt),
-            unique(c(which(dt[, "idx"] == 1L), nrow(dt))),
-            include.lowest = TRUE, right = FALSE
-          )
-          s_list <- split(x = dt, f = f)
-          lapply(
+    newnodes <- mclapply(
+      seq_along(dt_docs),
+      function(i){
+        if (nrow(dt_docs[[i]]) > 1L){
+          s_list <- split(x = dt_docs[[i]], f = dt_docs[[i]][["sentence_id"]])
+          sents <- lapply(
             s_list,
             function(s){
               sprintf(
@@ -262,46 +257,23 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
             }
           )
         } else {
-          sprintf("\n<s>\n%s\n</s>\n", dt[["tokenline"]])
+          sents <- sprintf("\n<s>\n%s\n</s>\n", dt_docs[[i]][["tokenline"]])
         }
+        el <- xml_name(text_nodes[[i]])
+        sprintf(
+          "<%s>\n%s\n</%s>",
+          el,
+          paste(unlist(sents), collapse = "\n"),
+          el
+        )
       },
       mc.cores = threads
     )
 
-    if (verbose) message("... generate named entity annotation")
-    if (isTRUE(ne)){
-      chunks <- mclapply(
-        chunks,
-        function(chunk){
-          s2 <- gsub(
-            ne_regex[1],
-            '\n<ne type="\\2">\n\\1\\2\\3\n</ne type="\\2">',
-            chunk,
-            perl = TRUE
-          )
-          # Remove closing and opening tag of the same type so that one multi-word ne is wrapped
-          # into one element
-          s3 <- gsub('</ne\\stype="(.*?)">\n<ne\\stype="\\1">\n', "", s2, perl = TRUE)
-          s4 <- gsub('</ne\\stype=".*?">', "</ne>", s3)
-          s5 <- gsub(ne_regex[2], '\n\\1\\3', s4, perl = TRUE) # Remove ner column
-          paste(s5, collapse = "\n")
-        },
-        mc.cores = threads
-      )
-    }
-    
-    if (verbose) message("... create temporary XML document")
-    newnodes <- mclapply(
-      seq_along(chunks),
-      function(i){
-        el <- xml_name(text_nodes[[i]])
-        sprintf("<%s>\n%s\n</%s>", el, chunks[[i]], el)
-      },
-      mc.cores = threads
-    )
+    if (verbose) message("... create and parse temporary XML document")
     xml_doc_char <- sprintf(
       "<tmpdoc>%s</tmpdoc>",
-      paste(newnodes, collapse = "\n")
+      paste(unlist(newnodes), collapse = "\n")
     )
     xml_doc_tmp <- read_xml(
       x = charToRaw(enc2utf8(xml_doc_char)),
