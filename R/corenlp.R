@@ -160,15 +160,15 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   
   if (verbose) message("... get text nodes ", appendLF = FALSE)
   text_nodes <- xml2::xml_find_all(x = x, xpath)
+  text_nodes_text <- xml_text(text_nodes)
   if (verbose) message(sprintf("(%d)", length(text_nodes)))
-  text_nodes_text <- sapply(text_nodes, xml_text)
-  
+
   if (verbose) message("... preprocessing text", appendLF = TRUE)
   if (isTRUE(purge)){
     text_nodes_text <- sapply(
       text_nodes_text,
-      function(txt)
-        purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+      purge, replacements = corenlp_preprocessing_replacements,
+      progress = FALSE
     )
   }
   
@@ -181,8 +181,9 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     if (isTRUE(purge)){
       text_nodes_text <- sapply(
         text_nodes_text,
-        function(txt)
-          purge(txt, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+        purge,
+        replacements = corenlp_preprocessing_replacements,
+        progress = FALSE
       )
     }
     empty_nodes <- grep("^\\s*$", text_nodes_text)
@@ -193,98 +194,68 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     x = data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text),
     pipe = pipe,
     threads = threads, inmemory = inmemory,
-    purge = purge,
+    purge = FALSE, # we've done this already
     verbose = verbose, progress = progress
   )
   
   fmt <- paste(rep("%s", times = length(cols)), collapse = "\t")
   tokenline <- do.call(sprintf, c(fmt, lapply(cols, function(col) dt[[col]])))
-  dt[, "tokenline" := tokenline]
-  
-  sentence_id <- cut(
-    1L:nrow(dt),
-    unique(c(which(dt[["idx"]] == 1L), nrow(dt))),
-    include.lowest = TRUE, right = FALSE
-  )
-  dt[, "sentence_id" := as.integer(sentence_id)]
-  
+
   if (ne){
+    if (verbose) message("... named entity annotation ", appendLF = TRUE)
     ne <- ifelse(dt[["ner"]] == "O", NA, dt[["ner"]])
-    dt[, "ne_begin" := ifelse(!is.na(ne), sprintf('<ne type="%s">\n', ner), "")]
-    dt[, "ne_end" := ifelse(!is.na(ne), "\n</ne>\n", "")]
+    ne_begin <- ifelse(!is.na(ne), sprintf('<ne type="%s">\n', dt[["ner"]]), "")
+    ne_end <- ifelse(!is.na(ne), "\n</ne>\n", "")
     multiline_ne <- c(ifelse(ne[2:length(ne)] == ne[1:(length(ne) - 1)], TRUE, FALSE), FALSE)
     multiline_ne <- ifelse(is.na(multiline_ne), FALSE, multiline_ne)
     
     # Next line is new sentence? Keep closing tag
     multiline_ne <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, FALSE, multiline_ne)
-    dt[, "ne_end" := ifelse(multiline_ne, "", dt[["ne_end"]])]
-    dt[, "ne_begin" := ifelse(c(FALSE, multiline_ne[1:(nrow(dt) - 1L)]), "", dt[["ne_begin"]])]
-    dt[, "tokenline" := sprintf("%s%s%s", ne_begin, tokenline, ne_end)]
+    ne_end <- ifelse(multiline_ne, "", ne_end)
+    ne_begin <- ifelse(c(FALSE, multiline_ne[1:(nrow(dt) - 1L)]), "", ne_begin)
+    tokenline <-  sprintf("%s%s%s", ne_begin, tokenline, ne_end)
   }
-    
+  
+  
+  if (sentences){
+    if (verbose) message("... sentence annotation ", appendLF = TRUE)
+    s_begin <- ifelse(dt[["idx"]] == 1L, "<s>\n", "")
+    s_end <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, "\n</s>", "")
+    tokenline <-sprintf("%s%s%s", s_begin, tokenline, s_end)
+  }
+
+  dt[, "tokenline" := tokenline]
   dt_docs <- split(dt, f = dt[["doc_id"]])
-  if (isFALSE(sentences)){
-    if (verbose) message("... enhance XML")
-    lapply(
-      dt_docs,
-      function(dt){
-        xml_set_text(
-          x = text_nodes[[dt[["doc_id"]][1]]],
-          value = sprintf(
-            "\n%s\n",
-            paste(dt_docs[["tokenline"]], collapse = "\n")
-          )
-        )
-        invisible(NULL)
-      }
-    )
-  } else {
-    
-    if (verbose) message("... generate sentence annotation ", appendLF = TRUE)
-    newnodes <- mclapply(
-      seq_along(dt_docs),
-      function(i){
-        if (nrow(dt_docs[[i]]) > 1L){
-          s_list <- split(x = dt_docs[[i]], f = dt_docs[[i]][["sentence_id"]])
-          sents <- lapply(
-            s_list,
-            function(s){
-              sprintf(
-                "\n<s>\n%s\n</s>\n",
-                paste(s[["tokenline"]], collapse = "\n")
-              )
-            }
-          )
-        } else {
-          sents <- sprintf("\n<s>\n%s\n</s>\n", dt_docs[[i]][["tokenline"]])
-        }
-        el <- xml_name(text_nodes[[i]])
-        sprintf(
-          "<%s>\n%s\n</%s>",
-          el,
-          paste(unlist(sents), collapse = "\n"),
-          el
-        )
-      },
-      mc.cores = threads
-    )
 
-    if (verbose) message("... create and parse temporary XML document")
-    xml_doc_char <- sprintf(
-      "<tmpdoc>%s</tmpdoc>",
-      paste(unlist(newnodes), collapse = "\n")
-    )
-    xml_doc_tmp <- read_xml(
-      x = charToRaw(enc2utf8(xml_doc_char)),
-      encoding = "UTF-8",
-      as_html = FALSE,
-      options = c("RECOVER", "NOERROR", "NOBLANKS")
-    )
-    new_nodes <- xml_find_all(xml_doc_tmp, xpath = xpath)
-    
-
-    if (verbose) message("... insert annotation into XML document")
-    dummy <- mapply(xml_replace, text_nodes, new_nodes)
-  }
+  if (verbose) message("... create nodes ", appendLF = TRUE)
+  newnodes <- mclapply(
+    seq_along(dt_docs),
+    function(i){
+      el <- xml_name(text_nodes[[i]])
+      sprintf(
+        "<%s>\n%s\n</%s>",
+        el, paste(dt_docs[[i]][["tokenline"]], collapse = "\n"), el
+      )
+    },
+    mc.cores = threads
+  )
+  
+  if (verbose) message("... create and parse temporary XML document")
+  xml_doc_char <- sprintf(
+    "<tmpdoc>%s</tmpdoc>",
+    paste(unlist(newnodes), collapse = "\n")
+  )
+  xml_doc_tmp <- read_xml(
+    x = charToRaw(enc2utf8(xml_doc_char)),
+    encoding = "UTF-8",
+    as_html = FALSE,
+    options = c("RECOVER", "NOERROR", "NOBLANKS")
+  )
+  new_nodes <- xml_find_all(xml_doc_tmp, xpath = xpath)
+  
+  
+  if (verbose) message("... insert annotation into XML document")
+  dummy <- mapply(xml_replace, text_nodes, new_nodes)
+  
   invisible(x)
 })
