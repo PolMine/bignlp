@@ -208,7 +208,6 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   )
   dt[, "sentence_id" := as.integer(sentence_id)]
   
-
   if (ne){
     ne <- ifelse(dt[["ner"]] == "O", NA, dt[["ner"]])
     dt[, "ne_begin" := ifelse(!is.na(ne), sprintf('<ne type="%s">\n', ner), "")]
