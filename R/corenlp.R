@@ -156,15 +156,14 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' # Write annotated document to disc
 #' y <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
-setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), sentences = TRUE, ne = FALSE, inmemory = FALSE, purge = TRUE, verbose = TRUE, progress = FALSE){
+setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), fmt = paste(rep("%s", times = length(cols)), collapse = "\t"), sentences = TRUE, ne = FALSE, inmemory = FALSE, purge = TRUE, verbose = TRUE, progress = FALSE){
   
-  if (verbose) message("... get text nodes ", appendLF = FALSE)
   text_nodes <- xml2::xml_find_all(x = x, xpath)
   text_nodes_text <- xml_text(text_nodes)
-  if (verbose) message(sprintf("(%d)", length(text_nodes)))
+  if (verbose) cli_alert("extracted {.emphf {length(text_nodes)}} text node{?s}")
 
-  if (verbose) message("... preprocessing text", appendLF = TRUE)
   if (isTRUE(purge)){
+    if (verbose) cli_alert("denoise/purge text")
     text_nodes_text <- sapply(
       text_nodes_text,
       purge, replacements = corenlp_preprocessing_replacements,
@@ -172,9 +171,10 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     )
   }
   
-  if (verbose) message("... remove empty text nodes", appendLF = TRUE)
+  # Purge first, because nodes may be empty only after purge
   empty_nodes <- grep("^\\s*$", text_nodes_text)
   if (length(empty_nodes) > 0L){
+    cli_alert_info("remove {.emph length(empty_nodes)} text nodes")
     for (i in rev(empty_nodes)) xml2::xml_remove(text_nodes[[i]])
     text_nodes <- xml2::xml_find_all(x = x, xpath = xpath)
     text_nodes_text <- sapply(text_nodes, xml_text)
@@ -190,19 +190,19 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     if (length(empty_nodes) > 0L) stop("non-empty node which should be gone!")
   }
 
+  if (verbose) cli_alert("run annotation pipeline")
   dt <- corenlp_annotate(
     x = data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text),
     pipe = pipe,
     threads = threads, inmemory = inmemory,
     purge = FALSE, # we've done this already
-    verbose = verbose, progress = progress
+    verbose = FALSE, progress = progress
   )
   
-  fmt <- paste(rep("%s", times = length(cols)), collapse = "\t")
   tokenline <- do.call(sprintf, c(fmt, lapply(cols, function(col) dt[[col]])))
 
   if (ne){
-    if (verbose) message("... named entity annotation ", appendLF = TRUE)
+    if (verbose) cli_alert("wrap named entities into XML tags")
     ne <- ifelse(dt[["ner"]] == "O", NA, dt[["ner"]])
     ne_begin <- ifelse(!is.na(ne), sprintf('<ne type="%s">\n', dt[["ner"]]), "")
     ne_end <- ifelse(!is.na(ne), "\n</ne>\n", "")
@@ -218,7 +218,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   
   
   if (sentences){
-    if (verbose) message("... sentence annotation ", appendLF = TRUE)
+    if (verbose) cli_alert("wrap sentences into XML tags")
     s_begin <- ifelse(dt[["idx"]] == 1L, "<s>\n", "")
     s_end <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, "\n</s>", "")
     tokenline <-sprintf("%s%s%s", s_begin, tokenline, s_end)
@@ -227,7 +227,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   dt[, "tokenline" := tokenline]
   dt_docs <- split(dt, f = dt[["doc_id"]])
 
-  if (verbose) message("... create nodes ", appendLF = TRUE)
+  if (verbose) cli_alert("update XML document with annotated content")
   newnodes <- mclapply(
     seq_along(dt_docs),
     function(i){
@@ -240,7 +240,6 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     mc.cores = threads
   )
   
-  if (verbose) message("... create and parse temporary XML document")
   xml_doc_char <- sprintf(
     "<tmpdoc>%s</tmpdoc>",
     paste(unlist(newnodes), collapse = "\n")
@@ -253,8 +252,6 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   )
   new_nodes <- xml_find_all(xml_doc_tmp, xpath = xpath)
   
-  
-  if (verbose) message("... insert annotation into XML document")
   dummy <- mapply(xml_replace, text_nodes, new_nodes)
   
   invisible(x)
