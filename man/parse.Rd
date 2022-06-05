@@ -16,7 +16,7 @@ corenlp_parse_json(
 corenlp_parse_xml(x)
 }
 \arguments{
-\item{x}{character vector, the JSON string(s) to be parsed}
+\item{x}{A \code{character} vector, the JSON string(s) to be parsed}
 
 \item{cols_to_keep}{columns to keep}
 

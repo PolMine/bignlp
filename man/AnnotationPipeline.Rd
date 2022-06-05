@@ -4,16 +4,17 @@
 \alias{AnnotationPipeline}
 \title{AnnotationPipeline Class.}
 \description{
-Worker behind the higher-level \code{StanfordCoreNLP} class that allows fine-tuned
-configuration of an annotation pipeline, see the \href{https://stanfordnlp.github.io/CoreNLP/pipelines.html}{documentation of CoreNLP Pipelines}. The
-\verb{$annotate()} method supports processing annotations in parallel. Unlike the
-\code{StanfordCoreNLP$process_files()} method for processing the content of files
-in parallel, it is a very efficient in-memory operation  and the fastest
-option for processsing medium-sized corpora. But as annotations consume a lot
-of memory, there are limitations to allocating sufficient heap space required
-for the parallel in-memory processing of larger corpora. If heap space is
-insufficient, the process may run endless without a telling warning message
-or an error. So use the \verb{$annotate()} method with appropriate care.
+Worker behind the higher-level \code{StanfordCoreNLP} class that
+allows fine-tuned configuration of an annotation pipeline, see the
+\href{https://stanfordnlp.github.io/CoreNLP/pipelines.html}{documentation of CoreNLP Pipelines}. The
+\verb{$annotate()} method supports processing annotations in parallel. Unlike
+the \code{StanfordCoreNLP$process_files()} method for processing the content of
+files in parallel, it offers an in-memory operation. As annotations consume
+a lot of memory, there are limitations to allocating sufficient heap space
+required for the parallel in-memory processing of larger corpora. If heap
+space is insufficient, the process may run endless without a telling
+warning message or an error. So use the \verb{$annotate()} method with
+appropriate care.
 }
 \examples{
 A <- AnnotationPipeline$new()
@@ -21,7 +22,9 @@ a <- c("This is a sentences.", "Yet another sentence.")
 s <- A$annotate(a)
 result <- s$as.data.table()
 
-reuters_txt <- readLines(system.file(package = "bignlp", "extdata", "txt", "reuters.txt"))
+reuters_txt <- readLines(
+  system.file(package = "bignlp", "extdata", "txt", "reuters.txt")
+)
 B <- AnnotationPipeline$new()
 r <- B$annotate(reuters_txt)
 result <- r$as.data.table()

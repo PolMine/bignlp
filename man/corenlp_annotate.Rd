@@ -38,8 +38,9 @@ corenlp_annotate(x, ...)
   pipe,
   threads = 1L,
   cols = c("word", "lemma", "pos"),
+  fmt = paste(rep("\%s", times = length(cols)), collapse = "\\t"),
   sentences = TRUE,
-  ner = FALSE,
+  ne = FALSE,
   inmemory = FALSE,
   purge = TRUE,
   verbose = TRUE,
@@ -49,8 +50,8 @@ corenlp_annotate(x, ...)
 \arguments{
 \item{x}{Either a \code{data.table} (required to have the columns 'doc_id' and
 'text'), or a character vector with input file(s), or a directory. If
-\code{input} is a directory, all files in the directory are processed. Files
-are assumed to be tsv files with two columns ('doc_id' and 'text').}
+\code{input} is a directory, all files in the directory are processed. Files are
+assumed to be tsv files with two columns ('doc_id' and 'text').}
 
 \item{...}{Further arguments.}
 
@@ -60,11 +61,13 @@ are assumed to be tsv files with two columns ('doc_id' and 'text').}
 
 \item{purge}{A \code{logical} value, whether to preprocess input.}
 
-\item{threads}{An integer value.}
+\item{threads}{An \code{integer} value.}
 
 \item{inmemory}{If \code{TRUE}, documents are processed in-memory using
 \code{AnnotationPipeline$annotate()}, if \code{FALSE}, documents written to disk
-temporarily are used as input for \code{StanfordCoreNLP$process_files()}.}
+temporarily are used as input for \code{StanfordCoreNLP$process_files()}. See
+details on a warning you may see when opting for the inmemory option and on
+performance.}
 
 \item{progress}{Logical, whether to show progress bar.}
 
@@ -72,7 +75,8 @@ temporarily are used as input for \code{StanfordCoreNLP$process_files()}.}
 
 \item{byline}{Logical, whether to process files in a line-by-line manner.}
 
-\item{output_format}{The output generated, either "json" (default), "txt", or "xml".}
+\item{output_format}{The output generated, either "json" (default), "txt", or
+"xml".}
 
 \item{preclean}{Logical, whether to preprocess string.}
 
@@ -81,8 +85,12 @@ annotated.}
 
 \item{cols}{Columns of the parsed CoNLL output of annotation to be kept.}
 
-\item{sentences}{A \code{logical} value - whether to wrap annotated annotated
-sentences in s element.}
+\item{fmt}{A format string for styling the output of applying the annotation
+pipeline. Defaults to a concatenating annotations seperated by tabs. Can be
+used to generate XML output.}
+
+\item{sentences}{A \code{logical} value - whether to wrap annotated
+sentences in s tags.}
 
 \item{ne}{A \code{logical} value, whether to turn column 'ner' into XML annotation
 of named entities.}
@@ -95,9 +103,22 @@ The target files will be returned, so that they can serve as input to
 Use CoreNLP to annotate strings.
 }
 \details{
-If argument \code{threads} is 1, the tagging result is returned, if output is NULL.
-If \code{threads} is higher than 1, \code{output} should be a directory where tagging
-results will be stored as NDJSON files.
+If argument \code{threads} is 1, the tagging  result is returned, if output is
+NULL. If \code{threads} is higher than 1, \code{output} should be a directory where
+tagging results will be stored as NDJSON files.
+
+If \code{inmemory} is \code{FALSE}, temporary files are used for input and output to
+the CoreNLP. If you choose inmemory processing (\code{TRUE}), you may see a
+warning beginning with "An illegal reflective access operation has occurred".
+There will be subsequen messages on the operation of threads. Somewhat
+against intuition, setting \code{inmemory} as \code{FALSE} yields better performance
+and by circumventing the bottleneck of passing data between R and the Java
+Virtual Machine directly. Using the temporary files does not provoke a
+warning and is assumed to be more robust.
+
+If \code{x} is an \code{xml_document}, text nodes of the input XML document
+will be replaced by the annotated content of the text nodes. Note that this
+is an in-place operation, i.e. the input XML document will be changed.
 }
 \examples{
 library(data.table)

@@ -14,10 +14,15 @@ test_that(
       "annotators" = "tokenize, ssplit",
       "tokenize.whitespace" = "true"
     )
-    Pipe <- StanfordCoreNLP$new(properties = properties_list, output_format = "conll")
+    Pipe <- StanfordCoreNLP$new(
+      properties = properties_list,
+      output_format = "conll"
+    )
     
-    annoli <- AnnotationList$new(ts_ws)
-    Pipe$annotate(annoli)
+    annoli <- AnnotationList$new(ts_ws, purge = FALSE)
+    
+    # Do not purge because original text includes things that look like tags.
+    Pipe$annotate(annoli, purge = FALSE)
     reuters_dt_v2 <- annoli$as.data.table()
     
     # Check that the number of tokens is identical

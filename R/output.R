@@ -1,6 +1,6 @@
 #' @title Parse CoreNLP output formats.
 #' @description Parse output from CoreNLP.
-#' @param x character vector, the JSON string(s) to be parsed
+#' @param x A `character` vector, the JSON string(s) to be parsed
 #' @param cols_to_keep columns to keep
 #' @param output a destfile
 #' @param logfile a character string naming the file to an error log to; if

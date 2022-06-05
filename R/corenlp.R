@@ -6,12 +6,21 @@
 #' NULL. If `threads` is higher than 1, `output` should be a directory where
 #' tagging results will be stored as NDJSON files.
 #' 
+#' If `inmemory` is `FALSE`, temporary files are used for input and output to
+#' the CoreNLP. If you choose inmemory processing (`TRUE`), you may see a
+#' warning beginning with "An illegal reflective access operation has occurred".
+#' There will be subsequen messages on the operation of threads. Somewhat
+#' against intuition, setting `inmemory` as `FALSE` yields better performance
+#' and by circumventing the bottleneck of passing data between R and the Java
+#' Virtual Machine directly. Using the temporary files does not provoke a
+#' warning and is assumed to be more robust.
+#' 
 #' @param x Either a `data.table` (required to have the columns 'doc_id' and
 #'   'text'), or a character vector with input file(s), or a directory. If
 #'   `input` is a directory, all files in the directory are processed. Files are
 #'   assumed to be tsv files with two columns ('doc_id' and 'text').
 #' @param pipe A Pipe object or a properties file to configure annotator.
-#' @param threads An integer value.
+#' @param threads An `integer` value.
 #' @param corenlp_dir The directory where corenlp resides.
 #' @param preclean Logical, whether to preprocess string.
 #' @param purge A `logical` value, whether to preprocess input.
@@ -20,7 +29,9 @@
 #'   "xml".
 #' @param inmemory If `TRUE`, documents are processed in-memory using
 #'   `AnnotationPipeline$annotate()`, if `FALSE`, documents written to disk
-#'   temporarily are used as input for `StanfordCoreNLP$process_files()`.
+#'   temporarily are used as input for `StanfordCoreNLP$process_files()`. See
+#'   details on a warning you may see when opting for the inmemory option and on
+#'   performance.
 #' @param progress Logical, whether to show progress bar.
 #' @param verbose Logical, whether to output messages.
 #' @param ... Further arguments.
@@ -130,17 +141,24 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 })
 
 
+#' @details If `x` is an `xml_document`, text nodes of the input XML document
+#'   will be replaced by the annotated content of the text nodes. Note that this
+#'   is an in-place operation, i.e. the input XML document will be changed.
 #' @param xpath An XPath expression for looking up nodes with text that shall be
 #'   annotated.
 #' @param cols Columns of the parsed CoNLL output of annotation to be kept.
-#' @param sentences A `logical` value - whether to wrap annotated annotated
-#'   sentences in s element.
+#' @param sentences A `logical` value - whether to wrap annotated
+#'   sentences in s tags.
 #' @param ne A `logical` value, whether to turn column 'ner' into XML annotation 
 #'   of named entities.
+#' @param fmt A format string for styling the output of applying the annotation
+#'   pipeline. Defaults to a concatenating annotations seperated by tabs. Can be
+#'   used to generate XML output.
 #' @rdname corenlp_annotate
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child
 #'   xml_text<- write_xml
-#' @importFrom xml2 xml_find_first read_html
+#' @importFrom xml2 xml_find_first read_html xml_name xml_replace
+#' @importFrom cli cli_alert_info
 #' @examples
 #' xml_dir <- system.file(package = "bignlp", "extdata", "xml")
 #' xml_files <- list.files(xml_dir, full.names = TRUE)
