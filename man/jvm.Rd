@@ -7,6 +7,7 @@
 \alias{jvm_heap_space}
 \alias{jvm_memory_usage}
 \alias{jvm_available_processors}
+\alias{jvm_encoding}
 \title{Auxiliary functions to get information on JVM.}
 \usage{
 jvm_is_initialized()
@@ -20,6 +21,8 @@ jvm_heap_space(units = "MB")
 jvm_memory_usage()
 
 jvm_available_processors()
+
+jvm_encoding()
 }
 \arguments{
 \item{units}{See documentation of format.object_size, typically either "MB"
@@ -27,15 +30,14 @@ or "GB".}
 }
 \description{
 Upon loading the bignlp package, a Java Virtual Machine (JVM) is initialized.
-Some auxiliary functions provide information on the configuration of the JVM
-and its status. Use the functions to check which Java is installed
-(recommended: Oracle Java), the Java version and the heap space of the JVM.
+A set of auxiliary functions provides information on the configuration of the
+JVM and its status.
 }
 \details{
 \code{jvm_is_initialized} checks whether a JVM has been initialized
 already. The return value is a \code{logical} value, \code{TRUE} if JVM has been
 initialized, \code{FALSE} if not. As a JVM is initialized upon loading bignlp,
-the expected value is always \code{TRUE} if your installation of Java and rJave
+the expected value is always \code{TRUE} if your installation of Java and rJava
 works.
 }
 \examples{

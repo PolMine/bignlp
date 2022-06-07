@@ -18,11 +18,14 @@ test_that(
       properties = properties_list,
       output_format = "conll"
     )
+    Pipe$verbose(FALSE) # ineffective, messages shown anyway
     
     annoli <- AnnotationList$new(ts_ws, purge = FALSE)
     
     # Do not purge because original text includes things that look like tags.
     Pipe$annotate(annoli, purge = FALSE)
+    
+    
     reuters_dt_v2 <- annoli$as.data.table()
     
     # Check that the number of tokens is identical

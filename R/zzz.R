@@ -20,6 +20,15 @@
       )
   )
   
+  packageStartupMessage(sprintf("CoreNLP version: v%s", corenlp_get_version()))
+  
   packageStartupMessage(sprintf("JVM memory allocated: %s", jvm_heap_space()))
+  
+  packageStartupMessage(
+    sprintf(
+      "JVM file encoding: %s",
+      jvm_encoding()
+    )
+  )
 }
 

@@ -80,7 +80,7 @@ Initialize AnnotationPipeline
 \subsection{Method \code{annotate()}}{
 Annotate a list of strings.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AnnotationPipeline$annotate(x, threads = NULL, verbose = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AnnotationPipeline$annotate(x, purge = FALSE, threads = NULL, verbose = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -88,6 +88,8 @@ Annotate a list of strings.
 \describe{
 \item{\code{x}}{A list of \code{character} vectors to annotate, an \code{AnnotationList}
 class object or an ArrayList with Annotation objects.}
+
+\item{\code{purge}}{A \code{logical} value, whether to purge text first.}
 
 \item{\code{threads}}{If \code{NULL}, all available threads are used, otherwise an
 \code{integer} value with number of threads to use.}

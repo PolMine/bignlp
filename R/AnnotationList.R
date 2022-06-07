@@ -31,7 +31,11 @@ AnnotationList <- R6Class(
             x,
             function(doc){
               if (isTRUE(purge)){
-                doc <- purge(doc, replacements = corenlp_preprocessing_replacements, progress = FALSE)
+                doc <- purge(
+                  doc,
+                  replacements = corenlp_preprocessing_replacements,
+                  progress = FALSE
+                )
               }
               .jnew("edu/stanford/nlp/pipeline/Annotation", .jnew("java.lang.String", doc))
             }

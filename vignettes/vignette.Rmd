@@ -14,33 +14,63 @@ editor_options:
   
 ## Rationale of the bignlp-package
 
-As Natural Language Processing (NLP) has evolved, various software tools for standard tasks such as tokenization, sentence segmentation, part-of-speech annotation, named entity recognition or dependency parsing have been developed. Well-established and powerful tools are typically implemented in Java or Python, yet several R wrapper packages such as [OpenNLP](https://CRAN.R-project.org/package=openNLP), [cleanNLP](https://CRAN.R-project.org/package=cleanNLP), [coreNLP](https://CRAN.R-project.org/package=coreNLP), 
-[spacyr](https://CRAN.R-project.org/package=spacyr) or [udpipe](https://CRAN.R-project.org/package=udpipe) expose this functionality to the R community.
+As Natural Language Processing (NLP) has evolved, various software tools for
+standard tasks such as tokenization, sentence segmentation, part-of-speech
+annotation, named entity recognition or dependency parsing have been developed.
+Well-established and powerful tools are typically implemented in Java or Python.
+Fortunately, several R wrapper packages such as
+[OpenNLP](https://CRAN.R-project.org/package=openNLP),
+[cleanNLP](https://CRAN.R-project.org/package=cleanNLP),
+[coreNLP](https://CRAN.R-project.org/package=coreNLP),
+[spacyr](https://CRAN.R-project.org/package=spacyr) or
+[udpipe](https://CRAN.R-project.org/package=udpipe) expose this functionality to
+the R community.
 
-So why yet another NLP R package? As more data is available and the text to process is getting bigger, one limitation of the state of affairs in the R domain is that the existing packages are not good at dealing with large volumes of text. The thrust of the bignlp-package is to offer a fast and memory-efficient workflow based on [CoreNLP](https://stanfordnlp.github.io/CoreNLP/), an established high-quality standard tool. 
+So why yet another NLP R package? As more data is available and the text to
+process is getting bigger, one limitation of existing R packages is their
+limited performance to deal with large-scale corpora. The thrust of the
+bignlp-package is to offer fast and memory-efficient workflows based on
+[CoreNLP](https://stanfordnlp.github.io/CoreNLP/), an established high-quality
+standard tool. The multithreaded processing of corpora is a particular focus.
 
-The default workflow envisaged by the bignlp package pursues a split-apply-combine strategy that entails
+The default workflow envisaged by the bignlp package pursues a
+split-apply-combine strategy that entails
 
 (a) splitting up a corpus into segments of text that are saved to disk,
 (b) the (parallel) processing of these segments using CoreNLP and 
-(c) parsing and combining the results into an R output format, such as a `data.table`. 
+(c) parsing and combining the results into an R output format, such as a
+`data.table`.
 
-Input and output data (which can be considerably larger than the input as annotation layers are added) need not be kept in memory at the same time, making this approach memory efficient. And as this approach makes full use of the ability of to CoreNLP to process documents in parallel, it is fast and capable to process big data efficiently.
+Input and output data (which can be considerably larger than the input as
+annotation layers are added) need not be kept in memory at the same time, making
+this approach memory efficient. And as this approach makes full use of the
+ability of to CoreNLP to process documents in parallel, it is fast and capable
+to process big data efficiently.
 
 
 ## Prerequisites
 
 ## Hardware Requirements
 
-The machine should at least have 8 GB of RAM as we recommend to allocate 4 GB of memory to the Java Virtual Machine (JVM). You can do this as follows.
+The machine should at least have 8 GB of RAM as we recommend to allocate 4 GB of
+memory to the Java Virtual Machine (JVM). You can do this as follows. Note that
+allocating sufficient space to the JVM is only possible when it has not yet been
+initiated.
 
 ```{r java_heap_space}
 options(java.parameters = "-Xmx4g")
 ```
 
-There needs to be sufficient free disk space. Depending on the output format you opt for, the space required for temporary files can be extensive. If you save these files to a temporary directory, make sure that the volume or partition of the R temporary directory is sufficiently sized.
+There needs to be sufficient free disk space. Depending on the output format you
+opt for, the space required for temporary files can be extensive. If you save
+these files to a temporary directory, make sure that the volume or partition of
+the R temporary directory is sufficiently sized.
 
-The pipeline will work on a single core, but multithreading is actively supported. Using more cores speeds up things, more cores are better than few cores. If you run the pipeline within a virtual machine (VM), check the number of cores available for the VM. A common approach is to use all cores but one for multithreaded operations.
+The pipeline will work on a single core, but multithreading is actively
+supported. Using more cores speeds up things, more cores are better than few
+cores. If you run the pipeline within a virtual machine (VM), check the number
+of cores available for the VM. A common approach is to use all cores but one for
+multithreaded operations.
 
 ```{r}
 no_cores <- parallel::detectCores() - 1L
@@ -51,46 +81,73 @@ no_cores
 
 ### Operating System
 
-CoreNLP runs within a JVM which ensures portability. There is no known limitation to using the pipeline on Linux, macOS and Windows machines.
+CoreNLP runs within a JVM which ensures portability. There is no known
+limitation to using the pipeline on Linux, macOS and Windows machines.
 
 
 ### Java and rJava
 
-CoreNLP is implemented in Java, so Java needs to be installed as CoreNLP is run in a Java Virtual Machine (JVM). More specifically, Java 8 (Oracle Java) is flagged as a prerequisite of the CoreNLP version used(v4.2.0), see the information on the [CoreNLP Download page](https://stanfordnlp.github.io/CoreNLP/download.html). Download Java from one of these locations:
+CoreNLP is implemented in Java, so Java needs to be installed as CoreNLP is run
+in a Java Virtual Machine (JVM). More specifically, Java 8 (Oracle Java) is
+flagged as a prerequisite of the CoreNLP version used(v4.2.0), see the
+information on the [CoreNLP Download
+page](https://stanfordnlp.github.io/CoreNLP/download.html). In practice, we have
+not encountered limitations when using OpenJDK instead. So download Java from
+one of these locations:
 
 - [Java 8 (recommended)](https://www.java.com/de/download/)
 - [OpenJDK](https://openjdk.java.net/install/index.html)
 
-The [rJava](https://CRAN.R-project.org/package=rJava) package is the interface to using Java code from R. Configuring rJava can be painful. Very often, running `R CMD javareconf` in the terminal solves issues. Once Java is installed and working, you can load the bignlp package.
+The [rJava](https://CRAN.R-project.org/package=rJava) package is the interface
+to using Java code from R. Configuring rJava can be painful. Very often, running
+`R CMD javareconf` in the terminal solves issues. Once Java is installed and
+working, you can load the bignlp package.
 
 ```{r}
 library(bignlp)
 ```
 
-Upon loading the bignlp package, a JVM is initialized. The package includes auxiliary functionality to check which implementation of Java is available and used to run the JVM and to check the Java version.
+Upon loading the bignlp package, a JVM is initialized. The package includes
+auxiliary functionality to check which implementation of Java is available and
+used to run the JVM and to check the Java version.
 
 ```{r}
 jvm_name()
 jvm_version()
 ```
 
-As CoreNLP is based on Oracle Java 8, you would ideally see "Java(TM) SE Runtime Environment". If you see "OpenJDK Runtime Environment", this indicates that you are using OpenJDK, not Oracle Java as recommended by CoreNLP. However, our experience is that CoreNLP works nicely with OpenJDK too. If you have issues with the licensing conditions of Oracle Java, using OpenJDK does not seem to be a limitation.
+As CoreNLP is based on Oracle Java 8, you would ideally see "Java(TM) SE Runtime
+Environment". If you see "OpenJDK Runtime Environment", this indicates that you
+are using OpenJDK, not Oracle Java as recommended by CoreNLP. As mentioned, our
+experience is that CoreNLP works nicely with OpenJDK too. If you have issues
+with the licensing conditions of Oracle Java, using OpenJDK does not seem to be
+a limitation.
 
 
 ### CoreNLP
 
-The CoreNLP code jar and models for specific languages can be downloaded from the [CoreNLP website](https://stanfordnlp.github.io/CoreNLP/) without restrictions. Check the presence of the CoreNLP code jar as follows, and perform the download, if necessary. In this vignette, we avoid downloading a lanugage model (argument `lang` is `NULL`).
+The CoreNLP code jar and models for specific languages can be downloaded from
+the [CoreNLP website](https://stanfordnlp.github.io/CoreNLP/) without
+restrictions. Check the presence of the CoreNLP code jar as follows, and perform
+the download, if necessary. In this vignette, we avoid downloading a lanugage
+model (argument `lang` is `NULL`).
 
 ```{r load_bignlp, eval = TRUE}
 library(bignlp)
 if (getOption("bignlp.corenlp_dir") == "") corenlp_install(lang = NULL)
 ```
 
-Another way to download Stanford CoreNLP is to (ab)use the installation mechanism included in the [cleanNLP](https://CRAN.R-project.org/package=cleanNLP) package. 
+Another way to download Stanford CoreNLP is to (ab)use the installation
+mechanism included in the
+[cleanNLP](https://CRAN.R-project.org/package=cleanNLP) package.
 
-Apart from the directory with the code jars, the location of a properties file to configure the annotators is required. Again, use the `system.file()`-function to find out where that is.
+Apart from the directory with the code jars, the location of a properties file
+to configure the annotators is required. Again, use the `system.file()`-function
+to find out where that is.
 
-Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. CoreNLP and properties files can be stored anywhere on your system, and functions of the bignlp package take the paths as input.
+Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP.
+CoreNLP and properties files can be stored anywhere on your system, and
+functions of the bignlp package take the paths as input.
 
 
 ## Workflow 1: A split-apply-combine approach
@@ -99,7 +156,10 @@ Note that it is not necessary to use cleanNLP for downloading Stanford CoreNLP. 
 
 #### Sample data
 
-In our example, we will use an excerpt from the Reuters corpus. The articles of the corpus are included as sample data in the package. We geneerate a `data.table` with the columns "doc_id" (integer ids) and "text" that will serve as input for the subsequent steps.
+In our example, we will use an excerpt from the Reuters corpus. The articles of
+the corpus are included as sample data in the package. We generate a
+`data.table` with the columns "doc_id" (integer ids) and "text" that will serve
+as input for the subsequent steps.
 
 ```{r create_reuters_table}
 library(data.table)
@@ -110,21 +170,33 @@ reuters_tab <- data.table(doc_id = 1L:length(reuters_txt), text = reuters_txt)
 
 #### Allocate sufficient memory
 
-Running CoreNLP may require substanial memory. With 4GB, you are on the safe side. Set the memory limit for JVMs before doing anything else, i.e. note that setting the memory allocated for the JVM was the very first code executed in this vignette. It is necessary that this is done *before* rJava and/or bignlp are loaded.
+Running CoreNLP may require substanial memory. With 4GB, you are on the safe
+side. Set the memory limit for JVMs before doing anything else, i.e. note that
+setting the memory allocated for the JVM was the very first code executed in
+this vignette. It is necessary that this is done *before* rJava and/or bignlp
+are loaded.
 
-Please note: Other packages (such as [openNLP](https://CRAN.R-project.org/package=openNLP)) interfacing to Java may have instantiated a JVM already, with less memory than necessary for running coreNLP. If a JVM has already been initialized with insufficient memory, the memory allocated cannot be increased afterwards.
+Please note: Other packages (such as
+[openNLP](https://CRAN.R-project.org/package=openNLP)) interfacing to Java may
+have instantiated a JVM already, with less memory than necessary for running
+coreNLP. If a JVM has already been initialized with insufficient memory, the
+memory allocated cannot be increased afterwards.
 
 
 #### Configure properties
 
-The default approach of CoreNLP is to read the configuration of annotators from a properties file.  There is much more flexibility if we generate a Java Properties object which we can manipulate from R. This is what the `properties()` function does.
+The default approach of CoreNLP is to read the configuration of annotators from
+a properties file.  There is much more flexibility if we generate a Java
+Properties object which we can manipulate from R. This is what the
+`properties()` function does.
 
 ```{r}
 props_file <- corenlp_get_properties_file(lang = "en", fast = TRUE)
 props <- properties(x = props_file)
 ```
 
-As we want to use parallelization, we set the number of threads in the properties object. 
+As we want to use parallelization, we set the number of threads in the
+properties object.
 
 ```{r}
 properties_set_threads(props, no_cores)
@@ -133,13 +205,18 @@ properties_set_threads(props, no_cores)
 
 ### Instantiate pipeline
 
-Our first stept then is to instantiate the pipeline for processing files. On this point, we define the output format (argument `output_format`) we want to use. Here, we use the CoNLL output format which is closest to the tabular data formats that can be processed quickly by R.
+Our first stept then is to instantiate the pipeline for processing files. On
+this point, we define the output format (argument `output_format`) we want to
+use. Here, we use the CoNLL output format which is closest to the tabular data
+formats that can be processed quickly by R.
 
 ```{r}
 Pipe <- StanfordCoreNLP$new(properties = props, output_format = "conll")
 ```
 
-While it is good to see the messages issued on the initialization of the different annotators, there will be too many status messages when files are processed. Therefore, we switch the verbosity of the annotator off.
+While it is good to see the messages issued on the initialization of the
+different annotators, there will be too many status messages when files are
+processed. Therefore, we switch the verbosity of the annotator off.
 
 ```{r}
 Pipe$verbose(FALSE)
@@ -341,9 +418,14 @@ ts_ws <- lapply(
 )
 ```
 
-To keep things simple (and fast) here, we will just add a sentence annotation. In real-life scenarios you might want to add annotations "further down the NLP road" such es POS, NER etc. 
+To keep things simple (and fast) here, we will just add a sentence annotation.
+In real-life scenarios you might want to add annotations "further down the NLP
+road" such es POS, NER etc.
 
-The crucial setting step is to ensure that a plain and simple whitespace tokenizer is used. We can do so using the properties that configure the NLP pipeline. Setting the property "tokenize.whitespace" as "true" will do the job. Then we instantiate the pipeline with these properties.
+The crucial setting step is to ensure that a plain and simple whitespace
+tokenizer is used. We can do so using the properties that configure the NLP
+pipeline. Setting the property "tokenize.whitespace" as "true" will do the job.
+Then we instantiate the pipeline with these properties.
 
 ```{r}
 properties_list <- list(
@@ -353,7 +435,9 @@ properties_list <- list(
 Pipe <- StanfordCoreNLP$new(properties = properties_list, output_format = "conll")
 ```
 
-The rest is not new. We turn the vector of documents with whitespace-separated documents into an `AnnotationList`, we run the pipeline on the Annotation objects (in parallel) and convert the annotated data into a `data.table`.
+The rest is not new. We turn the vector of documents with whitespace-separated
+documents into an `AnnotationList`, we run the pipeline on the Annotation
+objects (in parallel) and convert the annotated data into a `data.table`.
 
 ```{r}
 annoli <- AnnotationList$new(ts_ws)
@@ -361,14 +445,24 @@ Pipe$annotate(annoli)
 reuters_dt_v2 <- annoli$as.data.table()
 ```
 
-We now have a table that has that same number of rows (i.e. same number of tokens) as the (tokenized) input data. The should only be a technicality to write back the annotation layers that have been added back to your data source (i.e. database or corpus management system).
+We now have a table that has that same number of rows (i.e. same number of
+tokens) as the (tokenized) input data. The should only be a technicality to
+write back the annotation layers that have been added back to your data source
+(i.e. database or corpus management system).
 
 
 #### Option 2: Turn tabular data into Annotation object
 
-There is a second workflow to work with pre-tokenized data that avoids generating a string. This step may appear somewhat inefficient. Wouldn't it be smart to generate the Java Annotation objects directly?
+There is a second workflow to work with pre-tokenized data that avoids
+generating a string. This step may appear somewhat inefficient. Wouldn't it be
+smart to generate the Java Annotation objects directly?
 
-Indeed, skipping generating a concatenated string with whitespace-delimiters should potentially speed up things. The current implementation of instantiating Java `Annotation` objects requires going back and forth between R and Java for every single token. This is very inefficient and inhibits performance dramatically. Thus, we present this appraoch as a proof-of-concept rather than for real life scenarios.
+Indeed, skipping generating a concatenated string with whitespace-delimiters
+should potentially speed up things. The current implementation of instantiating
+Java `Annotation` objects requires going back and forth between R and Java for
+every single token. This is very inefficient and inhibits performance
+dramatically. Thus, we present this appraoch as a proof-of-concept rather than
+for real life scenarios.
 
 ```{r, eval = FALSE}
 anno_objs <- lapply(
@@ -384,9 +478,13 @@ Pipe$annotate(anno_list)
 reuters_dt_v3 <- anno_list$as.data.table()
 ```
 
-To explain: We generate `Annotation` objects from tabular input data and turn the list of `Annotation` objects into a proper Java `ArrayList` that is assigned to a new R `AnnotationList` object. This is annotated using the pipeline we instantiated for approach #1.
+To explain: We generate `Annotation` objects from tabular input data and turn
+the list of `Annotation` objects into a proper Java `ArrayList` that is assigned
+to a new R `AnnotationList` object. This is annotated using the pipeline we
+instantiated for approach #1.
 
-This code is not run when preparing vignette because it is slow. If you do so, you will see it is slow indeed. So we do recommend to use the first approach.
+This code is not run when preparing vignette because it is slow. If you do so,
+you will see it is slow indeed. So we do recommend to use the first approach.
 
 
 ## Discussion
@@ -397,7 +495,10 @@ Enjoy!
 
 ### Installing CoreNLP
 
-A good and conventional place for installing a tool such as CoreNLP on Linux and macOS is the /opt dir. So from a terminal, create a directory for CoreNLP, go into it, download the zipped jar files, unzip it, and remove the zip file. Note that sudo rights may be necessary to write into the /opt directory.
+A good and conventional place for installing a tool such as CoreNLP on Linux and
+macOS is the /opt dir. So from a terminal, create a directory for CoreNLP, go
+into it, download the zipped jar files, unzip it, and remove the zip file. Note
+that sudo rights may be necessary to write into the /opt directory.
 
 ```{sh download_corenlp, eval = FALSE}
 mkdir /opt/stanford-corenlp

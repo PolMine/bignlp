@@ -1,14 +1,13 @@
 #' Auxiliary functions to get information on JVM.
 #' 
 #' Upon loading the bignlp package, a Java Virtual Machine (JVM) is initialized.
-#' Some auxiliary functions provide information on the configuration of the JVM
-#' and its status. Use the functions to check which Java is installed
-#' (recommended: Oracle Java), the Java version and the heap space of the JVM.
+#' A set of auxiliary functions provides information on the configuration of the
+#' JVM and its status.
 #' 
 #' @details `jvm_is_initialized` checks whether a JVM has been initialized
 #'   already. The return value is a `logical` value, `TRUE` if JVM has been
 #'   initialized, `FALSE` if not. As a JVM is initialized upon loading bignlp,
-#'   the expected value is always `TRUE` if your installation of Java and rJave
+#'   the expected value is always `TRUE` if your installation of Java and rJava
 #'   works.
 #' @export jvm_is_initialized
 #' @rdname jvm
@@ -50,18 +49,26 @@ jvm_heap_space <- function(units = "MB"){
 
 #' @rdname jvm
 #' @export
-jvm_memory_usage = function(){
+jvm_memory_usage <- function(){
   runtime <- rJava::J("java/lang/Runtime")$getRuntime()
-  list(totalMemory = runtime$totalMemory(), freeMemory = runtime$getRuntime()$freeMemory())
+  list(
+    totalMemory = runtime$totalMemory(),
+    freeMemory = runtime$getRuntime()$freeMemory()
+  )
 }
 
-.jvm_garbage_collection = function(){
+.jvm_garbage_collection <- function(){
   rJava::J("java/lang/Runtime")$getRuntime()$gc()
 }
 
 #' @rdname jvm
 #' @export
-jvm_available_processors = function(){
+jvm_available_processors <- function(){
   .jnew("java/lang/Runtime")$availableProcessors()
 }
 
+#' @rdname jvm
+#' @export
+jvm_encoding <- function(){
+  .jcall("java/lang/System", "S", "getProperty", "file.encoding")
+} 

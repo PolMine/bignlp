@@ -65,3 +65,18 @@ corenlp_get_properties_file <- function(lang = c("en", "de"), fast = TRUE){
   
 }
 
+
+#' Get version of CoreNLP
+#' @export corenlp_get_version
+corenlp_get_version <- function(){
+  as.numeric_version(
+    gsub(
+      "^.*?(\\d+\\.\\d+\\.\\d+).*?$", "\\1",
+      grep(
+        "^stanford-corenlp-\\d+\\.\\d+\\.\\d\\.jar$",
+        basename(rJava::.jclassPath()),
+        value = TRUE),
+      perl = TRUE
+    )
+  )
+}
