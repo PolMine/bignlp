@@ -41,7 +41,9 @@ augmenting the XML document.
 * `conll_parse()` will insert all new sentence nodes at once, which speeds up 
 the process of annotating XML documents significantly.
 * `purge()` will remove XML elements from the string.
-
+* When loading bignlp, the Java file encoding is displayed. Uses a new auxiliary
+function `jvm_encoding()`(#32).
+* New function `corenlp_version()` returns latest CoreNLP version.
 
 
 # bignlp v0.1.2

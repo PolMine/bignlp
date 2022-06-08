@@ -1,11 +1,11 @@
 ---
-title: "Dockerizing "
+title: "Dockerizing bignlp"
 subtitle: "Fast and memory-efficient annotation of big corpora"
 author: "Andreas Blaette (andreas.blaette@uni-due.de)"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{dockerized}
+  %\VignetteIndexEntry{Dockerizing bignlp}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 

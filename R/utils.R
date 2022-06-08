@@ -65,3 +65,33 @@ corenlp_get_properties_file <- function(lang = c("en", "de"), fast = TRUE){
   
 }
 
+
+#' Get version of CoreNLP
+#' @export corenlp_get_version
+corenlp_get_version <- function(){
+  as.numeric_version(
+    gsub(
+      "^.*?(\\d+\\.\\d+\\.\\d+).*?$", "\\1",
+      grep(
+        "^stanford-corenlp-\\d+\\.\\d+\\.\\d\\.jar$",
+        basename(rJava::.jclassPath()),
+        value = TRUE),
+      perl = TRUE
+    )
+  )
+}
+
+# Get version of latest CoreNLP release
+#' @export
+corenlp_latest <- function(){
+  trystatus <- try({
+    page <- xml2::read_html("https://stanfordnlp.github.io/CoreNLP/history.html")
+  })
+  if (is(trystatus)[[1]] == "try-error") return(NULL)
+  v_node <- xml2::xml_find_first(page, xpath = "//table/tbody/tr/td")
+  if (length(v_node) > 0L){
+    return(as.numeric_version(xml2::xml_text(v_node)))
+  } else {
+    return(NULL)
+  }
+}
