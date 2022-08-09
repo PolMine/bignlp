@@ -43,6 +43,7 @@ corenlp_annotate(x, ...)
   ne = FALSE,
   inmemory = FALSE,
   purge = TRUE,
+  opts = c("RECOVER", "NOERROR", "NOBLANKS", "HUGE", "COMPACT"),
   verbose = TRUE,
   progress = FALSE
 )
@@ -94,6 +95,9 @@ sentences in s tags.}
 
 \item{ne}{A \code{logical} value, whether to turn column 'ner' into XML annotation
 of named entities.}
+
+\item{opts}{Passed into \code{read_xml()} as argument \code{options}. Defaults to a
+options that make XML processing as robust as possible.}
 }
 \value{
 The target files will be returned, so that they can serve as input to

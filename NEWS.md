@@ -44,6 +44,8 @@ the process of annotating XML documents significantly.
 * When loading bignlp, the Java file encoding is displayed. Uses a new auxiliary
 function `jvm_encoding()`(#32).
 * New function `corenlp_version()` returns latest CoreNLP version.
+* `corenlp_annotate()` has new argument `opts` with options for `xml_read()` 
+that default of a robust choice of options.
 
 
 # bignlp v0.1.2

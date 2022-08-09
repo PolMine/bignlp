@@ -25,14 +25,14 @@ annoli$as.data.table()
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{AnnotationList$new()}}
-\item \href{#method-as.data.table}{\code{AnnotationList$as.data.table()}}
-\item \href{#method-clone}{\code{AnnotationList$clone()}}
+\item \href{#method-AnnotationList-new}{\code{AnnotationList$new()}}
+\item \href{#method-AnnotationList-as.data.table}{\code{AnnotationList$as.data.table()}}
+\item \href{#method-AnnotationList-clone}{\code{AnnotationList$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-AnnotationList-new"></a>}}
+\if{latex}{\out{\hypertarget{method-AnnotationList-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize AnnotationPipeline
 \subsection{Usage}{
@@ -51,8 +51,8 @@ Initialize AnnotationPipeline
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-as.data.table"></a>}}
-\if{latex}{\out{\hypertarget{method-as.data.table}{}}}
+\if{html}{\out{<a id="method-AnnotationList-as.data.table"></a>}}
+\if{latex}{\out{\hypertarget{method-AnnotationList-as.data.table}{}}}
 \subsection{Method \code{as.data.table()}}{
 Parse annotation output and return \code{data.table}.
 \subsection{Usage}{
@@ -61,8 +61,8 @@ Parse annotation output and return \code{data.table}.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-AnnotationList-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-AnnotationList-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

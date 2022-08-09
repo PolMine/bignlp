@@ -154,6 +154,8 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' @param fmt A format string for styling the output of applying the annotation
 #'   pipeline. Defaults to a concatenating annotations seperated by tabs. Can be
 #'   used to generate XML output.
+#' @param opts Passed into `read_xml()` as argument `options`. Defaults to a 
+#'   options that make XML processing as robust as possible.
 #' @rdname corenlp_annotate
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child
 #'   xml_text<- write_xml
@@ -174,7 +176,7 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' # Write annotated document to disc
 #' y <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = xml_doc, file = y, options = NULL)
-setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), fmt = paste(rep("%s", times = length(cols)), collapse = "\t"), sentences = TRUE, ne = FALSE, inmemory = FALSE, purge = TRUE, verbose = TRUE, progress = FALSE){
+setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), fmt = paste(rep("%s", times = length(cols)), collapse = "\t"), sentences = TRUE, ne = FALSE, inmemory = FALSE, purge = TRUE, opts =  c("RECOVER", "NOERROR", "NOBLANKS", "HUGE"), verbose = TRUE, progress = FALSE){
   
   text_nodes <- xml2::xml_find_all(x = x, xpath)
   text_nodes_text <- xml_text(text_nodes)
@@ -192,7 +194,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   # Purge first, because nodes may be empty only after purge
   empty_nodes <- grep("^\\s*$", text_nodes_text)
   if (length(empty_nodes) > 0L){
-    cli_alert_info("remove {.emph length(empty_nodes)} text nodes")
+    cli_alert_info("remove {length(empty_nodes)} empty text nodes")
     for (i in rev(empty_nodes)) xml2::xml_remove(text_nodes[[i]])
     text_nodes <- xml2::xml_find_all(x = x, xpath = xpath)
     text_nodes_text <- sapply(text_nodes, xml_text)
@@ -266,7 +268,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     x = charToRaw(enc2utf8(xml_doc_char)),
     encoding = "UTF-8",
     as_html = FALSE,
-    options = c("RECOVER", "NOERROR", "NOBLANKS")
+    options = opts
   )
   new_nodes <- xml_find_all(xml_doc_tmp, xpath = xpath)
   

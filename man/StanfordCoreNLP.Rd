@@ -81,23 +81,23 @@ from annotations.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{StanfordCoreNLP$new()}}
-\item \href{#method-process}{\code{StanfordCoreNLP$process()}}
-\item \href{#method-process_files}{\code{StanfordCoreNLP$process_files()}}
-\item \href{#method-verbose}{\code{StanfordCoreNLP$verbose()}}
-\item \href{#method-clone}{\code{StanfordCoreNLP$clone()}}
+\item \href{#method-StanfordCoreNLP-new}{\code{StanfordCoreNLP$new()}}
+\item \href{#method-StanfordCoreNLP-process}{\code{StanfordCoreNLP$process()}}
+\item \href{#method-StanfordCoreNLP-process_files}{\code{StanfordCoreNLP$process_files()}}
+\item \href{#method-StanfordCoreNLP-verbose}{\code{StanfordCoreNLP$verbose()}}
+\item \href{#method-StanfordCoreNLP-clone}{\code{StanfordCoreNLP$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="bignlp" data-topic="AnnotationPipeline" data-id="annotate">}\href{../../bignlp/html/AnnotationPipeline.html#method-annotate}{\code{bignlp::AnnotationPipeline$annotate()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="bignlp" data-topic="AnnotationPipeline" data-id="annotate"><a href='../../bignlp/html/AnnotationPipeline.html#method-AnnotationPipeline-annotate'><code>bignlp::AnnotationPipeline$annotate()</code></a></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-StanfordCoreNLP-new"></a>}}
+\if{latex}{\out{\hypertarget{method-StanfordCoreNLP-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{StanfordCoreNLP$new(
@@ -121,8 +121,8 @@ properties object.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-process"></a>}}
-\if{latex}{\out{\hypertarget{method-process}{}}}
+\if{html}{\out{<a id="method-StanfordCoreNLP-process"></a>}}
+\if{latex}{\out{\hypertarget{method-StanfordCoreNLP-process}{}}}
 \subsection{Method \code{process()}}{
 Process a string.
 \subsection{Usage}{
@@ -146,8 +146,8 @@ If output_format is "json" or "xml", a string is returned, if output_format is
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-process_files"></a>}}
-\if{latex}{\out{\hypertarget{method-process_files}{}}}
+\if{html}{\out{<a id="method-StanfordCoreNLP-process_files"></a>}}
+\if{latex}{\out{\hypertarget{method-StanfordCoreNLP-process_files}{}}}
 \subsection{Method \code{process_files()}}{
 Process all files in the stated directory (argument \code{dir}).
 Parallel processing is possible if a 'threads' key the properties
@@ -169,8 +169,8 @@ the tagging exercise.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-verbose"></a>}}
-\if{latex}{\out{\hypertarget{method-verbose}{}}}
+\if{html}{\out{<a id="method-StanfordCoreNLP-verbose"></a>}}
+\if{latex}{\out{\hypertarget{method-StanfordCoreNLP-verbose}{}}}
 \subsection{Method \code{verbose()}}{
 Set whether calls of the class shall be verbose.
 \subsection{Usage}{
@@ -190,8 +190,8 @@ The class is returned invisibly
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-StanfordCoreNLP-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-StanfordCoreNLP-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

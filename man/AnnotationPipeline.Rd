@@ -52,14 +52,14 @@ result <- anno$as.data.table(anno)
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{AnnotationPipeline$new()}}
-\item \href{#method-annotate}{\code{AnnotationPipeline$annotate()}}
-\item \href{#method-clone}{\code{AnnotationPipeline$clone()}}
+\item \href{#method-AnnotationPipeline-new}{\code{AnnotationPipeline$new()}}
+\item \href{#method-AnnotationPipeline-annotate}{\code{AnnotationPipeline$annotate()}}
+\item \href{#method-AnnotationPipeline-clone}{\code{AnnotationPipeline$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-AnnotationPipeline-new"></a>}}
+\if{latex}{\out{\hypertarget{method-AnnotationPipeline-new}{}}}
 \subsection{Method \code{new()}}{
 Initialize AnnotationPipeline
 \subsection{Usage}{
@@ -75,8 +75,8 @@ Initialize AnnotationPipeline
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-annotate"></a>}}
-\if{latex}{\out{\hypertarget{method-annotate}{}}}
+\if{html}{\out{<a id="method-AnnotationPipeline-annotate"></a>}}
+\if{latex}{\out{\hypertarget{method-AnnotationPipeline-annotate}{}}}
 \subsection{Method \code{annotate()}}{
 Annotate a list of strings.
 \subsection{Usage}{
@@ -103,8 +103,8 @@ A Java object .
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-AnnotationPipeline-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-AnnotationPipeline-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
