@@ -119,6 +119,7 @@ corenlp_parse_conll <- function(x, progress = TRUE, threads = 1L){
           blank.lines.skip = TRUE,
           quote = "",
           header = FALSE,
+          sep = "\t",
           colClasses = list(integer = 1L, character = 2L:7L)
         )
       )

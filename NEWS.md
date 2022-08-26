@@ -1,4 +1,4 @@
-# bignlp v0.1.2.9001 - v0.1.2.9008
+# bignlp v0.1.2.9001 - v0.1.2.9016
 
 * Added lifecylce badge 'maturing'.
 * Add repostatus badge 'Active'.
@@ -46,6 +46,7 @@ function `jvm_encoding()`(#32).
 * New function `corenlp_version()` returns latest CoreNLP version.
 * `corenlp_annotate()` has new argument `opts` with options for `xml_read()` 
 that default of a robust choice of options.
+* Stronger assumption about tab separated data of `corenlp_parse_conll()`.
 
 
 # bignlp v0.1.2
