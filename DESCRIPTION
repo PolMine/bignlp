@@ -1,8 +1,8 @@
 Package: bignlp
 Type: Package
 Title: Fast and Memory-Efficient Annotation of Big Corpora
-Version: 0.1.3
-Date: 2022-08-26
+Version: 0.1.3.9001
+Date: 2022-09-12
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de"),
   person("Christoph", "Leonhardt", role = "aut", email = "christoph.leonhardt@uni-due.de")

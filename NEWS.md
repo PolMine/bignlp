@@ -1,3 +1,11 @@
+# bignlp v0.1.3.9001ff
+
+* The `corenlp_annotate()` method for `data.table` objects will create a column
+"xml" with XML output if `pipe` is a `AnnotationPipeline` with an XML Outputter.
+* The `corenlp_annotate()` method for `xml_document` objects will insert the 
+result of the XML Outputter if the designated output format is "xml".
+
+
 # bignlp v0.1.3
 
 * Added lifecylce badge 'maturing'.

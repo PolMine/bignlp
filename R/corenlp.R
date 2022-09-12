@@ -68,6 +68,7 @@
 setGeneric("corenlp_annotate", function(x, ...) standardGeneric("corenlp_annotate"))
 
 
+#' @importFrom data.table setnames
 #' @rdname corenlp_annotate
 setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption("bignlp.corenlp_dir"), pipe, purge = TRUE, threads = 1L, inmemory = TRUE, progress = TRUE,  verbose = TRUE){
   stopifnot(c("doc_id", "text") %in% colnames(x))
@@ -81,26 +82,38 @@ setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption(
   if (threads == 1L){
     if (progress) pb <- txtProgressBar(min = 0, max = uniqueN(x[["doc_id"]]), style = 3)
     retval <- x[, {if (progress) setTxtProgressBar(pb, value = .GRP); Annotator$process(.SD[["text"]], purge = purge)}, by = "doc_id"]
+    
+    if (Annotator$output_format == "xml")
+      setnames(retval, old = "V1", new = "xml")
+    
     if (progress) close(pb)
   } else {
     if (isTRUE(inmemory)){
       annolist <- AnnotationList$new(x[["text"]])
       Annotator$annotate(annolist, verbose = verbose)
-      conll_outputter <- rJava::.jnew("edu.stanford.nlp.pipeline.CoNLLOutputter")
       if (verbose) message("... get results")
-      conll_output <- lapply(
+      annotated <- lapply(
         0L:(annolist$obj$size() - 1L),
-        function(i)conll_outputter$print(annolist$obj$get(i))
+        function(i) Annotator$outputter$print(annolist$obj$get(i))
       )
       if (verbose) message("... parse conll")
-      retval <- rbindlist(
-        mclapply(
-          1L:length(conll_output),
-          function(i)
-            corenlp_parse_conll(conll_output[[i]])[, "doc_id" := x[["doc_id"]][i]],
-          mc.cores = threads
+      if (Annotator$output_format == "conll"){
+        retval <- rbindlist(
+          mclapply(
+            seq_along(annotated),
+            function(i)
+              corenlp_parse_conll(annotated[[i]])[, "doc_id" := x[["doc_id"]][i]],
+            mc.cores = threads
+          )
         )
-      )
+      } else if (Annotator$output_format == "xml"){
+        retval <- data.table(
+          doc_id = seq_along(annotated),
+          xml = annotated
+        )
+      } else {
+        stop(sprintf("'%s' outputtter not supported", Annotator$output_format))
+      }
       if (verbose) message("... finished")
     } else if (isFALSE(inmemory)){
       if (verbose) message("... write documents to disk")
@@ -115,16 +128,25 @@ setMethod("corenlp_annotate", "data.table", function(x, corenlp_dir = getOption(
       )
       
       if (verbose) message("... process documents")
-      conll_files <- lapply(segdirs, Annotator$process_files)
-      while(length(Sys.glob(sprintf("%s/*.conll", segdirs))) < nrow(x)){
+      fnames <- lapply(segdirs, Annotator$process_files)
+      while(length(Sys.glob(sprintf("%s/*.%s", segdirs, Annotator$output_format))) < nrow(x)){
         Sys.sleep(0.1)
       }
       
-      if (verbose) message("... parse CoNLL files")
-      retval <- corenlp_parse_conll(
-        conll_files,
-        progress = FALSE, threads = threads
-      )
+      if (Annotator$output_format == "conll"){
+        if (verbose) message("... parse CoNLL files")
+        retval <- corenlp_parse_conll(fnames, progress = FALSE, threads = threads)
+      } else if (Annotator$output_format == "xml"){
+        retval <- data.table(
+          doc_id = seq_along(unlist(fnames)),
+          xml = sapply(
+            unlist(fnames),
+            function(fname) paste(readLines(fname), collapse = "\n")
+          )
+        )
+      } else {
+        stop(sprintf("output format '%s' not supported", Annotator$output_format))
+      }
 
       if (verbose) message("... remove temporary files")
       unlink(x = chunkdir, recursive = TRUE)
@@ -209,56 +231,74 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     empty_nodes <- grep("^\\s*$", text_nodes_text)
     if (length(empty_nodes) > 0L) stop("non-empty node which should be gone!")
   }
-
-  if (verbose) cli_alert("run annotation pipeline")
-  dt <- corenlp_annotate(
-    x = data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text),
-    pipe = pipe,
-    threads = threads, inmemory = inmemory,
-    purge = FALSE, # we've done this already
-    verbose = FALSE, progress = progress
-  )
   
-  tokenline <- do.call(sprintf, c(fmt, lapply(cols, function(col) dt[[col]])))
-
-  if (ne){
-    if (verbose) cli_alert("wrap named entities into XML tags")
-    ne <- ifelse(dt[["ner"]] == "O", NA, dt[["ner"]])
-    ne_begin <- ifelse(!is.na(ne), sprintf('<ne type="%s">\n', dt[["ner"]]), "")
-    ne_end <- ifelse(!is.na(ne), "\n</ne>\n", "")
-    multiline_ne <- c(ifelse(ne[2:length(ne)] == ne[1:(length(ne) - 1)], TRUE, FALSE), FALSE)
-    multiline_ne <- ifelse(is.na(multiline_ne), FALSE, multiline_ne)
+  if (pipe$output_format == "conll"){
+    if (verbose) cli_alert("run annotation pipeline (with CoNLL Outputter)")
+    dt <- corenlp_annotate(
+      x = data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text),
+      pipe = pipe,
+      threads = threads, inmemory = inmemory,
+      purge = FALSE, # we've done this already
+      verbose = FALSE, progress = progress
+    )
     
-    # Next line is new sentence? Keep closing tag
-    multiline_ne <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, FALSE, multiline_ne)
-    ne_end <- ifelse(multiline_ne, "", ne_end)
-    ne_begin <- ifelse(c(FALSE, multiline_ne[1:(nrow(dt) - 1L)]), "", ne_begin)
-    tokenline <-  sprintf("%s%s%s", ne_begin, tokenline, ne_end)
-  }
-  
-  
-  if (sentences){
-    if (verbose) cli_alert("wrap sentences into XML tags")
-    s_begin <- ifelse(dt[["idx"]] == 1L, "<s>\n", "")
-    s_end <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, "\n</s>", "")
-    tokenline <-sprintf("%s%s%s", s_begin, tokenline, s_end)
-  }
+    tokenline <- do.call(sprintf, c(fmt, lapply(cols, function(col) dt[[col]])))
+    
+    if (ne){
+      if (verbose) cli_alert("wrap named entities into XML tags")
+      ne <- ifelse(dt[["ner"]] == "O", NA, dt[["ner"]])
+      ne_begin <- ifelse(!is.na(ne), sprintf('<ne type="%s">\n', dt[["ner"]]), "")
+      ne_end <- ifelse(!is.na(ne), "\n</ne>\n", "")
+      multiline_ne <- c(ifelse(ne[2:length(ne)] == ne[1:(length(ne) - 1)], TRUE, FALSE), FALSE)
+      multiline_ne <- ifelse(is.na(multiline_ne), FALSE, multiline_ne)
+      
+      # Next line is new sentence? Keep closing tag
+      multiline_ne <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, FALSE, multiline_ne)
+      ne_end <- ifelse(multiline_ne, "", ne_end)
+      ne_begin <- ifelse(c(FALSE, multiline_ne[1:(nrow(dt) - 1L)]), "", ne_begin)
+      tokenline <-  sprintf("%s%s%s", ne_begin, tokenline, ne_end)
+    }
+    
+    
+    if (sentences){
+      if (verbose) cli_alert("wrap sentences into XML tags")
+      s_begin <- ifelse(dt[["idx"]] == 1L, "<s>\n", "")
+      s_end <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, "\n</s>", "")
+      tokenline <-sprintf("%s%s%s", s_begin, tokenline, s_end)
+    }
+    
+    dt[, "tokenline" := tokenline]
+    dt_docs <- split(dt, f = dt[["doc_id"]])
+    
+    if (verbose) cli_alert("update XML document with annotated content")
+    newnodes <- mclapply(
+      seq_along(dt_docs),
+      function(i){
+        el <- xml_name(text_nodes[[i]])
+        sprintf(
+          "<%s>\n%s\n</%s>",
+          el, paste(dt_docs[[i]][["tokenline"]], collapse = "\n"), el
+        )
+      },
+      mc.cores = threads
+    )
+    
+  } else if (pipe$output_format == "xml"){
+    dt <- corenlp_annotate(
+      x = data.table(doc_id = seq_along(text_nodes), text = text_nodes_text),
+      pipe = pipe,
+      threads = threads, inmemory = inmemory,
+      purge = FALSE, # we've done this already
+      verbose = FALSE, progress = progress
+    )
+    
+    nodes <- sapply(text_nodes, xml_name)
+    docs <- gsub("^.*?<document>(.*?)</document>.*?$", "\\1", dt[["xml"]])
+    newnodes <- sprintf("<%s>%s</%s>", nodes, docs, nodes)
 
-  dt[, "tokenline" := tokenline]
-  dt_docs <- split(dt, f = dt[["doc_id"]])
-
-  if (verbose) cli_alert("update XML document with annotated content")
-  newnodes <- mclapply(
-    seq_along(dt_docs),
-    function(i){
-      el <- xml_name(text_nodes[[i]])
-      sprintf(
-        "<%s>\n%s\n</%s>",
-        el, paste(dt_docs[[i]][["tokenline"]], collapse = "\n"), el
-      )
-    },
-    mc.cores = threads
-  )
+  } else if (pipe$output_format == "json"){
+    stop("`corenlp_annotate()` not implemented for json outputter")
+  }
   
   xml_doc_char <- sprintf(
     "<tmpdoc>%s</tmpdoc>",
@@ -274,5 +314,5 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   
   dummy <- mapply(xml_replace, text_nodes, new_nodes)
   
-  invisible(x)
+  return( invisible(x) )
 })
