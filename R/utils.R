@@ -81,8 +81,11 @@ corenlp_get_version <- function(){
   )
 }
 
-# Get version of latest CoreNLP release
-#' @export
+#' Get version of latest CoreNLP release
+#' 
+#' Evaluate the website of CoreNLP to get information on the latest CoreNLP
+#' release.
+#' @export corenlp_latest
 corenlp_latest <- function(){
   trystatus <- try({
     page <- xml2::read_html("https://stanfordnlp.github.io/CoreNLP/history.html")

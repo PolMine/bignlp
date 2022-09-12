@@ -47,6 +47,9 @@ function `jvm_encoding()`(#32).
 * `corenlp_annotate()` has new argument `opts` with options for `xml_read()` 
 that default of a robust choice of options.
 * Stronger assumption about tab separated data of `corenlp_parse_conll()`.
+* An illegal reflective access warning issued when calling
+`AnnotationList$new()` that turned into an error is addressed by instantiating a
+real ArrayList (#25).
 
 
 # bignlp v0.1.2

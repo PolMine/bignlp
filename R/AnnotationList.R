@@ -40,7 +40,8 @@ AnnotationList <- R6Class(
               .jnew("edu/stanford/nlp/pipeline/Annotation", .jnew("java.lang.String", doc))
             }
           ))
-          self$obj <- .jnew("java.util.Arrays")$asList(anno_array)
+          self$obj <- .jnew("java.util.ArrayList")
+          .jnew("java.util.Collections")$addAll(self$obj, anno_array)
         } else if (is(s) == "jobjRef"){
           self$obj <- x
         }

@@ -43,7 +43,7 @@ corenlp_annotate(x, ...)
   ne = FALSE,
   inmemory = FALSE,
   purge = TRUE,
-  opts = c("RECOVER", "NOERROR", "NOBLANKS", "HUGE", "COMPACT"),
+  opts = c("RECOVER", "NOERROR", "NOBLANKS", "HUGE"),
   verbose = TRUE,
   progress = FALSE
 )

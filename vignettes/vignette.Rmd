@@ -230,7 +230,7 @@ segdirs <- segment(x = reuters_tab, dir = (nlpdir <- tempdir()), chunksize = 10L
 ```
 
 
-**Step 2 - Appy** Process files
+**Step 2 - Apply** Process files
 
 ```{r}
 conll_files <- lapply(segdirs, Pipe$process_files)
