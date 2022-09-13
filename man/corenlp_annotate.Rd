@@ -147,16 +147,26 @@ y <- corenlp_annotate(
 xml_files <- list.files(system.file(package = "bignlp", "extdata", "xml"))
 xml_dir <- system.file(package = "bignlp", "extdata", "xml")
 xml_files <- list.files(xml_dir, full.names = TRUE)
-xml_doc <- xml2::read_xml(x = xml_files[[1]])
 
+# Scenario 1: Insert CoNLL output into XML
+
+doc <- xml2::read_xml(x = xml_files[[1]])
 Pipe <- StanfordCoreNLP$new(
   output_format = "conll",
   properties = corenlp_get_properties_file(lang = "en", fast = TRUE)
 )
-
-xml_doc2 <- corenlp_annotate(x = xml_doc, pipe = Pipe, sentences = TRUE)
+corenlp_annotate(x = doc, pipe = Pipe, sentences = TRUE) # changes inplace
 
 # Write annotated document to disc
-y <- tempfile(fileext = ".xml")
-xml2::write_xml(x = xml_doc, file = y, options = NULL)
+xml_tmp <- tempfile(fileext = ".xml")
+xml2::write_xml(x = doc, file = xml_tmp, options = NULL)
+
+# Scenario 2: Insert CoreNLP XML output into XML
+
+doc <- xml2::read_xml(x = xml_files[[1]]) # read anew
+Pipe <- StanfordCoreNLP$new(
+  output_format = "xml", # triggers XML output
+  properties = corenlp_get_properties_file(lang = "en", fast = TRUE)
+)
+corenlp_annotate(x = doc, verbose = TRUE, pipe = Pipe) # inplace!
 }

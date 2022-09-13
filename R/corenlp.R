@@ -182,30 +182,41 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child
 #'   xml_text<- write_xml
 #' @importFrom xml2 xml_find_first read_html xml_name xml_replace
-#' @importFrom cli cli_alert_info
+#' @importFrom cli cli_alert_info cli_progress_step
 #' @examples
 #' xml_dir <- system.file(package = "bignlp", "extdata", "xml")
 #' xml_files <- list.files(xml_dir, full.names = TRUE)
-#' xml_doc <- xml2::read_xml(x = xml_files[[1]])
 #' 
+#' # Scenario 1: Insert CoNLL output into XML
+#' 
+#' doc <- xml2::read_xml(x = xml_files[[1]])
 #' Pipe <- StanfordCoreNLP$new(
 #'   output_format = "conll",
 #'   properties = corenlp_get_properties_file(lang = "en", fast = TRUE)
 #' )
-#' 
-#' xml_doc2 <- corenlp_annotate(x = xml_doc, pipe = Pipe, sentences = TRUE)
+#' corenlp_annotate(x = doc, pipe = Pipe, sentences = TRUE) # changes inplace
 #' 
 #' # Write annotated document to disc
-#' y <- tempfile(fileext = ".xml")
-#' xml2::write_xml(x = xml_doc, file = y, options = NULL)
+#' xml_tmp <- tempfile(fileext = ".xml")
+#' xml2::write_xml(x = doc, file = xml_tmp, options = NULL)
+#' 
+#' # Scenario 2: Insert CoreNLP XML output into XML
+#' 
+#' doc <- xml2::read_xml(x = xml_files[[1]]) # read anew
+#' Pipe <- StanfordCoreNLP$new(
+#'   output_format = "xml", # triggers XML output
+#'   properties = corenlp_get_properties_file(lang = "en", fast = TRUE)
+#' )
+#' corenlp_annotate(x = doc, verbose = TRUE, pipe = Pipe) # inplace!
 setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), fmt = paste(rep("%s", times = length(cols)), collapse = "\t"), sentences = TRUE, ne = FALSE, inmemory = FALSE, purge = TRUE, opts =  c("RECOVER", "NOERROR", "NOBLANKS", "HUGE"), verbose = TRUE, progress = FALSE){
   
   text_nodes <- xml2::xml_find_all(x = x, xpath)
   text_nodes_text <- xml_text(text_nodes)
-  if (verbose) cli_alert("extracted {.emphf {length(text_nodes)}} text node{?s}")
+  if (verbose)
+    cli_alert("found {.emphf {length(text_nodes)}} text node{?s} to process")
 
   if (isTRUE(purge)){
-    if (verbose) cli_alert("denoise/purge text")
+    if (verbose) cli_progress_step("denoise text")
     text_nodes_text <- sapply(
       text_nodes_text,
       purge, replacements = corenlp_preprocessing_replacements,
@@ -233,7 +244,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   }
   
   if (pipe$output_format == "conll"){
-    if (verbose) cli_alert("run annotation pipeline (with CoNLL Outputter)")
+    if (verbose) cli_progress_step("run annotation pipeline (CoNLL Outputter)")
     dt <- corenlp_annotate(
       x = data.table(doc_id = 1L:length(text_nodes), text = text_nodes_text),
       pipe = pipe,
@@ -245,7 +256,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     tokenline <- do.call(sprintf, c(fmt, lapply(cols, function(col) dt[[col]])))
     
     if (ne){
-      if (verbose) cli_alert("wrap named entities into XML tags")
+      if (verbose) cli_progress_step("wrap named entities into XML tags")
       ne <- ifelse(dt[["ner"]] == "O", NA, dt[["ner"]])
       ne_begin <- ifelse(!is.na(ne), sprintf('<ne type="%s">\n', dt[["ner"]]), "")
       ne_end <- ifelse(!is.na(ne), "\n</ne>\n", "")
@@ -261,7 +272,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     
     
     if (sentences){
-      if (verbose) cli_alert("wrap sentences into XML tags")
+      if (verbose) cli_progress_step("wrap sentences into XML tags")
       s_begin <- ifelse(dt[["idx"]] == 1L, "<s>\n", "")
       s_end <- ifelse(c(dt[["idx"]][2:nrow(dt)], 1L) == 1L, "\n</s>", "")
       tokenline <-sprintf("%s%s%s", s_begin, tokenline, s_end)
@@ -270,7 +281,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     dt[, "tokenline" := tokenline]
     dt_docs <- split(dt, f = dt[["doc_id"]])
     
-    if (verbose) cli_alert("update XML document with annotated content")
+    if (verbose) cli_progress_step("transform annotated content")
     newnodes <- mclapply(
       seq_along(dt_docs),
       function(i){
@@ -284,6 +295,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     )
     
   } else if (pipe$output_format == "xml"){
+    if (verbose) cli_progress_step("run annotation pipeline (XML Outputter)")
     dt <- corenlp_annotate(
       x = data.table(doc_id = seq_along(text_nodes), text = text_nodes_text),
       pipe = pipe,
@@ -292,14 +304,15 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
       verbose = FALSE, progress = progress
     )
     
+    if (verbose) cli_progress_step("transform annotated content")
     nodes <- sapply(text_nodes, xml_name)
-    docs <- gsub("^.*?<document>(.*?)</document>.*?$", "\\1", dt[["xml"]])
+    docs <- gsub("</document>.*?$", "", gsub("^.*?<document>", "", dt[["xml"]]))
     newnodes <- sprintf("<%s>%s</%s>", nodes, docs, nodes)
-
   } else if (pipe$output_format == "json"){
     stop("`corenlp_annotate()` not implemented for json outputter")
   }
   
+  if (verbose) cli_progress_step("insert annotated content into XML")
   xml_doc_char <- sprintf(
     "<tmpdoc>%s</tmpdoc>",
     paste(unlist(newnodes), collapse = "\n")
