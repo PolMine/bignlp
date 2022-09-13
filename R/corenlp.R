@@ -178,11 +178,15 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #'   used to generate XML output.
 #' @param opts Passed into `read_xml()` as argument `options`. Defaults to a 
 #'   options that make XML processing as robust as possible.
+#' @param xsl An XSLT style sheet parsed as `xml_document` that will be applied
+#'   before assembling the final document. Useful for transforming CoreNLP XML
+#'   output efficiently to a lean target format.
 #' @rdname corenlp_annotate
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child
 #'   xml_text<- write_xml
 #' @importFrom xml2 xml_find_first read_html xml_name xml_replace
 #' @importFrom cli cli_alert_info cli_progress_step
+#' @importFrom xslt xml_xslt
 #' @examples
 #' xml_dir <- system.file(package = "bignlp", "extdata", "xml")
 #' xml_files <- list.files(xml_dir, full.names = TRUE)
@@ -200,7 +204,7 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' xml_tmp <- tempfile(fileext = ".xml")
 #' xml2::write_xml(x = doc, file = xml_tmp, options = NULL)
 #' 
-#' # Scenario 2: Insert CoreNLP XML output into XML
+#' # Scenario 2a: Insert CoreNLP XML output into XML (without transformation)
 #' 
 #' doc <- xml2::read_xml(x = xml_files[[1]]) # read anew
 #' Pipe <- StanfordCoreNLP$new(
@@ -208,7 +212,21 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #'   properties = corenlp_get_properties_file(lang = "en", fast = TRUE)
 #' )
 #' corenlp_annotate(x = doc, verbose = TRUE, pipe = Pipe) # inplace!
-setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), fmt = paste(rep("%s", times = length(cols)), collapse = "\t"), sentences = TRUE, ne = FALSE, inmemory = FALSE, purge = TRUE, opts =  c("RECOVER", "NOERROR", "NOBLANKS", "HUGE"), verbose = TRUE, progress = FALSE){
+#' 
+#' # Scenario 2b: Insert transformed CoreNLP XML output
+#' 
+#' stylesheet <- xml2::read_xml(
+#'   x = system.file(package = "bignlp", "extdata", "xsl", "sample.xsl")
+#' )
+#' doc <- xml2::read_xml(x = xml_files[[1]]) # read anew
+#' corenlp_annotate(
+#'   x = doc,
+#'   pipe = Pipe,
+#'   xpath = "//p",
+#'   xsl = stylesheet,
+#'   verbose = TRUE
+#' )
+setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, threads = 1L, cols = c("word", "lemma", "pos"), fmt = paste(rep("%s", times = length(cols)), collapse = "\t"), sentences = TRUE, ne = FALSE, xsl = NULL, inmemory = FALSE, purge = TRUE, opts =  c("RECOVER", "NOERROR", "NOBLANKS", "HUGE"), verbose = TRUE, progress = FALSE){
   
   text_nodes <- xml2::xml_find_all(x = x, xpath)
   text_nodes_text <- xml_text(text_nodes)
@@ -314,7 +332,7 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
   
   if (verbose) cli_progress_step("insert annotated content into XML")
   xml_doc_char <- sprintf(
-    "<tmpdoc>%s</tmpdoc>",
+    "<root>%s</root>",
     paste(unlist(newnodes), collapse = "\n")
   )
   xml_doc_tmp <- read_xml(
@@ -323,8 +341,14 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     as_html = FALSE,
     options = opts
   )
-  new_nodes <- xml_find_all(xml_doc_tmp, xpath = xpath)
   
+  if (!is.null(xsl)){
+    if (verbose) cli_progress_step("transformation using XSL")
+    xml_doc_tmp <- xslt::xml_xslt(doc = xml_doc_tmp, stylesheet = xsl)
+  }
+
+  new_nodes <- xml_find_all(xml_doc_tmp, xpath = xpath)
+
   dummy <- mapply(xml_replace, text_nodes, new_nodes)
   
   return( invisible(x) )

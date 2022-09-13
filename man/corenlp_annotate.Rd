@@ -41,6 +41,7 @@ corenlp_annotate(x, ...)
   fmt = paste(rep("\%s", times = length(cols)), collapse = "\\t"),
   sentences = TRUE,
   ne = FALSE,
+  xsl = NULL,
   inmemory = FALSE,
   purge = TRUE,
   opts = c("RECOVER", "NOERROR", "NOBLANKS", "HUGE"),
@@ -95,6 +96,10 @@ sentences in s tags.}
 
 \item{ne}{A \code{logical} value, whether to turn column 'ner' into XML annotation
 of named entities.}
+
+\item{xsl}{An XSLT style sheet parsed as \code{xml_document} that will be applied
+before assembling the final document. Useful for transforming CoreNLP XML
+output efficiently to a lean target format.}
 
 \item{opts}{Passed into \code{read_xml()} as argument \code{options}. Defaults to a
 options that make XML processing as robust as possible.}
@@ -161,7 +166,7 @@ corenlp_annotate(x = doc, pipe = Pipe, sentences = TRUE) # changes inplace
 xml_tmp <- tempfile(fileext = ".xml")
 xml2::write_xml(x = doc, file = xml_tmp, options = NULL)
 
-# Scenario 2: Insert CoreNLP XML output into XML
+# Scenario 2a: Insert CoreNLP XML output into XML (without transformation)
 
 doc <- xml2::read_xml(x = xml_files[[1]]) # read anew
 Pipe <- StanfordCoreNLP$new(
@@ -169,4 +174,18 @@ Pipe <- StanfordCoreNLP$new(
   properties = corenlp_get_properties_file(lang = "en", fast = TRUE)
 )
 corenlp_annotate(x = doc, verbose = TRUE, pipe = Pipe) # inplace!
+
+# Scenario 2b: Insert transformed CoreNLP XML output
+
+stylesheet <- xml2::read_xml(
+  x = system.file(package = "bignlp", "extdata", "xsl", "sample.xsl")
+)
+doc <- xml2::read_xml(x = xml_files[[1]]) # read anew
+corenlp_annotate(
+  x = doc,
+  pipe = Pipe,
+  xpath = "//p",
+  xsl = stylesheet,
+  verbose = TRUE
+)
 }

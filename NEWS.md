@@ -4,6 +4,11 @@
 "xml" with XML output if `pipe` is a `AnnotationPipeline` with an XML Outputter.
 * The `corenlp_annotate()` method for `xml_document` objects will insert the 
 result of the XML Outputter if the designated output format is "xml".
+* `corenlp_annotate()` replaces `cli_alert_info()` with `cli_progress_step()` 
+for nicer and more informative (timing) messages.
+* `corenlp_annotate()` has new argument `xsl` to apply a XSLT Style Sheet on
+XML nodes with annotations. Useful to get rid of potential overhead of the XML 
+Outputter.
 
 
 # bignlp v0.1.3
