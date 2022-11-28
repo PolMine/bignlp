@@ -5,6 +5,8 @@ test_that(
     xml_files <- list.files(xml_dir, full.names = TRUE)
     xml_doc <- xml2::read_xml(x = xml_files[[1]])
 
+    sp_attrs_original <- xml2::xml_attrs(xml2::xml_find_all(xml_doc, xpath = "//sp"))
+    
     # first we run the exercise with conll output
     
     Pipe <- StanfordCoreNLP$new(
@@ -12,9 +14,17 @@ test_that(
       properties = corenlp_get_properties_file(lang = "en", fast = TRUE)
     )
 
-    corenlp_annotate(x = xml_doc, pipe = Pipe, cols = c("word", "word"), fmt = '<w word="%s">%s</w>\n', sentences = TRUE)
+    corenlp_annotate(
+      x = xml_doc,
+      pipe = Pipe,
+      cols = c("word", "word"),
+      fmt = '<w word="%s">%s</w>\n',
+      sentences = TRUE
+    )
     tokens1 <- xml2::xml_text(xml2::xml_find_all(xml_doc, xpath = "//w"))
+    sp_attrs1 <- xml2::xml_attrs(xml2::xml_find_all(xml_doc, xpath = "//sp"))
 
+    expect_identical(sp_attrs_original, sp_attrs1)
     
     # with XML outputter
 
@@ -26,8 +36,10 @@ test_that(
     )
     corenlp_annotate(x = xml_doc2, pipe = Pipe, xpath = "//p")
     tokens2 <- xml_text(xml2::xml_find_all(xml_doc2, xpath = "//word"))
+    sp_attrs2 <- xml2::xml_attrs(xml2::xml_find_all(xml_doc2, xpath = "//sp"))
     
     expect_identical(tokens1, tokens2)
+    expect_identical(sp_attrs1, sp_attrs2)
   }
 )
 
