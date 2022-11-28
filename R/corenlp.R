@@ -184,7 +184,7 @@ setMethod("corenlp_annotate", "character", function(x, corenlp_dir = getOption("
 #' @rdname corenlp_annotate
 #' @importFrom xml2 read_xml xml_find_all xml_text xml_set_text xml_add_child
 #'   xml_text<- write_xml
-#' @importFrom xml2 xml_find_first read_html xml_name xml_replace
+#' @importFrom xml2 xml_find_first read_html xml_name xml_replace xml_attrs
 #' @importFrom cli cli_alert_info cli_progress_step
 #' @importFrom xslt xml_xslt
 #' @examples
@@ -300,13 +300,23 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     dt_docs <- split(dt, f = dt[["doc_id"]])
     
     if (verbose) cli_progress_step("transform annotated content")
+    attrs <- xml_attrs(text_nodes)
+    attr_vec <- lapply(
+      attrs,
+      function(x) paste(sprintf('%s="%s"', names(x)), unname(x), collapse = " ")
+    )
+    whitespace <- ifelse(sapply(attrs, length) > 0L, " ", "")
     newnodes <- mclapply(
       seq_along(dt_docs),
       function(i){
         el <- xml_name(text_nodes[[i]])
         sprintf(
-          "<%s>\n%s\n</%s>",
-          el, paste(dt_docs[[i]][["tokenline"]], collapse = "\n"), el
+          "<%s%s%s>\n%s\n</%s>",
+          el,
+          whitespace[[i]],
+          attr_vec[[i]],
+          paste(dt_docs[[i]][["tokenline"]], collapse = "\n"),
+          el
         )
       },
       mc.cores = threads

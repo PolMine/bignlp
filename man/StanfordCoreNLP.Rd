@@ -91,7 +91,7 @@ from annotations.}
 \if{html}{\out{
 <details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="bignlp" data-topic="AnnotationPipeline" data-id="annotate"><a href='../../bignlp/html/AnnotationPipeline.html#method-AnnotationPipeline-annotate'><code>bignlp::AnnotationPipeline$annotate()</code></a></li>
+<li><span class="pkg-link" data-pkg="bignlp" data-topic="AnnotationPipeline" data-id="annotate"><a href='../../bignlp/html/AnnotationPipeline.html#method-AnnotationPipeline-annotate'><code>bignlp::AnnotationPipeline$annotate()</code></a></span></li>
 </ul>
 </details>
 }}

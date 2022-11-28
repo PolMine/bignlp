@@ -9,6 +9,8 @@ for nicer and more informative (timing) messages.
 * `corenlp_annotate()` has new argument `xsl` to apply a XSLT Style Sheet on
 XML nodes with annotations. Useful to get rid of potential overhead of the XML 
 Outputter.
+* Attributes of XML elements that had been lost in the meantime are preserved 
+#36.
 
 
 # bignlp v0.1.3
