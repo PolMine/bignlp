@@ -81,19 +81,31 @@ parse_properties_file <- function(x){
 }
 
 #' @details The number of threads used to process files in parallel is defined
-#'   by the property 'threads'. Auxiliary functions `properties_get_threads()`
-#'   and `properties_set_threads()` get and set the value.
+#'   by the properties 'threads', 'pos.nthreads' and 'lemma.nthreads'. Auxiliary
+#'   functions `properties_get_threads()` and `properties_set_threads()` get and
+#'   set the value.
 #' @param k The number of threads used to process files. Needs to be a
 #'   reasonable value, but need not be an integer value as value will be coerced
 #'   to `character` vector anyway.
+#'.@param property A property to set.
 #' @param p A properties object.
 #' @export properties_set_threads
 #' @rdname properties
-properties_set_threads <- function(p, k){p$put("threads", as.character(k)); invisible(p)}
+properties_set_threads <- function(p, k, property = c("threads", "pos.nthreads", "lemma.nthreads")){
+  for (prop in property) p$put(prop, as.character(k))
+  invisible(p)
+}
 
 #' @export properties_get_threads
 #' @rdname properties
-properties_get_threads <- function(p) as.integer(p$get("threads"))
+properties_get_threads <- function(p){
+  props <- c(
+    threads = p$get("threads"),
+    pos.nthreads = p$get("pos.nthreads"),
+    lemma.nthreads = p$get("lemma.nthreads")
+  )
+  setNames(as.integer(props), names(props))
+}
 
 #' @param dir The output directory for processed data.
 #' @export properties_set_output_directory

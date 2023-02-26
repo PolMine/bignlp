@@ -301,9 +301,15 @@ setMethod("corenlp_annotate", "xml_document", function(x, xpath = "//p", pipe, t
     
     if (verbose) cli_progress_step("transform annotated content")
     attrs <- xml_attrs(text_nodes)
-    attr_vec <- lapply(
+    attr_vec <- sapply(
       attrs,
-      function(x) paste(sprintf('%s="%s"', names(x)), unname(x), collapse = " ")
+      function(x){
+        if (length(x) > 0L){
+          paste(sprintf('%s="%s"', names(x), unname(x)), collapse = " ")
+        } else {
+          ""
+        }
+      }
     )
     whitespace <- ifelse(sapply(attrs, length) > 0L, " ", "")
     newnodes <- mclapply(

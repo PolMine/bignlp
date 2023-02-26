@@ -16,7 +16,11 @@ properties(x)
 
 parse_properties_file(x)
 
-properties_set_threads(p, k)
+properties_set_threads(
+  p,
+  k,
+  property = c("threads", "pos.nthreads", "lemma.nthreads")
+)
 
 properties_get_threads(p)
 
@@ -37,7 +41,8 @@ is_properties(p)
 
 \item{k}{The number of threads used to process files. Needs to be a
 reasonable value, but need not be an integer value as value will be coerced
-to \code{character} vector anyway.}
+to \code{character} vector anyway.
+.@param property A property to set.}
 
 \item{dir}{The output directory for processed data.}
 
@@ -62,8 +67,9 @@ The \code{parse_properties_file()} function instantiates a properties
 object from a properties file or a named list.
 
 The number of threads used to process files in parallel is defined
-by the property 'threads'. Auxiliary functions \code{properties_get_threads()}
-and \code{properties_set_threads()} get and set the value.
+by the properties 'threads', 'pos.nthreads' and 'lemma.nthreads'. Auxiliary
+functions \code{properties_get_threads()} and \code{properties_set_threads()} get and
+set the value.
 }
 \examples{
 # Instantiate properties from properties file

@@ -11,7 +11,11 @@ XML nodes with annotations. Useful to get rid of potential overhead of the XML
 Outputter.
 * Attributes of XML elements that had been lost in the meantime are preserved 
 #36.
-
+* `properties_set_threads()` will also set properties 'pos.nthreads' and
+'lemma.nthreads'.
+* `properties_get_threads()` will return named character vector with all
+properties set.
+* Minimized properties file 'corenlp-de-min.properties' in 'extdata/properties_files'.
 
 # bignlp v0.1.3
 
