@@ -51,7 +51,7 @@ At this stage, bignlp is a GitHub-only package. Using an installation mechanism
 of the [remotes]() package exported by [devtools]() you can install bignlp as
 follows.
 
-```{r}
+```{r install_bignlp, eval = FALSE}
 devtools::install_github("PolMine/bignlp")
 ```
 
