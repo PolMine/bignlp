@@ -9,7 +9,7 @@ corenlp_parse_conll(x, progress = TRUE, threads = 1L)
 \arguments{
 \item{x}{A filename, or a \code{character} vector of filenames. If \code{x} is a \code{list}
 (of \code{character} vectors of filenames), it will be unlisted to yield a
-\code{character} vector.}
+\code{character} vector. Filenames are expected to end with ".conll".}
 
 \item{progress}{logical}
 

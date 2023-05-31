@@ -16,6 +16,8 @@ Outputter.
 * `properties_get_threads()` will return named character vector with all
 properties set.
 * Minimized properties file 'corenlp-de-min.properties' in 'extdata/properties_files'.
+* Include further untokenizable chars in `corenlp_preprocessing_replacements`
+#39 #40.
 
 # bignlp v0.1.3
 

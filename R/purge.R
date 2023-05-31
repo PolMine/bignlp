@@ -61,6 +61,8 @@ corenlp_preprocessing_replacements <- list(
   c("\u200e", ""),
   c("\u00A0", " "),
   c("\u2027", "-"),
+  c("\u009d", ""), # 'Operating System Command' without specific function
+  c("\u202C", ""), # 'Pop Directional Formatting'
   c("&lt;", " "),
   c("&gt;", " "),
   c("<", " "),

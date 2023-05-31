@@ -9,7 +9,7 @@
 \format{
 An object of class \code{list} of length 14.
 
-An object of class \code{list} of length 12.
+An object of class \code{list} of length 14.
 }
 \usage{
 purge(x, replacements, progress = TRUE)

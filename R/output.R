@@ -84,7 +84,7 @@ corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "
 #'   
 #' @param x A filename, or a `character` vector of filenames. If `x` is a `list`
 #'   (of `character` vectors of filenames), it will be unlisted to yield a
-#'   `character` vector.
+#'   `character` vector. Filenames are expected to end with ".conll".
 #' @param progress logical 
 #' @param threads An `integer` value, number of threads to use.
 #' @importFrom data.table fread rbindlist setcolorder
@@ -108,7 +108,8 @@ corenlp_parse_json = function(x, cols_to_keep = c("sentence", "index", "word", "
 corenlp_parse_conll <- function(x, progress = TRUE, threads = 1L){
   if (is.list(x)) x <- unlist(x)
   if (length(x) == 1L){
-    if (file.exists(x)){
+    # file.exists() used previously: Error prone and potentially slow
+    if (endsWith(x, ".conll")){ 
       # If an empty document has been processed, the conll file will be empty 
       # and. data.table::fread will issue a warning. To avoid an error, an
       # empty data.table is returned
